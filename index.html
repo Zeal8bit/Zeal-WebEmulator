@@ -7,12 +7,17 @@
   <body>
     <canvas id="screen" tabindex="1" style="outline: none;"></canvas>
 
+    <input type="file" id="file-input" />
+    <button id="read-button">Read File</button>
+    <pre id="file-contents"></pre>
+
     <script>
       const KB = 1024;
     </script>
     <script src="characters.js"></script>
     <script src="screen.js"></script>
     <script src="rom.js"></script>
+    <script src="pio.js"></script>
     <script src="ram.js"></script>
     <script src="Z80.js"></script>
     <script src="zeal.js"></script>

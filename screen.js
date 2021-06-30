@@ -81,7 +81,7 @@ function VideoChip() {
     }
 
     function is_valid_port(read, port) {
-        return port >= 0x80;
+        return !read && port >= 0x80;
     }
 
     function mem_read(address) {

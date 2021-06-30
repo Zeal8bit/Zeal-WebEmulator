@@ -2,7 +2,8 @@ function RAM() {
     const size = 512*KB;
     const bank_size = 16*KB;
     const from = 0x8000;
-    const bank_from = 0xC000;
+    const bank_from = 0x8000;
+    const fixed_from = 0xC000;
     
     /* RAM starts at 0x8000, first 16KB is non bankable */
     var nonbankable = new Array(16 * KB);
@@ -21,21 +22,21 @@ function RAM() {
     }
 
     function is_valid_port(read, port) {
-        return port < 0x80;
+        return port == 0xF3;
     }
  
     function mem_read(address) {
         console.assert (address >= from, "Wrong address for SRAM");
-        if (address >= bank_from)
-            return bankable[bank][address - bank_from];
-        return nonbankable[address - from];
+        if (address >= fixed_from)
+            return nonbankable[address - fixed_from];
+        return bankable[bank][address - bank_from];
     }
 
     function mem_write(address, value) {
         console.assert (address >= from, "Wrong address for SRAM");
-        if (address >= bank_from)
-            bankable[bank][address - bank_from] = value;
-        nonbankable[address - from] = value;
+        if (address >= fixed_from)
+            nonbankable[address - fixed_from] = value;
+        bankable[bank][address - bank_from] = value;
     }
 
     function io_read(port) {
@@ -44,7 +45,7 @@ function RAM() {
     }
 
     function io_write(port, value) {
-        console.assert (port < 0x80, "Wrong port for SRAM");
+        console.assert (port == 0xF3, "Wrong port for SRAM");
         bank = value;
     }
 

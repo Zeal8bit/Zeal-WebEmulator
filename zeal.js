@@ -1,8 +1,9 @@
 const rom = new ROM();
 const ram = new RAM();
 const vchip = new VideoChip();
+const pio = new PIO();
 
-const devices = [ rom, ram, vchip ];
+const devices = [ rom, ram, vchip, pio ];
 
 const zpu = new Z80({ mem_read, mem_write, io_read, io_write });
 
@@ -39,7 +40,7 @@ function io_read(port) {
     devices.forEach(function (device) {
         if (device.is_valid_port(true, port)) {
             console.assert(found == false, "Two devices have valid ports " + port);
-            device.io_read(port);
+            rd = device.io_read(port);
             found = true;
         }
     });
@@ -58,9 +59,33 @@ function io_write(port, value) {
 
 const frequency = 5 * KB * KB;
 
-function step_cpu() {    
-    const t_state = zpu.run_instruction();
-    setTimeout(step_cpu, 1);
+function step_cpu() {
+    var t_state = 0;
+    for (var i = 0; i < 10000; i++) {
+        t_state += zpu.run_instruction();
+    }
+    setTimeout(step_cpu, 0);
 }
 
-step_cpu();
+document.querySelector("#read-button").addEventListener('click', function() {
+    let file = document.querySelector("#file-input").files[0];
+    let reader = new FileReader();
+    reader.addEventListener('load', function(e) {
+	let binary = e.target.result;
+	rom.loadFile(binary);
+        step_cpu();
+    });
+    reader.readAsBinaryString(file);
+});
+
+
+document.querySelector("#screen").addEventListener("keydown", function(e) {
+    const intcount = pio.key_pressed(e.keyCode);
+    zpu.interrupt(false, 0);
+    if (intcount != 1) {
+        for (var i = 0; i < 256; i++) {
+            zpu.run_instruction();
+        }
+        zpu.interrupt(false, 0);
+    }
+});
