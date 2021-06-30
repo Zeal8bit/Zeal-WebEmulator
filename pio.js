@@ -43,7 +43,11 @@ function PIO() {
             /* Space character */
             fifo.push(0x29);
             return 1;
-        }
+        } else if (code == 8) {
+	   /* Backspace */
+           fifo.push(0x66);
+           return 1;
+	}
     }
     
     function io_write(port, value) {
