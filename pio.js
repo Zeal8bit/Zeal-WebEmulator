@@ -44,10 +44,14 @@ function PIO() {
             fifo.push(0x29);
             return 1;
         } else if (code == 8) {
-	   /* Backspace */
-           fifo.push(0x66);
-           return 1;
-	}
+	        /* Backspace */
+            fifo.push(0x66);
+            return 1;
+	    } else if (code == 13) {
+            /* Enter pressed */
+            fifo.push(0x5A);
+            return 1;
+        }
     }
     
     function io_write(port, value) {

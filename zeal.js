@@ -5,6 +5,10 @@ const pio = new PIO();
 
 const devices = [ rom, ram, vchip, pio ];
 
+const breakpoints = [];
+var running = true;
+var registers = null;
+
 const zpu = new Z80({ mem_read, mem_write, io_read, io_write });
 
 
@@ -61,10 +65,36 @@ const frequency = 5 * KB * KB;
 
 function step_cpu() {
     var t_state = 0;
-    for (var i = 0; i < 10000; i++) {
+    for (var i = 0; i < 10000 && running; i++) {
         t_state += zpu.run_instruction();
+        registers = zpu.getState();
+        if (breakpoints.includes(registers.pc)) {
+            running = false;
+        }
     }
-    setTimeout(step_cpu, 0);
+
+    if (running)
+        setTimeout(step_cpu, 0);
+}
+
+function step () {
+    var pc = registers.pc;
+    while (registers.pc == pc) {
+        zpu.run_instruction();
+        registers = zpu.getState();
+    }
+}
+
+function cont() {
+    running = true;
+    step_cpu();
+}
+
+function bp(addr) {
+    if (breakpoints.includes(addr))
+        breakpoints = breakpoints.filter(e => e != addr);
+    else
+        breakpoints.push(addr);
 }
 
 document.querySelector("#read-button").addEventListener('click', function() {

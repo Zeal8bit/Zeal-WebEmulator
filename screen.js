@@ -8,6 +8,7 @@ function VideoChip() {
     var ratio = 1.5;
     var resolution_width = 800;
     var resolution_height = 600;
+    var scroll = 0;
 
     var mapped_vram = false;
     var mapped_sprite = false;
@@ -47,6 +48,9 @@ function VideoChip() {
             y += ratio;
         }
     }
+
+    function scroll_screen () {
+    }
     
     function putChar(code) {
 
@@ -68,7 +72,7 @@ function VideoChip() {
 
     function writeChar(code, cursor) {
         const char_per_line = 100;
-        const y = cursor / char_per_line;
+        const y = Math.floor(cursor / char_per_line);
         const x = cursor % char_per_line;
         drawCharacter(ctx, code,
                       x * charwidth * ratio,
@@ -107,6 +111,9 @@ function VideoChip() {
         } else if (port == 0x83) {
             mapped_vram = (value == 0);
             mapped_sprite = (value == 1);
+        } else if (port == 0x85) {
+            scroll = value;
+            scroll_screen();
         }
     }
 
