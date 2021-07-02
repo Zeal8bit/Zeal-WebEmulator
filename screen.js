@@ -6,15 +6,21 @@ function VideoChip() {
     var x_cursor = 0;
     var y_cursor = 0;
     var ratio = 1.5;
+    var charheight = 12;
     var resolution_width = 800;
     var resolution_height = 600;
+    const final_height = resolution_height * ratio;
+    const final_width = resolution_width * ratio;
+    const char_per_line = 100;
+    const char_per_col  = 50;
+    const char_total = char_per_line * char_per_col;
     var scroll = 0;
 
     var mapped_vram = false;
     var mapped_sprite = false;
     
+    var framebuffer = new Array(resolution_width/8 * resolution_height/12);
     const { canvas, ctx } = initialize();
-
 
     function initialize() {
         var canvas = document.querySelector("#screen");
@@ -24,6 +30,10 @@ function VideoChip() {
         var ctx = canvas.getContext("2d");
         ctx.fillStyle = backgroundColor;
         ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        for (var i = 0; i < framebuffer.length; i++)
+            framebuffer[i] = 0;
+
         return { canvas, ctx };
     }
 
@@ -50,10 +60,13 @@ function VideoChip() {
     }
 
     function scroll_screen () {
+        var firstline = ctx.getImageData(0, 0, final_width, charheight * ratio);
+        var restlines = ctx.getImageData(0, charheight * ratio, final_width, final_height - charheight * ratio);
+        ctx.putImageData(restlines, 0, 0);
+        ctx.putImageData(firstline, 0, final_height - charheight * ratio);
     }
     
     function putChar(code) {
-
         //drawCharacter(ctx, text.charCodeAt(i), i * charwidth * ratio, 0);
         drawCharacter(ctx, code,
                       x_cursor * charwidth * ratio,
@@ -70,13 +83,18 @@ function VideoChip() {
         }
     }
 
-    function writeChar(code, cursor) {
-        const char_per_line = 100;
+    function drawChar(code, cursor) {
+        cursor = ((cursor - scroll * char_per_line) + char_total) % char_total;
         const y = Math.floor(cursor / char_per_line);
         const x = cursor % char_per_line;
         drawCharacter(ctx, code,
                       x * charwidth * ratio,
                       y * charheight * ratio);
+    }
+
+    function writeChar(code, cursor) {
+        framebuffer[cursor] = code;
+        drawChar(code, cursor);
     }
 
 
