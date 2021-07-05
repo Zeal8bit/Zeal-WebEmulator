@@ -1,15 +1,51 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>Zeal emulator</title>
+    <title>Zeal v0.2 Emulator</title>
+    <link rel="stylesheet" type="text/css" href="emulator.css" media="screen" />
   </head>
   
   <body>
+    <section id="debug">
+      <table>
+        <tr><td>A</td><td id="rega"></td></tr>
+        <tr><td>B</td><td id="regb"></td></tr>
+        <tr><td>C</td><td id="regc"></td></tr>
+        <tr><td>D</td><td id="regd"></td></tr>
+        <tr><td>E</td><td id="rege"></td></tr>
+        <tr><td>H</td><td id="regh"></td></tr>
+        <tr><td>L</td><td id="regl"></td></tr>
+        <tr><td>IX</td><td id="regix"></td></tr>
+        <tr><td>IY</td><td id="regiy"></td></tr>
+        <tr><td>BC</td><td id="regbc"></td></tr>
+        <tr><td>DE</td><td id="regde"></td></tr>
+        <tr><td>HL</td><td id="reghl"></td></tr>
+        <tr><td>PC</td><td id="regpc"></td></tr>
+        <tr><td>SP</td><td id="regsp"></td></tr>
+        <tr><td>Flags</td><td id="flags"></td></tr>
+      </table>
+
+      <section id="controls">
+        <button id="step">step</button>
+        <button id="continue">continue</button>
+      </section>
+        
+      <section id="romfile">
+        <input type="file" id="file-input" />
+        <button id="read-button">Read File</button>
+        <pre id="file-contents"></pre>
+      </section>
+    </section>
+
     <canvas id="screen" tabindex="1" style="outline: none;"></canvas>
 
-    <input type="file" id="file-input" />
-    <button id="read-button">Read File</button>
-    <pre id="file-contents"></pre>
+    <section id="breakpoints">
+      <section id="bps"></section>
+      <section id="newbp">
+        <input type="text" id="bpaddr" />
+        <button id="addbp">Add</button>
+      </section> 
+    </section>
 
     <script>
       const KB = 1024;

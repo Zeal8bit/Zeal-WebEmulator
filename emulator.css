@@ -1,0 +1,23 @@
+html {
+    padding: 0;
+    margin: 0;
+    font-family: Calibri;
+}
+
+#debug {
+    vertical-align: top;
+    display: inline-block;
+}
+
+#romfile {
+    margin-top: 5em;
+    position: static;
+    display: inline-block;
+    bottom: 0;
+}
+
+#breakpoints {
+    vertical-align: top;
+    display: inline-block;
+    font-family: monospace;
+}

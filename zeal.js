@@ -60,8 +60,32 @@ function io_write(port, value) {
     });
 }
 
+function hex(str) {
+    return "0x" + str.toString(16).toUpperCase();
+}
 
-const frequency = 5 * KB * KB;
+function hex16(high, lower) {
+    const value = (high << 8) + lower;
+    return "0x" + value.toString(16).toUpperCase();
+}
+
+function updateRegistersHTML() {
+    document.querySelector("#rega").innerText = hex(registers.a);
+    document.querySelector("#regb").innerText = hex(registers.b);
+    document.querySelector("#regc").innerText = hex(registers.c);
+    document.querySelector("#regd").innerText = hex(registers.d);
+    document.querySelector("#rege").innerText = hex(registers.e);
+    document.querySelector("#regh").innerText = hex(registers.h);
+    document.querySelector("#regl").innerText = hex(registers.l);
+    document.querySelector("#regix").innerText = hex(registers.ix);
+    document.querySelector("#regiy").innerText = hex(registers.iy);
+    document.querySelector("#regbc").innerText = hex16(registers.b, registers.c);
+    document.querySelector("#regde").innerText = hex16(registers.d, registers.e);
+    document.querySelector("#reghl").innerText = hex16(registers.h, registers.l);
+    document.querySelector("#regpc").innerText = hex(registers.pc);
+    document.querySelector("#regsp").innerText = hex(registers.sp);
+    document.querySelector("#flags").innerText = JSON.stringify(registers.flags);
+}
 
 function step_cpu() {
     var t_state = 0;
@@ -75,6 +99,8 @@ function step_cpu() {
 
     if (running)
         setTimeout(step_cpu, 0);
+    else
+        updateRegistersHTML();
 }
 
 function step () {
@@ -83,6 +109,7 @@ function step () {
         zpu.run_instruction();
         registers = zpu.getState();
     }
+    updateRegistersHTML();
 }
 
 function cont() {
@@ -119,3 +146,14 @@ document.querySelector("#screen").addEventListener("keydown", function(e) {
         zpu.interrupt(false, 0);
     }
 });
+
+document.querySelector("#addbp").addEventListener("click", function (){
+    const written = document.querySelector("#bpaddr").value;
+    if (written.length < 1) return;
+    const result = parseInt(written, 16);
+    breakpoints.push(result);
+    document.querySelector("#bps").append(hex(result));
+});
+
+document.querySelector("#step").addEventListener("click", step);
+document.querySelector("#continue").addEventListener("click", cont);
