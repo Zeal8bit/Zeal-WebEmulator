@@ -1,8 +1,16 @@
 //canvas.addEventListener('keydown', check, false);
 
 function VideoChip() {
-    const backgroundColor = "#0000ac";
-    const textColor = "#0088ff";
+    var text_color_index = 0xf;
+    var background_color_index = 0x9;
+    /* 0 - Black, 1 - dark blue, 2 - dark green, 3 - dark cyan,
+     * 4 - dark red, 5 - dark purple, 6 - brown, 7 - light grey,
+     * 8 - dark grey, 9 - blue, 10 - green, 11 - cyan,
+     * 12 - red, 13 - purple, 14 - yellow, 15 - white */
+    var palette16 = [ "#000000", "#0000aa", "#00aa00", "#00aaaa",
+                      "#aa0000", "#aa00aa", "#aa5500", "#aaaaaa",
+                      "#555555", "#5555ff", "#55ff55", "#55ffff",
+                      "#ff5555", "#ff55ff", "#ffff55", "#ffffff" ];
     var x_cursor = 0;
     var y_cursor = 0;
     var ratio = 1.5;
@@ -28,7 +36,7 @@ function VideoChip() {
         canvas.height = resolution_height * ratio;
         
         var ctx = canvas.getContext("2d");
-        ctx.fillStyle = backgroundColor;
+        ctx.fillStyle = palette16[background_color_index];
         ctx.fillRect(0, 0, canvas.width, canvas.height);
 
         for (var i = 0; i < framebuffer.length; i++)
@@ -43,12 +51,13 @@ function VideoChip() {
         for (var i = 0; i < bitmaps.length; i++) {
             const line = bitmaps[i];
             if (line == 0) {
-                ctx.fillStyle = backgroundColor;
+                ctx.fillStyle = palette16[background_color_index];
                 ctx.fillRect(x, y, charwidth * ratio, ratio);
             } else {
                 for (var bits = 0; bits < charwidth; bits++) {
                     const bit = (line >> (7 - bits)) & 1;
-                    ctx.fillStyle = (bit == 1) ? textColor : backgroundColor;
+                    ctx.fillStyle = (bit == 1) ? palette16[text_color_index] :
+                                                 palette16[background_color_index];
                     ctx.fillRect(x, y, ratio, ratio);
                     x += ratio;
                 }
@@ -97,6 +106,10 @@ function VideoChip() {
         drawChar(code, cursor);
     }
 
+    function reWriteChar(address) {
+        drawChar(framebuffer[address], address);
+    }
+
 
     function is_valid_address(read, address) {
         return !read && address >= 0 && address < 0x8000;
@@ -111,7 +124,17 @@ function VideoChip() {
     }
 
     function mem_write(address, value) {
-        writeChar(value, address);
+        if (address >= 0x2000) {
+            const bak_foreground = text_color_index;
+            const bak_background = background_color_index;
+            background_color_index = (value >> 4) & 0xf;
+            text_color_index = value & 0xf;
+            reWriteChar(address - 0x2000);
+            text_color_index = bak_foreground;
+            background_color_index = bak_background;
+        } else {
+            writeChar(value, address);
+        }
     }
 
     function io_read(port) {
