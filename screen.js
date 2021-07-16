@@ -2,7 +2,7 @@
 
 function VideoChip() {
     var text_color_index = 0xf;
-    var background_color_index = 0x9;
+    var background_color_index = 0x0;
     /* 0 - Black, 1 - dark blue, 2 - dark green, 3 - dark cyan,
      * 4 - dark red, 5 - dark purple, 6 - brown, 7 - light grey,
      * 8 - dark grey, 9 - blue, 10 - green, 11 - cyan,
@@ -14,6 +14,9 @@ function VideoChip() {
     var x_cursor = 0;
     var y_cursor = 0;
     var ratio = 1.5;
+    /* In case the ratio is a float value, we have to draw a bit more
+     * pixel that whatt is required to avoid artifacts. */
+    var errorrate = Number.isInteger(ratio) ? 0 : ratio - Math.floor(ratio);
     var charheight = 12;
     var resolution_width = 800;
     var resolution_height = 600;
@@ -52,13 +55,13 @@ function VideoChip() {
             const line = bitmaps[i];
             if (line == 0) {
                 ctx.fillStyle = palette16[background_color_index];
-                ctx.fillRect(x, y, charwidth * ratio, ratio);
+                ctx.fillRect(x, y, charwidth * ratio + errorrate, ratio + errorrate);
             } else {
                 for (var bits = 0; bits < charwidth; bits++) {
                     const bit = (line >> (7 - bits)) & 1;
                     ctx.fillStyle = (bit == 1) ? palette16[text_color_index] :
                                                  palette16[background_color_index];
-                    ctx.fillRect(x, y, ratio, ratio);
+                    ctx.fillRect(x, y, ratio + errorrate, ratio + errorrate);
                     x += ratio;
                 }
                 x = orx;
@@ -155,6 +158,9 @@ function VideoChip() {
         } else if (port == 0x85) {
             scroll = value;
             scroll_screen();
+        } else if (port == 0x86) {
+            text_color_index = value & 0xf;
+            background_color_index = (value >> 4) & 0xf;
         }
     }
 

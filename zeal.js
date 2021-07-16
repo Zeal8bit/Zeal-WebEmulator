@@ -85,6 +85,23 @@ function updateRegistersHTML() {
     document.querySelector("#regpc").innerText = hex(registers.pc);
     document.querySelector("#regsp").innerText = hex(registers.sp);
     document.querySelector("#flags").innerText = JSON.stringify(registers.flags);
+    /* Update RAM view */
+    var result = "";
+    for (var i = 0xC104; i <= 0xC1F0; i += 0x10 ) {
+        result += "<section class=\"memline\">" +
+                  "<section class=\"memaddr\">$" +
+                        i.toString(16) +
+                  "</section>" + 
+                  "<section class=\"membytes\">";
+        for (var j = 0; j < 0x10; j++) {
+            var str = ram.mem_read(i + j).toString(16);
+            if (str.length == 1)
+                str = "0" + str
+            result += str + " ";
+        }
+        result += "</section></section>"
+    }
+    document.querySelector("#memdump").innerHTML = result;
 }
 
 function step_cpu() {

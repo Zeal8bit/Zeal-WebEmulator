@@ -21,3 +21,18 @@ html {
     display: inline-block;
     font-family: monospace;
 }
+
+#memdump {
+    display: inline-block;
+    width: 100%;
+    font-family: monospace;
+}
+
+.memaddr {
+    display: inline-block;
+}
+
+.membytes {
+    display: inline-block;
+    padding-left:1.5em;
+}
