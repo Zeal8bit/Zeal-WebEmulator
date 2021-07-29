@@ -87,14 +87,15 @@ function updateRegistersHTML() {
     document.querySelector("#flags").innerText = JSON.stringify(registers.flags);
     /* Update RAM view */
     var result = "";
-    for (var i = 0xC104; i <= 0xC1F0; i += 0x10 ) {
+    for (var i = 0xC104; i <= 0xC3F0; i += 0x10 ) {
         result += "<section class=\"memline\">" +
                   "<section class=\"memaddr\">$" +
                         i.toString(16) +
                   "</section>" + 
                   "<section class=\"membytes\">";
         for (var j = 0; j < 0x10; j++) {
-            var str = ram.mem_read(i + j).toString(16);
+            var str = ram.mem_read(i + j);
+            str = str.toString(16);
             if (str.length == 1)
                 str = "0" + str
             result += str + " ";

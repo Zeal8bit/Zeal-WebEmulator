@@ -16,7 +16,7 @@ function VideoChip() {
     var ratio = 1.5;
     /* In case the ratio is a float value, we have to draw a bit more
      * pixel that whatt is required to avoid artifacts. */
-    var errorrate = Number.isInteger(ratio) ? 0 : ratio - Math.floor(ratio);
+    var errorrate = Number.isInteger(ratio) ? 0 : 2 * (ratio - Math.floor(ratio));
     var charheight = 12;
     var resolution_width = 800;
     var resolution_height = 600;

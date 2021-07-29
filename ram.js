@@ -10,6 +10,10 @@ function RAM() {
     var bankable = initialize();
     var bank = 0; 
 
+    for (var i = 0; i < nonbankable.length; i++)
+        nonbankable[i] = 0;
+
+
     function initialize() {
         const banks = new Array(size / bank_size);
         for (var i = 0; i < banks.length; i++)
