@@ -13,7 +13,7 @@ function VideoChip() {
                       "#ff5555", "#ff55ff", "#ffff55", "#ffffff" ];
     var x_cursor = 0;
     var y_cursor = 0;
-    var ratio = 1.5;
+    var ratio = 1;
     /* In case the ratio is a float value, we have to draw a bit more
      * pixel that whatt is required to avoid artifacts. */
     var errorrate = Number.isInteger(ratio) ? 0 : 2 * (ratio - Math.floor(ratio));
@@ -22,8 +22,8 @@ function VideoChip() {
     var resolution_height = 600;
     const final_height = resolution_height * ratio;
     const final_width = resolution_width * ratio;
-    const char_per_line = 100;
-    const char_per_col  = 50;
+    const char_per_line = resolution_width / 8;
+    const char_per_col  = resolution_height / charheight;
     const char_total = char_per_line * char_per_col;
     var scroll = 0;
 

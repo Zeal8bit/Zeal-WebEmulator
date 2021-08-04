@@ -32,6 +32,12 @@ function PIO() {
     const arrows = [0x6B, 0x75, 0x74, 0x72];
     
     function key_pressed(code) {
+        /* This is not optimal is term of emulation. The keyboard sends characters based on
+         * on a timing, not based on the internal FIFO */
+        if (fifo.length != 0) {
+            return 0;
+        }
+
         if (code >= 65 && code <= 90) {
             const ps2code = mapletters[code - 65];
             fifo.push(ps2code);
@@ -51,7 +57,7 @@ function PIO() {
 	    /* Backspace */
             fifo.push(0x66);
             return 1;
-	} else if (code == 13) {
+	    } else if (code == 13) {
             /* Enter pressed */
             fifo.push(0x5A);
             return 1;

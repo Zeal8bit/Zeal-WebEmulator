@@ -156,9 +156,10 @@ document.querySelector("#read-button").addEventListener('click', function() {
 
 document.querySelector("#screen").addEventListener("keydown", function(e) {
     const intcount = pio.key_pressed(e.keyCode);
-    zpu.interrupt(false, 0);
-    if (intcount == 0)
+    if (intcount == 0) {
         return;
+    }
+    zpu.interrupt(false, 0);
     e.preventDefault();
     if (intcount != 1) {
         for (var i = 0; i < 256; i++) {
