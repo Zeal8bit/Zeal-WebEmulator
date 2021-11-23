@@ -1,12 +1,86 @@
-html {
+body {
     padding: 0;
     margin: 0;
     font-family: Calibri;
+    background-color: #002b36;
+    color: #93a1a1;
 }
 
 #debug {
+    background-color:#093642;
     vertical-align: top;
+    box-shadow: 5px 0 10px -4px #040404;
+    margin: 0 2em 0em 0;
     display: inline-block;
+    height: 65vh;
+    width:15em;
+}
+
+#debug table {
+    font-size:14pt;
+    width: 100%;
+    border: 0;
+    border-collapse:collapse;
+}
+
+#debug table:after {
+    content: " ";
+    display: block;
+    background: #939f8f;
+    height: 1px;
+    margin: 2em auto;
+    width: 8em;
+}
+
+hr {
+    content: " ";
+    display: block;
+    background: #939f8f;
+    height: 1px;
+    margin: 2em auto;
+    border: none;
+}
+
+#debug table td {
+    padding-left: 0.5em;
+}
+
+#debug table tr:nth-child(2n) {
+    background-color: #042d38;
+}
+
+
+#debug table tr:hover {
+    background-color: #0a4d5f;
+}
+
+#debug:after {
+    content: " ";
+    display: block;
+    background: #939f8f;
+    height: 1px;
+    margin: 18em auto;
+    width: 8em;
+}
+
+#screen {
+    display: inline-block;
+    margin: 2em auto;
+}
+
+#rightpanel {
+    position: absolute;
+    right: 0;
+    background-color:#093642;
+    color: #93a1a1;
+    vertical-align: top;
+    box-shadow: -5px 0 5px -3px #040404;
+    margin: 0 0 0em 2em;
+    display: inline-block;
+    height: 65vh;
+    width:15em;
+    padding: 1em;
+    box-sizing: border-box;
 }
 
 #romfile {
@@ -19,13 +93,14 @@ html {
 #breakpoints {
     vertical-align: top;
     display: inline-block;
-    font-family: monospace;
 }
+
 
 #memdump {
     display: inline-block;
     width: 100%;
-    font-family: monospace;
+    height: 35vh;
+    background-color:#093642;
 }
 
 .memaddr {
@@ -35,4 +110,9 @@ html {
 .membytes {
     display: inline-block;
     padding-left:1.5em;
+}
+
+h3 {
+    margin-left: 0.5em;
+    margin-top: 0.75em;
 }

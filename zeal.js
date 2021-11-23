@@ -87,7 +87,7 @@ function updateRegistersHTML() {
     document.querySelector("#flags").innerText = JSON.stringify(registers.flags);
     /* Update RAM view */
     var result = "";
-    for (var i = 0xC104; i <= 0xC3F0; i += 0x10 ) {
+    for (var i = 0xc155; i <= 0xc155 + 0x20; i += 0x10 ) {
         result += "<section class=\"memline\">" +
                   "<section class=\"memaddr\">$" +
                         i.toString(16) +

@@ -76,6 +76,10 @@ function PIO() {
         } else if (code == 187) {
             fifo.push(0x55);
             return 1;
+        } else if (code == 16) {
+            /* Left shift */
+            fifo.push(0x12);
+            return 1;
         }
 
         return 0;

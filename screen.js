@@ -46,7 +46,7 @@ function VideoChip() {
 
     var x_cursor = 0;
     var y_cursor = 0;
-    var ratio = 2;
+    var ratio = 1;
     /* In case the ratio is a float value, we have to draw a bit more
      * pixel that whatt is required to avoid artifacts. */
     var errorrate = Number.isInteger(ratio) ? 0 : 2 * (ratio - Math.floor(ratio));

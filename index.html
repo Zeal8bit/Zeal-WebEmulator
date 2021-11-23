@@ -25,14 +25,6 @@
         <tr><td>Flags</td><td id="flags"></td></tr>
       </table>
 
-      <section id="controls">
-        <button id="step">step</button>
-        <button id="continue">continue</button>
-      </section>
-
-      <section id="memdump">
-      </section>  
-
       <section id="romfile">
         <input type="file" id="file-input" />
         <button id="read-button">Read File</button>
@@ -42,12 +34,27 @@
 
     <canvas id="screen" tabindex="1" style="outline: none;"></canvas>
 
-    <section id="breakpoints">
-      <section id="bps"></section>
-      <section id="newbp">
-        <input type="text" id="bpaddr" />
-        <button id="addbp">Add</button>
-      </section> 
+    <section id="rightpanel">
+      <section id="controls">
+        <button id="step">step</button>
+        <button id="continue">continue</button>
+      </section>
+
+      <h4>Add a breakpoints</h4>
+      <section id="breakpoints">
+        <section id="newbp">
+          <input type="text" id="bpaddr" />
+          <button id="addbp">Add</button>
+        </section>
+        <hr />
+
+        <h4>Breakpoints</h4>
+        <section id="bps"></section>
+      </section>
+    </section>
+
+    <section id="memdump">
+      <h3>Memory dump</h3>
     </section>
 
     <script>
