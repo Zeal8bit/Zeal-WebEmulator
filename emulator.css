@@ -54,14 +54,6 @@ hr {
     background-color: #0a4d5f;
 }
 
-#debug:after {
-    content: " ";
-    display: block;
-    background: #939f8f;
-    height: 1px;
-    margin: 18em auto;
-    width: 8em;
-}
 
 #screen {
     display: inline-block;
@@ -91,20 +83,68 @@ hr {
 }
 
 #breakpoints {
+    width: 100%;
     vertical-align: top;
     display: inline-block;
 }
 
+#bps {
+    width: 100%;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+#bps li {
+    margin-left: -1.2em;
+    padding-left: 1.5em;
+    line-height: 3em;
+    font-family: monospace;
+    width: 102%;
+    user-select: none;
+}
+
+#bps li:hover {
+    background-color: #0a4d5f;
+    cursor: pointer;
+}
+
+#bps li::before {
+    text-align: center;
+    display: inline-block;
+    content: "⬤";
+    width: 1.5em;
+    padding-right: 1em;
+    color: rgb(163, 49, 34);
+}
+
+#bps li.disabled::before {
+    text-align: center;
+    display: inline-block;
+    content: "•";
+    width: 1.5em;
+    color: grey;
+}
 
 #memdump {
+    font-family: monospace;
+    font-size: 11pt;
     display: inline-block;
     width: 100%;
-    height: 35vh;
+    height: 34vh;
     background-color:#093642;
+    padding-top: 1em;
+    padding-left: 0.5em;
+    cursor: pointer;
+    overflow-y:scroll;
+    box-sizing: border-box;
+    user-select: none;
 }
 
 .memaddr {
     display: inline-block;
+    color: #268bd2;
+    font-weight: bold;
 }
 
 .membytes {
@@ -112,7 +152,23 @@ hr {
     padding-left:1.5em;
 }
 
+.membytes div {
+    display: inline-block;
+    padding: 0 0.37em 0 0.37em;
+    line-height: 1.5em;
+}
+
+
+.membytes div.selected {
+    background-color: #0a4d5f;
+}
+
+
 h3 {
     margin-left: 0.5em;
     margin-top: 0.75em;
+}
+
+.hide .memline {
+    display: none !important;
 }

@@ -17,7 +17,7 @@ function RAM() {
     function initialize() {
         const banks = new Array(size / bank_size);
         for (var i = 0; i < banks.length; i++)
-            banks[i] = new Array(bank_size);
+            banks[i] = new Array(bank_size).fill(0);
         return banks;
     }
 

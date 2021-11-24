@@ -3,6 +3,9 @@ const ram = new RAM();
 const vchip = new VideoChip();
 const pio = new PIO();
 
+/* Memdump related */
+const byte_per_line = 0x20;
+
 const devices = [ rom, ram, vchip, pio ];
 
 const breakpoints = [];
@@ -61,7 +64,8 @@ function io_write(port, value) {
 }
 
 function hex(str) {
-    return "0x" + str.toString(16).toUpperCase();
+    const leading = ('000' + str.toString(16).toUpperCase()).substr(-4);
+    return "0x" + leading;
 }
 
 function hex16(high, lower) {
@@ -69,40 +73,67 @@ function hex16(high, lower) {
     return "0x" + value.toString(16).toUpperCase();
 }
 
-function updateRegistersHTML() {
-    document.querySelector("#rega").innerText = hex(registers.a);
-    document.querySelector("#regb").innerText = hex(registers.b);
-    document.querySelector("#regc").innerText = hex(registers.c);
-    document.querySelector("#regd").innerText = hex(registers.d);
-    document.querySelector("#rege").innerText = hex(registers.e);
-    document.querySelector("#regh").innerText = hex(registers.h);
-    document.querySelector("#regl").innerText = hex(registers.l);
-    document.querySelector("#regix").innerText = hex(registers.ix);
-    document.querySelector("#regiy").innerText = hex(registers.iy);
-    document.querySelector("#regbc").innerText = hex16(registers.b, registers.c);
-    document.querySelector("#regde").innerText = hex16(registers.d, registers.e);
-    document.querySelector("#reghl").innerText = hex16(registers.h, registers.l);
-    document.querySelector("#regpc").innerText = hex(registers.pc);
-    document.querySelector("#regsp").innerText = hex(registers.sp);
-    document.querySelector("#flags").innerText = JSON.stringify(registers.flags);
+function isprint(char) {
+    return !( /[\x00-\x08\x0E-\x1F\x80-\xFF]/.test(char));
+}
+
+function setRAMView() {
+    $("#memdump").toggleClass("hide");
+
     /* Update RAM view */
     var result = "";
-    for (var i = 0xc155; i <= 0xc155 + 0x20; i += 0x10 ) {
-        result += "<section class=\"memline\">" +
-                  "<section class=\"memaddr\">$" +
-                        i.toString(16) +
-                  "</section>" + 
-                  "<section class=\"membytes\">";
-        for (var j = 0; j < 0x10; j++) {
-            var str = ram.mem_read(i + j);
-            str = str.toString(16);
+    for (var i = 0x8000; i <= 0xFFFF; i += byte_per_line ) {
+        result += '<section class="memline">' +
+                    '<section class="memaddr">' +
+                            i.toString(16) +
+                    '</section>' + 
+                  '<section class="membytes" data-addr="' + i + '">';
+        for (var j = 0; j < byte_per_line; j++) {
+            var byte = ram.mem_read(i + j);
+            str = byte.toString(16);
             if (str.length == 1)
                 str = "0" + str
-            result += str + " ";
+            result += '<div data-byte="' + byte + '">' + str + '</div>';
         }
-        result += "</section></section>"
+        result += '</section></section>';
     }
-    document.querySelector("#memdump").innerHTML = result;
+    $("#memdump").html(result);
+}
+
+function updateAndShowRAM () {
+    /* Get RAM updates */
+    $("#memdump").toggleClass("hide");
+}
+
+function updateRegistersHTML() {
+    $("#rega").text(hex(registers.a));
+    $("#regb").text(hex(registers.b));
+    $("#regc").text(hex(registers.c));
+    $("#regd").text(hex(registers.d));
+    $("#rege").text(hex(registers.e));
+    $("#regh").text(hex(registers.h));
+    $("#regl").text(hex(registers.l));
+    $("#regix").text(hex(registers.ix));
+    $("#regiy").text(hex(registers.iy));
+    $("#regbc").text(hex16(registers.b, registers.c));
+    $("#regde").text(hex16(registers.d, registers.e));
+    $("#reghl").text(hex16(registers.h, registers.l));
+    $("#regpc").text(hex(registers.pc));
+    $("#regsp").text(hex(registers.sp));    
+    /* Special treatment for the flags */
+    var flags = (registers.flags.S == 1 ? "S" : "") +
+                (registers.flags.Z == 1 ? "Z" : "") +
+                (registers.flags.Y == 1 ? "Y" : "") +
+                (registers.flags.H == 1 ? "H" : "") +
+                (registers.flags.X == 1 ? "X" : "") +
+                (registers.flags.P == 1 ? "P" : "") +
+                (registers.flags.N == 1 ? "N" : "") +
+                (registers.flags.C == 1 ? "C" : "");
+
+    $("#flags").text(flags);
+
+    /* Toggle RAM */
+    updateAndShowRAM();
 }
 
 function step_cpu() {
@@ -110,15 +141,19 @@ function step_cpu() {
     for (var i = 0; i < 10000 && running; i++) {
         t_state += zpu.run_instruction();
         registers = zpu.getState();
-        if (breakpoints.includes(registers.pc)) {
+        /* Check whether the current PC is part of the breakpoints list */
+        const filtered = breakpoints.find(elt => elt.address == registers.pc);
+        if (filtered != undefined && filtered.enabled) {
             running = false;
         }
     }
 
-    if (running)
-        setTimeout(step_cpu, 0);
-    else
-        updateRegistersHTML();
+    if (!registers.halted) {
+        if (running)
+            setTimeout(step_cpu, 0);
+        else
+            updateRegistersHTML();
+    }
 }
 
 function step () {
@@ -135,15 +170,8 @@ function cont() {
     step_cpu();
 }
 
-function bp(addr) {
-    if (breakpoints.includes(addr))
-        breakpoints = breakpoints.filter(e => e != addr);
-    else
-        breakpoints.push(addr);
-}
-
-document.querySelector("#read-button").addEventListener('click', function() {
-    let file = document.querySelector("#file-input").files[0];
+$("#read-button").on('click', function() {
+    let file = $("#file-input")[0].files[0];
     let reader = new FileReader();
     reader.addEventListener('load', function(e) {
 	let binary = e.target.result;
@@ -154,7 +182,7 @@ document.querySelector("#read-button").addEventListener('click', function() {
 });
 
 
-document.querySelector("#screen").addEventListener("keydown", function(e) {
+$("#screen").on("keydown", function(e) {
     const intcount = pio.key_pressed(e.keyCode);
     if (intcount == 0) {
         return;
@@ -167,15 +195,51 @@ document.querySelector("#screen").addEventListener("keydown", function(e) {
         }
         zpu.interrupt(false, 0);
     }
+    cont();
 });
 
-document.querySelector("#addbp").addEventListener("click", function (){
-    const written = document.querySelector("#bpaddr").value;
+$("#addbp").on("click", function (){
+    const written = $("#bpaddr").val();
     if (written.length < 1) return;
     const result = parseInt(written, 16);
-    breakpoints.push(result);
-    document.querySelector("#bps").append(hex(result));
+    /* Only add the breakkpooint if not in the list */
+    if (!breakpoints.includes(result) && result <= 0xFFFF) {
+        breakpoints.push({ address: result, enabled: true });
+        $("#bps").append('<li data-addr="' + result + '">' + hex(result) + '</li>');
+    }
 });
 
-document.querySelector("#step").addEventListener("click", step);
-document.querySelector("#continue").addEventListener("click", cont);
+function togglebreakpoint() {
+    /* Get the breakpoint address */
+    const bkpaddr = $(this).data("addr");
+    /* Same, for the DOM */
+    $(this).toggleClass("disabled");
+
+    /* Find the braeakpoint object in the breakpoint list */
+    const bkrobj = breakpoints.find(element => element.address == bkpaddr);
+    /* Toggle enabled field in the breakpoint */
+    if (bkrobj != undefined)
+        bkrobj.enabled ^= true;
+}
+
+$("#step").on("click", step);
+$("#continue").on("click", cont);
+$("#bps").on("click", "li", togglebreakpoint);
+setRAMView();
+
+var mousepressed = false;
+
+$(".membytes").on("mousedown", "div", function() {
+    mousepressed = true;
+    $(".membytes .selected").removeClass("selected");
+    $(this).toggleClass("selected");
+});
+$(".membytes").on("mouseup", "div", function() {
+    mousepressed = false;
+});
+
+$(".membytes").on("mouseenter", "div", function() {
+    if (mousepressed) {
+        $(this).toggleClass("selected");
+    }
+});
