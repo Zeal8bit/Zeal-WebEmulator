@@ -1,7 +1,7 @@
 const rom = new ROM();
 const ram = new RAM();
 const vchip = new VideoChip();
-const pio = new PIO();
+const pio = new PIO(this);
 
 /* Memdump related */
 const byte_per_line = 0x20;
@@ -193,6 +193,11 @@ function step_over () {
 function cont() {
     running = true;
     step_cpu();
+}
+
+function interrupt() {
+    //zpu.interrupt(false, 0);
+    //step_cpu();
 }
 
 $("#read-button").on('click', function() {

@@ -1,13 +1,30 @@
-function PIO() {
+function PIO(Zeal) {
 
+    const zeal = Zeal;
     const fifo = [];
+    var state = 0xf0;
+
+    const IO_I2C_SDA_OUT_PIN = 0;
+    const IO_I2C_SCL_OUT_PIN = 1;
+    const IO_I2C_SDA_IN_PIN  = 2;
+    const IO_UART_RX_PIN     = 3;
+    const IO_UART_TX_PIN     = 4;
+    const IO_HBLANK_PIN      = 6; // Hardware BUG on the FPGA board
+    const IO_VBLANK_PIN      = 5; // Hardware BUG on the FPGA board
+    const IO_KEYBOARD_PIN    = 7;
     
+    const KB_IO_ADDRESS = 0xE8;
+    const IO_PIO_DATA_A = 0xe0;
+    const IO_PIO_DATA_B = 0xe1;
+    const IO_PIO_CTRL_A = 0xe2;
+    const IO_PIO_CTRL_B = 0xe3;
+
     function is_valid_address(read, address) {
         return false;
     }
 
     function is_valid_port(read, port) {
-        return read && port == 0xE1;
+        return (port >= 0xE0 && port <= 0xE3)  || port == 0xE8;
     }
 
     function mem_read(address) {
@@ -19,8 +36,28 @@ function PIO() {
     }
 
     function io_read(port) {
-        console.assert (port == 0xE1, "Invalid IO read port");
-        return fifo.shift();
+        if (port == KB_IO_ADDRESS)
+            return fifo.shift();
+        else if (port == IO_PIO_DATA_B) {
+            /* Clear all bits */
+            var st = state;
+            state = 0xf0;
+            if (fifo.length != 0) {
+                st &= ~(1 << IO_KEYBOARD_PIN);
+            }
+            return st;
+        }
+        return 0xf0;
+    }
+        
+    function io_write(port, value) {
+        if (port == 0xE3 && ((value >> IO_VBLANK_PIN) & 1) == 0) {
+            /* Activate the VBlank counter */
+            setInterval(function() {
+                state &= ~(1 << IO_VBLANK_PIN);
+                zeal.interrupt();
+            }, 80);
+        }
     }
 
     const mapping = [ 0x45, 0x16, 0x1E, 0x26, 0x25, 0x2E, 0x36, 0x3D, 0x3E, 0x46 ];
@@ -83,9 +120,6 @@ function PIO() {
         }
 
         return 0;
-    }
-    
-    function io_write(port, value) {
     }
 
     this.is_valid_address = is_valid_address;
