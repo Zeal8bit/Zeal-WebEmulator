@@ -78,11 +78,26 @@ function isprint(char) {
 }
 
 function setRAMView() {
-    $("#memdump").toggleClass("hide");
+    $("#memdump").removeClass("hide");
 
     /* Update RAM view */
     var result = "";
-    for (var i = 0x8000; i <= 0xFFFF; i += byte_per_line ) {
+    for (var i = 0x8000; i < 0x8200; i += byte_per_line ) {
+        result += '<section class="memline">' +
+                    '<section class="memaddr">' +
+                            i.toString(16) +
+                    '</section>' + 
+                  '<section class="membytes" data-addr="' + i + '">';
+        for (var j = 0; j < byte_per_line; j++) {
+            var byte = ram.mem_read(i + j);
+            str = byte.toString(16);
+            if (str.length == 1)
+                str = "0" + str
+            result += '<div data-byte="' + byte + '">' + str + '</div>';
+        }
+        result += '</section></section>';
+    }
+    for (var i = 0xBF00; i < 0xC000; i += byte_per_line ) {
         result += '<section class="memline">' +
                     '<section class="memaddr">' +
                             i.toString(16) +
@@ -102,7 +117,8 @@ function setRAMView() {
 
 function updateAndShowRAM () {
     /* Get RAM updates */
-    $("#memdump").toggleClass("hide");
+    setRAMView();
+    //$("#memdump").toggleClass("hide");
 }
 
 function updateRegistersHTML() {
@@ -159,6 +175,15 @@ function step_cpu() {
 function step () {
     var pc = registers.pc;
     while (registers.pc == pc) {
+        zpu.run_instruction();
+        registers = zpu.getState();
+    }
+    updateRegistersHTML();
+}
+
+function step_over () {
+    var pc = registers.pc;
+    while (registers.pc != pc + 3) {
         zpu.run_instruction();
         registers = zpu.getState();
     }
@@ -223,6 +248,7 @@ function togglebreakpoint() {
 }
 
 $("#step").on("click", step);
+$("#stepover").on("click", step_over);
 $("#continue").on("click", cont);
 $("#bps").on("click", "li", togglebreakpoint);
 setRAMView();

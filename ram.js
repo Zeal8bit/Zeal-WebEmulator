@@ -32,14 +32,14 @@ function RAM() {
     function mem_read(address) {
         console.assert (address >= from, "Wrong address for SRAM");
         if (address >= fixed_from)
-            return nonbankable[address - fixed_from];
+            return bankable[0][address - fixed_from];
         return bankable[bank][address - bank_from];
     }
 
     function mem_write(address, value) {
         console.assert (address >= from, "Wrong address for SRAM");
         if (address >= fixed_from)
-            nonbankable[address - fixed_from] = value;
+            bankable[0][address - fixed_from] = value;
         bankable[bank][address - bank_from] = value;
     }
 
