@@ -162,9 +162,23 @@ function VideoChip() {
         drawChar(framebuffer[address], address);
     }
 
+    const mem_wo_from = 0x00_0000;
+    const mem_wo_to   = 0x00_8000;
+    const mem_rw_from = 0x10_0000;
+    const mem_rw_to   = 0x12_0000;
+
+    function is_address_rw(address) {
+        return address >= mem_rw_from && address < mem_rw_to;
+    }
+
+    function is_address_w(address) {
+        return is_address_rw(address)
+            || (address >= mem_wo_from && address < mem_wo_to);
+    }
 
     function is_valid_address(read, address) {
-        return !read && address >= 0 && address < 0x8000;
+        return (read && is_address_rw(address))
+            || (!read && is_address_w(address)) ;
     }
 
     function is_valid_port(read, port) {
@@ -176,10 +190,12 @@ function VideoChip() {
     }
 
     function mem_write(address, value) {
+        const physaddress = address & 0x7fff;
+
         if (video_mode == TEXT_MODE || video_mode == SMALL_TEXT_MODE)
-            mem_write_text_mode(address, value);
+            mem_write_text_mode(physaddress, value);
         else if (video_mode == BIG_SPRITE_MODE)
-            mem_write_big_sprite_mode(address, value);
+            mem_write_big_sprite_mode(physaddress, value);
         else
             console.log("Small sprite mode video mode currently not supported");
     }

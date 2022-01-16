@@ -2,11 +2,12 @@ const rom = new ROM();
 const ram = new RAM();
 const vchip = new VideoChip();
 const pio = new PIO(this);
+const mmu = new MMU();
 
 /* Memdump related */
 const byte_per_line = 0x20;
 
-const devices = [ rom, ram, vchip, pio ];
+const devices = [ rom, ram, vchip, pio, mmu ];
 
 const breakpoints = [];
 var running = true;
@@ -18,24 +19,29 @@ const zpu = new Z80({ mem_read, mem_write, io_read, io_write });
 function mem_read(address) {
     var rd = 0;
     var found = false;
+    const ext_addr = mmu.get_ext_adrr(address);
  
     devices.forEach(function (device) {
-        if (device.is_valid_address(true, address)) {
-            console.assert(found == false, "Two devices have valid address " + address);
-            rd = device.mem_read(address);
+        if (device.is_valid_address(true, ext_addr)) {
+            console.assert(found == false, "Two devices have valid address " + ext_addr);
+            rd = device.mem_read(ext_addr);
             found = true;
         }
     });
 
-    console.assert(found, "No device replied to memory read");
+    if (!found) {
+        console.log("No device replied to memory read: " + ext_addr);
+    }
 
     return rd;
 }
 
 function mem_write(address, value) {
+    const ext_addr = mmu.get_ext_adrr(address);
+
     devices.forEach(function (device) {
-        if (device.is_valid_address(false, address))
-            device.mem_write(address, value);
+        if (device.is_valid_address(false, ext_addr))
+            device.mem_write(ext_addr, value);
     });
 }
 
@@ -117,7 +123,7 @@ function setRAMView() {
 
 function updateAndShowRAM () {
     /* Get RAM updates */
-    setRAMView();
+    //setRAMView();
     //$("#memdump").toggleClass("hide");
 }
 
@@ -155,13 +161,15 @@ function updateRegistersHTML() {
 function step_cpu() {
     var t_state = 0;
     for (var i = 0; i < 10000 && running; i++) {
-        t_state += zpu.run_instruction();
         registers = zpu.getState();
+
         /* Check whether the current PC is part of the breakpoints list */
         const filtered = breakpoints.find(elt => elt.address == registers.pc);
         if (filtered != undefined && filtered.enabled) {
             running = false;
         }
+
+        t_state += zpu.run_instruction();
     }
 
     if (!registers.halted) {
@@ -204,10 +212,10 @@ $("#read-button").on('click', function() {
     let file = $("#file-input")[0].files[0];
     let reader = new FileReader();
     reader.addEventListener('load', function(e) {
-	let binary = e.target.result;
-	rom.loadFile(binary);
-        step_cpu();
-    });
+        let binary = e.target.result;
+        rom.loadFile(binary);
+            step_cpu();
+        });
     reader.readAsBinaryString(file);
 });
 
@@ -256,7 +264,7 @@ $("#step").on("click", step);
 $("#stepover").on("click", step_over);
 $("#continue").on("click", cont);
 $("#bps").on("click", "li", togglebreakpoint);
-setRAMView();
+//setRAMView();
 
 var mousepressed = false;
 
