@@ -30,7 +30,7 @@ function MMU() {
 
     function get_ext_adrr(address) {
         /* Get 22-bit address from 16-bit address */
-        const idx = (address >> 14) & 0x33;
+        const idx = (address >> 14) & 0x3;
         const highest = pages[idx];
         /* Highest bits are from the page, remaining 16KB are from address */
         return (highest << 14) | (address & 0x3fff);

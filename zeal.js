@@ -88,7 +88,13 @@ function setRAMView() {
 
     /* Update RAM view */
     var result = "";
-    for (var i = 0x8000; i < 0x8200; i += byte_per_line ) {
+
+    for (var i = 0 ; i < 4; i++) {
+        const ext_addr = mmu.get_ext_adrr(16*1024*i);
+        result += "<section>Page " + i + ": " + ext_addr.toString(16) + "</section>";
+    }
+
+    for (var i = 0x08_0000; i < 0x08_0100; i += byte_per_line ) {
         result += '<section class="memline">' +
                     '<section class="memaddr">' +
                             i.toString(16) +
@@ -103,6 +109,7 @@ function setRAMView() {
         }
         result += '</section></section>';
     }
+    /*
     for (var i = 0xBF00; i < 0xC000; i += byte_per_line ) {
         result += '<section class="memline">' +
                     '<section class="memaddr">' +
@@ -117,13 +124,13 @@ function setRAMView() {
             result += '<div data-byte="' + byte + '">' + str + '</div>';
         }
         result += '</section></section>';
-    }
+    }*/
     $("#memdump").html(result);
 }
 
 function updateAndShowRAM () {
     /* Get RAM updates */
-    //setRAMView();
+    setRAMView();
     //$("#memdump").toggleClass("hide");
 }
 
@@ -158,10 +165,16 @@ function updateRegistersHTML() {
     updateAndShowRAM();
 }
 
+visited = [];
+
 function step_cpu() {
     var t_state = 0;
     for (var i = 0; i < 10000 && running; i++) {
+        t_state += zpu.run_instruction();
+
         registers = zpu.getState();
+
+        visited.push(registers.pc.toString(16))
 
         /* Check whether the current PC is part of the breakpoints list */
         const filtered = breakpoints.find(elt => elt.address == registers.pc);
@@ -169,7 +182,6 @@ function step_cpu() {
             running = false;
         }
 
-        t_state += zpu.run_instruction();
     }
 
     if (!registers.halted) {
@@ -181,6 +193,9 @@ function step_cpu() {
 }
 
 function step () {
+    if (registers.halted) {
+        return;
+    }
     var pc = registers.pc;
     while (registers.pc == pc) {
         zpu.run_instruction();

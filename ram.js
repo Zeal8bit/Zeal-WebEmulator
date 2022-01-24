@@ -1,6 +1,6 @@
 function RAM() {
     const size = 512*KB;
-    const from = 0x04_0000;
+    const from = 0x08_0000;
     const to = 0x10_0000;
     
     var ram = new Array(size);
@@ -30,6 +30,9 @@ function RAM() {
 
     function mem_write(address, value) {
         console.assert (address >= from && address < to, "Wrong write address for SRAM");
+        if (address == 0x8fb11) {
+            console.log(registers.pc.toString(16) + " writing scroll_y to " + value);
+        }
         ram[address - from] = value;
     }
 
