@@ -165,16 +165,12 @@ function updateRegistersHTML() {
     updateAndShowRAM();
 }
 
-visited = [];
-
 function step_cpu() {
     var t_state = 0;
     for (var i = 0; i < 10000 && running; i++) {
         t_state += zpu.run_instruction();
 
         registers = zpu.getState();
-
-        visited.push(registers.pc.toString(16))
 
         /* Check whether the current PC is part of the breakpoints list */
         const filtered = breakpoints.find(elt => elt.address == registers.pc);
@@ -226,11 +222,16 @@ function interrupt() {
 $("#read-button").on('click', function() {
     let file = $("#file-input")[0].files[0];
     let reader = new FileReader();
+    const isos = $("#os").prop("checked");
     reader.addEventListener('load', function(e) {
         let binary = e.target.result;
-        rom.loadFile(binary);
+        if (isos) {
+            rom.loadFile(binary);
             step_cpu();
-        });
+        } else {
+            ram.loadFile(0x100, binary);
+        }
+    });
     reader.readAsBinaryString(file);
 });
 

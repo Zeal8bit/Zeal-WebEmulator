@@ -91,7 +91,7 @@ function PIO(Zeal) {
             fifo.push(0x29);
             return 1;
         } else if (code == 8) {
-	    /* Backspace */
+            /* Backspace */
             fifo.push(0x66);
             return 1;
 	    } else if (code == 13) {
@@ -116,6 +116,10 @@ function PIO(Zeal) {
         } else if (code == 16) {
             /* Left shift */
             fifo.push(0x12);
+            return 1;
+        } else if (code == 0xBE) {
+            /* dot */
+            fifo.push(0x49);
             return 1;
         }
 

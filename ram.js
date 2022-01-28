@@ -46,10 +46,17 @@ function RAM() {
         console.assert (false, "IO write invalid for SRAM");
     }
 
+    function loadFile(offset, binary) {
+        for (var i = 0; i < binary.length; i++) {
+            ram[offset + i ] = binary.charCodeAt(i);
+        }
+    }
+
     this.is_valid_address = is_valid_address;
     this.is_valid_port = is_valid_port;
     this.mem_read = mem_read;
     this.mem_write = mem_write;
     this.io_read = io_read;
     this.io_write = io_write;
+    this.loadFile = loadFile;
 }
