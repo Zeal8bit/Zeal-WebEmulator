@@ -144,6 +144,13 @@ function VideoChip() {
         }
     }
 
+    function putCharNoInc(code) {
+        //drawCharacter(ctx, text.charCodeAt(i), i * charwidth * ratio, 0);
+        drawCharacter(ctx, code,
+                      x_cursor * charwidth * ratio,
+                      y_cursor * charheight * ratio);
+    }
+
     function drawChar(code, cursor) {
         cursor = ((cursor - scroll * char_per_line) + char_total) % char_total;
         const y = Math.floor(cursor / char_per_line);
@@ -276,7 +283,9 @@ function VideoChip() {
         
         if (port == 0x80) {
             putChar(value);
-        } else if (port == 0x81) {
+        } else if (port == 0x87) {
+            putCharNoInc(value);
+        }  else if (port == 0x81) {
             y_cursor = value;
         } else if (port == 0x82) {
             x_cursor = value;
@@ -292,7 +301,7 @@ function VideoChip() {
         } else if (port == 0x86) {
             text_color_index = value & 0xf;
             background_color_index = (value >> 4) & 0xf;
-        } else if (port == 0x87) {
+        } else if (port == 0x88) {
             if (value == 0) {
                 const millis = Date.now() - start;
                 console.log(millis + "ms elapsed");    
