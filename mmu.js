@@ -1,12 +1,13 @@
 function MMU() {
     var pages = [0, 0, 0, 0];
-    
+    const mmu_io_addr = 0xf0;
+
     function is_valid_address(read, address) {
         return false;
     }
 
     function is_valid_port(read, port) {
-        return port >= 0xF8 && port <= 0xFB;
+        return port >= mmu_io_addr && port <= mmu_io_addr + 0xf;
     }
  
     function mem_read(address) {
@@ -19,13 +20,15 @@ function MMU() {
     }
 
     function io_read(port) {
-        /* Impossible to read the bank in real hardware */
+        /* This is a bit tricky as the MMU uses the 16-bit address to decode the page to read... */
         console.assert (false, "IO read invalid for MMU");
         return 0;
     }
 
     function io_write(port, value) {
-        pages[port - 0xF8] = value & 0xff;
+        console.assert (port >= mmu_io_addr && port <= mmu_io_addr + 0xf, "IO write invalid for MMU");
+        const idx = (port - mmu_io_addr) & 0x3;
+        pages[idx] = value & 0xff;
     }
 
     function get_ext_adrr(address) {

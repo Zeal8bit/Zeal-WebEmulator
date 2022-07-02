@@ -14,17 +14,17 @@ function PIO(Zeal) {
     const IO_KEYBOARD_PIN    = 7;
     
     const KB_IO_ADDRESS = 0xE8;
-    const IO_PIO_DATA_A = 0xe0;
-    const IO_PIO_DATA_B = 0xe1;
-    const IO_PIO_CTRL_A = 0xe2;
-    const IO_PIO_CTRL_B = 0xe3;
+    const IO_PIO_DATA_A = 0xd0;
+    const IO_PIO_DATA_B = 0xd1;
+    const IO_PIO_CTRL_A = 0xd2;
+    const IO_PIO_CTRL_B = 0xd3;
 
     function is_valid_address(read, address) {
         return false;
     }
 
     function is_valid_port(read, port) {
-        return (port >= 0xE0 && port <= 0xE3)  || port == 0xE8;
+        return (port >= IO_PIO_DATA_A && port <= IO_PIO_CTRL_B)  || port == 0xE8;
     }
 
     function mem_read(address) {
@@ -50,13 +50,22 @@ function PIO(Zeal) {
         return 0xf0;
     }
         
+    let time = false;
+
     function io_write(port, value) {
-        if (port == 0xE3 && ((value >> IO_VBLANK_PIN) & 1) == 0) {
+        if (port == IO_PIO_CTRL_B && ((value >> IO_VBLANK_PIN) & 1) == 0) {
             /* Activate the VBlank counter */
+            if (time)
+                return;
             setInterval(function() {
                 state &= ~(1 << IO_VBLANK_PIN);
                 zeal.interrupt();
             }, 80);
+            time = true;
+        } else if (port == IO_PIO_DATA_B) {
+            console.log("Port B: 0x" + value.toString(16) + " (" + value.toString(2) + ")");
+        } else if (port == IO_PIO_DATA_A) {
+            console.log("Port A: 0x" + value.toString(16) + " (" + value.toString(2) + ")");
         }
     }
 

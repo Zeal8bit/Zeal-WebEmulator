@@ -29,8 +29,9 @@
       <section id="romfile">
         <input type="radio" id="os" name="typebin" value="OS" checked>
         <label for="os">OS</label><br>
-        <input type="radio" id="program" name="typebin" value="CP/M Program">
-        <label for="program">CP/M Program</label><br>
+        <input type="radio" id="program" name="typebin" value="Program">
+        <label for="program">Program</label><br>
+        <input type="text" id="address" name="address" value="0x2000" />
 
         <input type="file" id="file-input" />
         <button id="read-button">Read File</button>
@@ -38,13 +39,15 @@
       </section>        
     </section>
 
-    <canvas id="screen" tabindex="1" style="outline: none;"></canvas>
-
+    <div id="container">
+      <canvas id="screen" tabindex="1" style="outline: none;"></canvas>
+    </div>
+  
     <section id="rightpanel">
       <section id="controls">
-        <button id="step">step</button>
-        <button id="stepover">step over</button>
-        <button id="continue">continue</button>
+        <button id="step">Step</button>
+        <button id="stepover">Step over</button>
+        <button id="continue">Continue</button>
       </section>
 
       <h4>Set breakpoint</h4>

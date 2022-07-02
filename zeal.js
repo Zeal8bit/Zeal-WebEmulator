@@ -229,7 +229,9 @@ $("#read-button").on('click', function() {
             rom.loadFile(binary);
             step_cpu();
         } else {
-            ram.loadFile(0x100, binary);
+            const addr = $("#address").val();
+            const result = parseInt(addr, 16);
+            ram.loadFile(result, binary);
         }
     });
     reader.readAsBinaryString(file);

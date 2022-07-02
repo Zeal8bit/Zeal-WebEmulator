@@ -10,7 +10,7 @@ body {
     background-color:#093642;
     vertical-align: top;
     box-shadow: 5px 0 10px -4px #040404;
-    margin: 0 2em 0em 0;
+    margin: 0;
     display: inline-block;
     height: 65vh;
     width:15em;
@@ -28,7 +28,7 @@ body {
     display: block;
     background: #939f8f;
     height: 1px;
-    margin: 2em auto;
+    margin: 0em auto;
     width: 8em;
 }
 
@@ -54,9 +54,13 @@ hr {
     background-color: #0a4d5f;
 }
 
+#container {
+    display: inline-block;
+    width: calc(100% - 15em - 15em);
+}
 
 #screen {
-    display: inline-block;
+    display: block;
     margin: 2em auto;
 }
 
