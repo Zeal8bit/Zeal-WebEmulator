@@ -9,9 +9,18 @@ const byte_per_line = 0x20;
 
 const devices = [ rom, ram, vchip, pio, mmu ];
 
+var t_state = 0;
 const breakpoints = [];
 var running = true;
 var registers = null;
+var dump = {
+    /* line stores all the lines of the dump file */
+    lines: [],
+    /* table will associate the virtual address (PC) of the virtual
+     * machine to the line of the instruction in the previous field */
+    table: [],
+    labels: []
+};
 
 const zpu = new Z80({ mem_read, mem_write, io_read, io_write });
 
@@ -19,7 +28,7 @@ const zpu = new Z80({ mem_read, mem_write, io_read, io_write });
 function mem_read(address) {
     var rd = 0;
     var found = false;
-    const ext_addr = mmu.get_ext_adrr(address);
+    const ext_addr = mmu.get_ext_addr(address);
  
     devices.forEach(function (device) {
         if (device.is_valid_address(true, ext_addr)) {
@@ -37,7 +46,7 @@ function mem_read(address) {
 }
 
 function mem_write(address, value) {
-    const ext_addr = mmu.get_ext_adrr(address);
+    const ext_addr = mmu.get_ext_addr(address);
 
     devices.forEach(function (device) {
         if (device.is_valid_address(false, ext_addr))
@@ -48,7 +57,6 @@ function mem_write(address, value) {
 function io_read(port) {
     var rd = 0;
     var found = false;
-    port = port & 0xff;
     
     devices.forEach(function (device) {
         if (device.is_valid_port(true, port)) {
@@ -83,54 +91,73 @@ function isprint(char) {
     return !( /[\x00-\x08\x0E-\x1F\x80-\xFF]/.test(char));
 }
 
-function setRAMView() {
-    $("#memdump").removeClass("hide");
+function dumpRamContent(virtaddr, physaddr, lines) {
+    var result = "";
+    for (var i = physaddr; i < physaddr + lines * byte_per_line; i += byte_per_line, virtaddr += byte_per_line) {
+        result += '<section class="memline">' +
+                    '<section class="memaddr">' +
+                    virtaddr.toString(16) + " (" + i.toString(16) + ")" +
+                    '</section>' + 
+                  '<section class="membytes" data-addr="' + i + '">';
+        for (var j = 0; j < byte_per_line; j++) {
+            var byte = ram.mem_read(i + j);
+            str = byte.toString(16);
+            if (str.length == 1)
+                str = "0" + str
+            result += '<div data-byte="' + byte + '">' + str + '</div>';
+        }
+        result += '</section></section>';
+    }
+    return result;
+}
 
+function setRAMView() {
+    //$("#memdump").removeClass("hide");
     /* Update RAM view */
     var result = "";
-
-    for (var i = 0 ; i < 4; i++) {
-        const ext_addr = mmu.get_ext_adrr(16*1024*i);
-        result += "<section>Page " + i + ": " + ext_addr.toString(16) + "</section>";
-    }
-
-    for (var i = 0x08_0000; i < 0x08_0100; i += byte_per_line ) {
-        result += '<section class="memline">' +
-                    '<section class="memaddr">' +
-                            i.toString(16) +
-                    '</section>' + 
-                  '<section class="membytes" data-addr="' + i + '">';
-        for (var j = 0; j < byte_per_line; j++) {
-            var byte = ram.mem_read(i + j);
-            str = byte.toString(16);
-            if (str.length == 1)
-                str = "0" + str
-            result += '<div data-byte="' + byte + '">' + str + '</div>';
-        }
-        result += '</section></section>';
-    }
-    /*
-    for (var i = 0xBF00; i < 0xC000; i += byte_per_line ) {
-        result += '<section class="memline">' +
-                    '<section class="memaddr">' +
-                            i.toString(16) +
-                    '</section>' + 
-                  '<section class="membytes" data-addr="' + i + '">';
-        for (var j = 0; j < byte_per_line; j++) {
-            var byte = ram.mem_read(i + j);
-            str = byte.toString(16);
-            if (str.length == 1)
-                str = "0" + str
-            result += '<div data-byte="' + byte + '">' + str + '</div>';
-        }
-        result += '</section></section>';
-    }*/
     $("#memdump").html(result);
+    /* Get the PC and convert it to a physical address */
+    const pc = registers != null ? mmu.get_ext_addr(registers.pc) : 0;
+    /* Check that the physical address is still in ROM */
+    if (!rom.is_valid_address(true, pc)) {
+        const ramdump = dumpRamContent(registers.pc, pc, 4);
+        $("#memdump").html("<div>PC address not in ROM</div>" + ramdump);
+        return;    
+    }
+    const line = dump.table[pc];
+    if (typeof line === "undefined") {
+        return;
+    }
+
+    const totallines = 20;
+    const from = (line - totallines/2) < 0 ? 0 : (line - totallines/2);
+
+    for (var i = from; i <= from + totallines; i++) {
+        var classes = "dumpline ";
+        if (i == line) {
+            classes += "activeline"
+        }
+        result += "<div class=\""+ classes +"\">"+dump.lines[i]+
+                  "</div>";
+    }
+
+    $("#memdump").html(result);
+}
+
+function setMMUView() {
+    /* MMU panel */
+    var mmuresult = "";
+    for (var i = 0 ; i < 4; i++) {
+        const ext_addr = mmu.get_ext_addr(16*1024*i);
+        mmuresult += "<section>Page " + i + ": " + ext_addr.toString(16) + "</section>";
+    }
+    $("#memview").html(mmuresult);
 }
 
 function updateAndShowRAM () {
     /* Get RAM updates */
     setRAMView();
+    setMMUView();
     //$("#memdump").toggleClass("hide");
 }
 
@@ -166,7 +193,6 @@ function updateRegistersHTML() {
 }
 
 function step_cpu() {
-    var t_state = 0;
     for (var i = 0; i < 10000 && running; i++) {
         t_state += zpu.run_instruction();
 
@@ -194,7 +220,7 @@ function step () {
     }
     var pc = registers.pc;
     while (registers.pc == pc) {
-        zpu.run_instruction();
+        t_state += zpu.run_instruction();
         registers = zpu.getState();
     }
     updateRegistersHTML();
@@ -203,7 +229,7 @@ function step () {
 function step_over () {
     var pc = registers.pc;
     while (registers.pc != pc + 3) {
-        zpu.run_instruction();
+        t_state += zpu.run_instruction();
         registers = zpu.getState();
     }
     updateRegistersHTML();
@@ -219,7 +245,55 @@ function interrupt() {
     //step_cpu();
 }
 
+function parseDumpLine(i, line) {
+    var idx = line.indexOf(";");
+    if (idx != -1) {
+        /* Extract number from the [ ] */
+        const addr = parseInt(line.substr(idx+2, 4), 16);
+        dump.table[addr] = i;
+        return addr;
+    }
+    return -1;   
+}
+
+function binaryReady() {
+    $("#binready").addClass("ready");
+}
+
+function symbolsReady() {
+    $("#symready").addClass("ready");
+}
+
 $("#read-button").on('click', function() {
+    /* Read the binary dump */
+    let fdump = $("#file-dump")[0].files[0];
+    let rdump = new FileReader();
+    rdump.addEventListener('load', function(e) {
+        const lines = e.target.result.split("\n"); 
+        dump.lines = lines;
+        for (var i = 0; i < lines.length; i++) {
+            const line = lines[i];
+            const addr = parseDumpLine(i, line);
+            /* If error in parsing, it may be a label */
+            if (addr == -1 && line.indexOf(":") != -1) {
+                /* Check if the next line can be parsed */
+                const naddr = parseDumpLine(i + 1, lines[i + 1]);
+                if (naddr != -1) {
+                    /* Extract the label, without the : */
+                    const label = line.substr(0, line.length - 1);
+                    dump.labels[label] = naddr;
+                    /* Skip the next line as we just treated it */
+                    i++;
+                }
+            }
+        }
+        symbolsReady();
+    });
+    if (typeof fdump !== "undefined") {
+        rdump.readAsText(fdump);
+    }
+
+    /* Read the binary executable */
     let file = $("#file-input")[0].files[0];
     let reader = new FileReader();
     const isos = $("#os").prop("checked");
@@ -227,14 +301,16 @@ $("#read-button").on('click', function() {
         let binary = e.target.result;
         if (isos) {
             rom.loadFile(binary);
-            step_cpu();
+            binaryReady();
         } else {
             const addr = $("#address").val();
             const result = parseInt(addr, 16);
             ram.loadFile(result, binary);
         }
     });
-    reader.readAsBinaryString(file);
+    if (typeof file !== "undefined") {
+        reader.readAsBinaryString(file);
+    }
 });
 
 
@@ -247,7 +323,7 @@ $("#screen").on("keydown", function(e) {
     e.preventDefault();
     if (intcount != 1) {
         for (var i = 0; i < 256; i++) {
-            zpu.run_instruction();
+            t_state += zpu.run_instruction();
         }
         zpu.interrupt(false, 0);
     }
@@ -257,7 +333,15 @@ $("#screen").on("keydown", function(e) {
 $("#addbp").on("click", function (){
     const written = $("#bpaddr").val();
     if (written.length < 1) return;
-    const result = parseInt(written, 16);
+    var result = parseInt(written, 16);
+    if (isNaN(result)) {
+        /* Could be a label, let's check this */
+
+        result = dump.labels[written];
+        if (typeof result === "undefined") {
+            return;
+        }
+    }
     /* Only add the breakkpooint if not in the list */
     if (!breakpoints.includes(result) && result <= 0xFFFF) {
         breakpoints.push({ address: result, enabled: true });
@@ -299,4 +383,13 @@ $(".membytes").on("mouseenter", "div", function() {
     if (mousepressed) {
         $(this).toggleClass("selected");
     }
+});
+
+$(".tab").on("click", function(){
+    const index = $(this).index();
+    $(".tab").removeClass("active");
+    $(".bottompanel .panel").addClass("hidden");
+    $(".bottompanel .panel").eq(index).removeClass("hidden");
+    $(this).addClass("active");
+
 });

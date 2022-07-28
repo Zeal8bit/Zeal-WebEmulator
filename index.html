@@ -27,14 +27,21 @@
       </table>
 
       <section id="romfile">
-        <input type="radio" id="os" name="typebin" value="OS" checked>
-        <label for="os">OS</label><br>
-        <input type="radio" id="program" name="typebin" value="Program">
-        <label for="program">Program</label><br>
-        <input type="text" id="address" name="address" value="0x2000" />
-
-        <input type="file" id="file-input" />
+        <div style="display: none;">
+          <input type="radio" id="os" name="typebin" value="OS" checked>
+          <label for="os">OS</label><br>
+          <input type="radio" id="program" name="typebin" value="Program">
+          <label for="program">Program</label><br>
+          <input type="text" id="address" name="address" value="0x2000" />
+        </div>
+        <input type="file" id="file-input" placeholder="OS file" />
+        <input type="file" id="file-dump" placeholder="OS dump" />
         <button id="read-button">Read File</button>
+        <div id="statuspan">
+          <h4>Ready?</h4>
+          <div id="binready" class="status">OS binary</div>
+          <div id="symready" class="status">Symbols</div>
+        </div>
         <pre id="file-contents"></pre>
       </section>        
     </section>
@@ -64,7 +71,15 @@
       </section>
     </section>
 
-    <section id="memdump" class="">
+    <section class="bottompanel">
+      <section class="tabs">
+        <div class="tab active">Disassemble</div>
+        <div class="tab">Memory view</div>
+      </section>
+      <section id="memdump" class="panel">
+      </section>
+      <section id="memview" class="panel hidden">
+      </section>
     </section>
 
     <script>

@@ -24,6 +24,7 @@ function PIO(Zeal) {
     }
 
     function is_valid_port(read, port) {
+        port &= 0xff;
         return (port >= IO_PIO_DATA_A && port <= IO_PIO_CTRL_B)  || port == 0xE8;
     }
 
@@ -36,6 +37,7 @@ function PIO(Zeal) {
     }
 
     function io_read(port) {
+        port &= 0xff;
         if (port == KB_IO_ADDRESS)
             return fifo.shift();
         else if (port == IO_PIO_DATA_B) {

@@ -7,6 +7,8 @@ function MMU() {
     }
 
     function is_valid_port(read, port) {
+        /* Only keep the 8-bit port */
+        port &= 0xff;
         return port >= mmu_io_addr && port <= mmu_io_addr + 0xf;
     }
  
@@ -20,18 +22,20 @@ function MMU() {
     }
 
     function io_read(port) {
-        /* This is a bit tricky as the MMU uses the 16-bit address to decode the page to read... */
-        console.assert (false, "IO read invalid for MMU");
-        return 0;
+        const index = (port >> 14) & 3;
+        port &= 0xff
+        console.assert (port >= mmu_io_addr && port <= mmu_io_addr + 0xf, "IO write invalid for MMU");
+        return pages[index];
     }
 
     function io_write(port, value) {
+        port &= 0xff
         console.assert (port >= mmu_io_addr && port <= mmu_io_addr + 0xf, "IO write invalid for MMU");
         const idx = (port - mmu_io_addr) & 0x3;
         pages[idx] = value & 0xff;
     }
 
-    function get_ext_adrr(address) {
+    function get_ext_addr(address) {
         /* Get 22-bit address from 16-bit address */
         const idx = (address >> 14) & 0x3;
         const highest = pages[idx];
@@ -45,5 +49,5 @@ function MMU() {
     this.mem_write = mem_write;
     this.io_read = io_read;
     this.io_write = io_write;
-    this.get_ext_adrr = get_ext_adrr;
+    this.get_ext_addr = get_ext_addr;
 }

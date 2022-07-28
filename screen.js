@@ -279,8 +279,8 @@ function VideoChip() {
     var start = 0;
 
     function io_write(port, value) {
+        port &= 0xff;
         console.assert (port >= 0x80, "Wrong port for VideoChip");
-        
         if (port == 0x80) {
             putChar(value);
         } else if (port == 0x87) {
