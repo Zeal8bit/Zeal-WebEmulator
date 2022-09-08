@@ -8,6 +8,8 @@
 
 This project is a software emulator for Zeal 8-bit Computer: a homebrew 8-bit computer based on a Z80 CPU.
 
+[Click here for a live demo](https://zeal8bit.github.io/Zeal-WebEmulator/)
+
 ## Why this project?
 
 The goal of this project is to reproduce the exact same behavior of the real machine, in order to be able to execute and mainly **debug** the programs written for it directly from a host computer, without the need to flash any EEPROM or NOR Flash in order to test it. This makes development and test cycles much faster and more convenient. 
