@@ -1,4 +1,10 @@
-function MMU() {
+/**
+ * SPDX-FileCopyrightText: 2022 Zeal 8-bit Computer <contact@zeal8bit.com>
+ * 
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+ function MMU() {
     var pages = [0, 0, 0, 0];
     const mmu_io_addr = 0xf0;
 

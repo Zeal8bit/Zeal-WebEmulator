@@ -1,4 +1,10 @@
-const characters = new Array(256);
+/**
+ * SPDX-FileCopyrightText: 2022 Zeal 8-bit Computer <contact@zeal8bit.com>
+ * 
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+ const characters = new Array(256);
 const charwidth = 8;
 const charheight = 12;
 characters[0] = [0,0,0,0,0,0,0,0,0,0,0,0];

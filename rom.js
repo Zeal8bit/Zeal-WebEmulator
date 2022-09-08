@@ -1,4 +1,10 @@
-function ROM() {
+/**
+ * SPDX-FileCopyrightText: 2022 Zeal 8-bit Computer <contact@zeal8bit.com>
+ * 
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+ function ROM() {
     const size = 32*KB;
     const from = 0x00_0000;
     const to = 0x04_0000;

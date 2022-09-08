@@ -1,3 +1,9 @@
+/**
+ * SPDX-FileCopyrightText: 2022 Zeal 8-bit Computer <contact@zeal8bit.com>
+ * 
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 const rom = new ROM();
 const ram = new RAM();
 const vchip = new VideoChip();

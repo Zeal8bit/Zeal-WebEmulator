@@ -1,4 +1,10 @@
-let TEXT_MODE = 0;
+/**
+ * SPDX-FileCopyrightText: 2022 Zeal 8-bit Computer <contact@zeal8bit.com>
+ * 
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+ let TEXT_MODE = 0;
 let SMALL_TEXT_MODE = 1;
 let SMALL_SPRITE_MODE = 2;
 let BIG_SPRITE_MODE = 3;

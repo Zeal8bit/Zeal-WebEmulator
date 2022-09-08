@@ -1,4 +1,10 @@
-let instructions = [
+/**
+ * SPDX-FileCopyrightText: 2022 Zeal 8-bit Computer <contact@zeal8bit.com>
+ * 
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+ let instructions = [
     {
         name: "ADC A,(HL)",
         check: (fst) => fst == 0x8E
@@ -1165,6 +1171,3 @@ let instructions = [
         size: 1
     }
 ];
-
-
-console.log(instructions);

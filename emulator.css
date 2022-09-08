@@ -1,4 +1,10 @@
-body {
+/**
+ * SPDX-FileCopyrightText: 2022 Zeal 8-bit Computer <contact@zeal8bit.com>
+ * 
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+ body {
     padding: 0;
     margin: 0;
     font-family: Calibri;

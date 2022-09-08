@@ -1,3 +1,9 @@
+/**
+ * SPDX-FileCopyrightText: 2022 Zeal 8-bit Computer <contact@zeal8bit.com>
+ * 
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 const intructions_iy_op = 0xFD;
 const intructions_ix_op = 0xDD;
 
