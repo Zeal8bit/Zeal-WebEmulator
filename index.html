@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta charset="utf-8">
-    <title>Zeal v0.4 Emulator</title>
+    <title>Zeal v1-RC Emulator</title>
     <link rel="stylesheet" type="text/css" href="emulator.css" media="screen" />
   </head>
   
@@ -55,6 +55,7 @@
         <button id="step">Step</button>
         <button id="stepover">Step over</button>
         <button id="continue">Continue</button>
+        <button id="stop">Stop</button>
       </section>
 
       <h4>Set breakpoint</h4>
@@ -79,6 +80,14 @@
       <section id="memdump" class="panel">
       </section>
       <section id="memview" class="panel hidden">
+        <section id="dumpfields">
+          <input type="text" id="dumpaddr" placeholder="Hex address" />
+          <input type="text" id="dumpsize" placeholder="Size" />
+          <input type="button" id="dumpnow" value="Dump" />
+        </section>
+        <section id="dumpcontent">
+
+        </section>        
       </section>
     </section>
 

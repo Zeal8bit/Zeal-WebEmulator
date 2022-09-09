@@ -10,11 +10,11 @@ const byte_per_line = 0x20;
 const devices = [ rom, ram, vchip, pio, mmu ];
 
 var t_state = 0;
-const breakpoints = [];
+var breakpoints = [];
 var running = true;
 var registers = null;
 var dump = {
-    /* line stores all the lines of the dump file */
+    /* Stores all the lines of the dump file */
     lines: [],
     /* table will associate the virtual address (PC) of the virtual
      * machine to the line of the instruction in the previous field */
@@ -111,15 +111,15 @@ function dumpRamContent(virtaddr, physaddr, lines) {
     return result;
 }
 
-function setRAMView() {
+function setASMView() {
     //$("#memdump").removeClass("hide");
     /* Update RAM view */
     var result = "";
     $("#memdump").html(result);
     /* Get the PC and convert it to a physical address */
-    const pc = registers != null ? mmu.get_ext_addr(registers.pc) : 0;
+    const pc = registers != null ? (registers.pc) : 0;
     /* Check that the physical address is still in ROM */
-    if (!rom.is_valid_address(true, pc)) {
+    if (false && !rom.is_valid_address(true, pc)) {
         const ramdump = dumpRamContent(registers.pc, pc, 4);
         $("#memdump").html("<div>PC address not in ROM</div>" + ramdump);
         return;    
@@ -144,6 +144,15 @@ function setRAMView() {
     $("#memdump").html(result);
 }
 
+function setRAMView() {
+    // TODO: Add the addr to a watchlist that will be updates after a breakpoint is reached
+    const virtaddr = parseInt($("#dumpaddr").val(), 16);
+    const size = parseInt($("#dumpsize").val());
+    const physaddr = mmu.get_ext_addr(virtaddr);
+    const dumptxt = dumpRamContent(virtaddr, physaddr, size / byte_per_line);
+    $("#dumpcontent").html(dumptxt);
+}
+
 function setMMUView() {
     /* MMU panel */
     var mmuresult = "";
@@ -151,13 +160,13 @@ function setMMUView() {
         const ext_addr = mmu.get_ext_addr(16*1024*i);
         mmuresult += "<section>Page " + i + ": " + ext_addr.toString(16) + "</section>";
     }
-    $("#memview").html(mmuresult);
+    $("#dumpcontent").html(mmuresult);
 }
 
 function updateAndShowRAM () {
-    /* Get RAM updates */
-    setRAMView();
-    setMMUView();
+    /* Get ASM updates */
+    setASMView();
+    //setMMUView();
     //$("#memdump").toggleClass("hide");
 }
 
@@ -192,6 +201,8 @@ function updateRegistersHTML() {
     updateAndShowRAM();
 }
 
+var stop_cpu = false;
+
 function step_cpu() {
     for (var i = 0; i < 10000 && running; i++) {
         t_state += zpu.run_instruction();
@@ -207,10 +218,13 @@ function step_cpu() {
     }
 
     if (!registers.halted) {
-        if (running)
+        if (running && !stop_cpu) {
             setTimeout(step_cpu, 0);
-        else
+        } else {
+            stop_cpu = false;
+            running = false;
             updateRegistersHTML();
+        }
     }
 }
 
@@ -220,6 +234,7 @@ function step () {
     }
     var pc = registers.pc;
     while (registers.pc == pc) {
+        /* TODO: check if jr/jp to self instruction */
         t_state += zpu.run_instruction();
         registers = zpu.getState();
     }
@@ -227,11 +242,35 @@ function step () {
 }
 
 function step_over () {
-    var pc = registers.pc;
-    while (registers.pc != pc + 3) {
-        t_state += zpu.run_instruction();
-        registers = zpu.getState();
+    /* If the CPU is running, step is meaningless */
+    if (running) {
+        return;
     }
+
+    /* Ideally, we would need the size of the instruction, to know where to put the breakpoint
+     * but as we don't have such thing yet, we can put 4 breakpoints, one after each byte.
+     * TODO: refactor once we have a working disassembler. */
+    var pc = registers.pc;
+    var former_breakpoints = [...breakpoints];
+    for (var i = 1; i <= 4; i++) {
+        var brk = getBreakpoint(pc + i);
+        if (brk == null) {
+            breakpoints.push({ address: pc + i, enabled: true });
+        } else {
+            /* Enable it */
+            brk.enabled = true;
+        }
+    }
+
+    running = true;
+    step_cpu();
+    /* If running is still true, the current instruction is looping for too long,
+     * stop the machine here */
+    running = false;
+    
+    /* Restore the breakpoints list */
+    breakpoints = former_breakpoints;
+
     updateRegistersHTML();
 }
 
@@ -240,8 +279,13 @@ function cont() {
     step_cpu();
 }
 
-function interrupt() {
-    //zpu.interrupt(false, 0);
+function stop() {
+    console.log("Stopping");
+    stop_cpu = true;
+}
+
+function interrupt(interrupt_vector) {
+    //zpu.interrupt(false, interrupt_vector);
     //step_cpu();
 }
 
@@ -316,18 +360,24 @@ $("#read-button").on('click', function() {
 
 $("#screen").on("keydown", function(e) {
     const intcount = pio.key_pressed(e.keyCode);
-    if (intcount == 0) {
-        return;
-    }
-    zpu.interrupt(false, 0);
-    e.preventDefault();
-    if (intcount != 1) {
-        for (var i = 0; i < 256; i++) {
-            t_state += zpu.run_instruction();
+
+    for (var i = 0; i < intcount; i++) {
+        zpu.interrupt(false, pio.interrupt_vector());
+        e.preventDefault();
+        /* If we still have some interrupt to send to the CPU,
+         * let the CPU run a bit in order to process the current
+         * interrupt */ 
+        if (i != intcount - 1) {
+            for (var j = 0; j < 256; j++) {
+                t_state += zpu.run_instruction();
+            }
         }
-        zpu.interrupt(false, 0);
     }
-    cont();
+
+    /* Continue CPU execution if at least one interrupt occured */
+    if (intcount != 0) {
+        cont();
+    }
 });
 
 $("#addbp").on("click", function (){
@@ -336,18 +386,23 @@ $("#addbp").on("click", function (){
     var result = parseInt(written, 16);
     if (isNaN(result)) {
         /* Could be a label, let's check this */
-
         result = dump.labels[written];
         if (typeof result === "undefined") {
             return;
         }
     }
-    /* Only add the breakkpooint if not in the list */
+    /* Only add the breakpoint if not in the list */
     if (!breakpoints.includes(result) && result <= 0xFFFF) {
         breakpoints.push({ address: result, enabled: true });
         $("#bps").append('<li data-addr="' + result + '">' + hex(result) + '</li>');
     }
 });
+
+function getBreakpoint(addr) {
+    /* Find the breakpoint object in the breakpoint list */
+    const bkrobj = breakpoints.find(element => element.address == addr);
+    return (bkrobj != undefined) ? bkrobj : null;
+}
 
 function togglebreakpoint() {
     /* Get the breakpoint address */
@@ -355,7 +410,7 @@ function togglebreakpoint() {
     /* Same, for the DOM */
     $(this).toggleClass("disabled");
 
-    /* Find the braeakpoint object in the breakpoint list */
+    /* Find the breakpoint object in the breakpoint list */
     const bkrobj = breakpoints.find(element => element.address == bkpaddr);
     /* Toggle enabled field in the breakpoint */
     if (bkrobj != undefined)
@@ -363,10 +418,12 @@ function togglebreakpoint() {
 }
 
 $("#step").on("click", step);
+$("#stop").on("click", stop);
 $("#stepover").on("click", step_over);
 $("#continue").on("click", cont);
 $("#bps").on("click", "li", togglebreakpoint);
-//setRAMView();
+
+$("#dumpnow").on("click", setRAMView);
 
 var mousepressed = false;
 

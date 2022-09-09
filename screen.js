@@ -63,7 +63,7 @@ function VideoChip() {
     var mapped_vram = false;
     var mapped_sprite = false;
     
-    var framebuffer = new Array(MAX_TILES);
+    var framebuffer = new Array(16*1024);
     var spriteram = new Array(SPRITE_RAM_SIZE);
     const { canvas, ctx } = initialize();
 
@@ -171,8 +171,10 @@ function VideoChip() {
 
     const mem_wo_from = 0x00_0000;
     const mem_wo_to   = 0x00_8000;
+    /* VRAM size: 128KB */
+    const mem_size    = 0x02_0000;
     const mem_rw_from = 0x10_0000;
-    const mem_rw_to   = 0x12_0000;
+    const mem_rw_to   = mem_rw_from + mem_size;
 
     function is_address_rw(address) {
         return address >= mem_rw_from && address < mem_rw_to;
@@ -184,8 +186,10 @@ function VideoChip() {
     }
 
     function is_valid_address(read, address) {
-        return (read && is_address_rw(address))
-            || (!read && is_address_w(address)) ;
+        return is_address_rw(address);
+        /* Remove the support for writing to ROM address
+         *|| (!read && is_address_w(address)) ;
+         */
     }
 
     function is_valid_port(read, port) {
@@ -193,11 +197,23 @@ function VideoChip() {
     }
 
     function mem_read(address) {
-        assert(false, "Cannot read mem from VideoChip !");
+        /* Only support the first 16KB at the moment */
+        if (address >= mem_rw_from + 16*1024) {
+            return;
+        }
+
+        const physaddress = address & (mem_size - 1);
+        return framebuffer[physaddress];
     }
 
     function mem_write(address, value) {
-        const physaddress = address & 0x7fff;
+        /* Only support the first 16KB at the moment */
+        if (address >= mem_rw_from + 16*1024) {
+            return;
+        }
+
+        /* Get an address between 0 and 128KB. Masking with size works because mem_rw_from is aligned on 128KB. */
+        const physaddress = address & (mem_size - 1);
 
         if (video_mode == TEXT_MODE || video_mode == SMALL_TEXT_MODE)
             mem_write_text_mode(physaddress, value);
@@ -208,10 +224,11 @@ function VideoChip() {
     }
 
     function mem_write_text_mode(address, value) {
-        /* VRAM must be mapped to modify framebuffer */
-        if (!mapped_vram)
-            return;
-        if (address >= 0x2000) {
+        /* Text characters are mapped between 0 and 3200 */
+        if (address < 3200) {
+            writeChar(value, address);
+        } else if (address >= 0x2000 && address < 0x2000 + 3200) {
+            /* Color attributes for the characters */
             const bak_foreground = text_color_index;
             const bak_background = background_color_index;
             background_color_index = (value >> 4) & 0xf;
@@ -221,7 +238,8 @@ function VideoChip() {
             text_color_index = bak_foreground;
             background_color_index = bak_background;
         } else {
-            writeChar(value, address);
+            /* Not a char, not a color either, nothing at the moment.
+             * Maybe palette in the future? Char table? */
         }
     }
 
@@ -301,14 +319,6 @@ function VideoChip() {
         } else if (port == 0x86) {
             text_color_index = value & 0xf;
             background_color_index = (value >> 4) & 0xf;
-        } else if (port == 0x88) {
-            if (value == 0) {
-                const millis = Date.now() - start;
-                console.log(millis + "ms elapsed");    
-            } else {
-                /* Start timing for the benchmark */
-                start = Date.now();
-            }
         }
     }
 
