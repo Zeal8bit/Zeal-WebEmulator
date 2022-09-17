@@ -8,12 +8,13 @@ const rom = new ROM();
 const ram = new RAM();
 const vchip = new VideoChip();
 const pio = new PIO(this);
+const keyboard = new Keyboard(this, pio);
 const mmu = new MMU();
 
 /* Memdump related */
 const byte_per_line = 0x20;
 
-const devices = [ rom, ram, vchip, pio, mmu ];
+const devices = [ rom, ram, vchip, pio, keyboard, mmu ];
 
 var t_state = 0;
 var breakpoints = [];
@@ -29,7 +30,6 @@ var dump = {
 };
 
 const zpu = new Z80({ mem_read, mem_write, io_read, io_write });
-
 
 function mem_read(address) {
     var rd = 0;
@@ -208,40 +208,73 @@ function updateRegistersHTML() {
 }
 
 var stop_cpu = false;
+var interval = null;
+
+
+var count = 0;
+var elapsed = 0;
+
+function adjustTStatesWhenHalted(end) {
+    const earliest = getEarliestCallback();
+    if (earliest == null || earliest.tstates > end) {
+        /* No callback or no near callback. Increment the T-states and exit */
+        t_state = end;
+        return;
+    }
+    /* Here, the number of T-state the callback is meant to be executed is in the range
+     * [t_state;end], so it is meant to happen during this iteration.
+     * Jump to that amount and execute instructions following it directly. */
+    t_state = earliest.tstates;
+}
 
 function step_cpu() {
-    for (var i = 0; i < 10000 && running; i++) {
-        t_state += zpu.run_instruction();
+    running = true;
 
-        registers = zpu.getState();
+    if (interval == null) {
+        /* Execute the CPU every 16ms */
+        interval = setInterval(() => {
+            /* In 16ms, the number of T-states the CPU could execute is Math.floor(16666.666 / TSTATES_US) */
+            const to_execute = us_to_tstates(16666.666);
+            const end = t_state + to_execute;
 
-        /* Check whether the current PC is part of the breakpoints list */
-        const filtered = breakpoints.find(elt => elt.address == registers.pc);
-        if (filtered != undefined && filtered.enabled) {
-            running = false;
-        }
+            /* If the CPU is halted, there is no need to execute all the instructions nothing may happen.
+             * Instead, we have to check whether the earliest callback will happen during this iteration.
+             * If that's the case, let it happen right now. Else, no need to execute anything, let's just
+             * jump to the total amount of T-states we should have had executed. */
+            if (registers && registers.halted) {
+                adjustTStatesWhenHalted(end);
+            }
 
-    }
+            /* t_state is global and will be incremented by addTstates */
+            while (t_state <= end && running) {
+                addTstates(zpu.run_instruction());
+                registers = zpu.getState();
+                /* Check whether the current PC is part of the breakpoints list */
+                const filtered = breakpoints.find(elt => elt.address == registers.pc);
+                if (filtered != undefined && filtered.enabled) {
+                    running = false;
+                    updateRegistersHTML();
+                    if (filtered.callback) {
+                        filtered.callback(filtered);
+                    }
+                }
 
-    if (!registers.halted) {
-        if (running && !stop_cpu) {
-            setTimeout(step_cpu, 0);
-        } else {
-            stop_cpu = false;
-            running = false;
-            updateRegistersHTML();
-        }
+                if (registers.halted && t_state <= end) {
+                    adjustTStatesWhenHalted(end);
+                }
+            }
+        }, 16.666);
     }
 }
 
 function step () {
-    if (registers.halted) {
+    if (registers.halted || running) {
         return;
     }
     var pc = registers.pc;
     while (registers.pc == pc) {
         /* TODO: check if jr/jp to self instruction */
-        t_state += zpu.run_instruction();
+        addTstates(zpu.run_instruction());
         registers = zpu.getState();
     }
     updateRegistersHTML();
@@ -258,41 +291,127 @@ function step_over () {
      * TODO: refactor once we have a working disassembler. */
     var pc = registers.pc;
     var former_breakpoints = [...breakpoints];
+    /* Define the callback that will be called when reaching one of the breakpoints */
+    const callback = (obj) => {
+        /* Restore the breakpoints list */
+        breakpoints = former_breakpoints;
+    };
+
     for (var i = 1; i <= 4; i++) {
         var brk = getBreakpoint(pc + i);
         if (brk == null) {
-            breakpoints.push({ address: pc + i, enabled: true });
+            breakpoints.push({ address: pc + i, enabled: true, callback });
         } else {
             /* Enable it */
             brk.enabled = true;
         }
     }
 
-    running = true;
     step_cpu();
-    /* If running is still true, the current instruction is looping for too long,
-     * stop the machine here */
-    running = false;
-    
-    /* Restore the breakpoints list */
-    breakpoints = former_breakpoints;
-
-    updateRegistersHTML();
 }
 
 function cont() {
-    running = true;
     step_cpu();
 }
 
 function stop() {
-    console.log("Stopping");
-    stop_cpu = true;
+    /* Clear the interval that executes the CPU */
+    clearInterval(interval);
+    interval = null;
+    updateRegistersHTML();
+    running = false;
+}
+
+/**
+ * T-states related functions
+ */
+function getTstates() {
+    return t_state;
+}
+
+/**
+ * Set of T-states callbacks Object: { tstates, callback, period }
+ * In theory, a Binary Heap (min heap) would be better. In practice,
+ * We won't have a lot on entries in here. At most 4.
+ */
+var tstates_callbacks = new Set();
+var in_callback = false;
+
+function addTstates(count) {
+    t_state += count;
+    /* Check if any callback can be called, if we aren't in any */
+    if (!in_callback) {
+        tstates_callbacks.forEach(entry => {
+            if (entry.tstates <= t_state) {
+                in_callback = true;
+                entry.callback();
+                if (entry.period == 0) {
+                    tstates_callbacks.delete(entry);
+                } else {
+                    entry.tstates += entry.period;
+                }
+                in_callback = false;
+            }
+        });
+    }
+}
+
+/** 
+ * Get the earliest callback out of the list.
+ */
+function getEarliestCallback() {
+    var earliest = null;
+
+    tstates_callbacks.forEach((entry) => {
+        if (earliest == null || entry.tstates < earliest.tstates) {
+            earliest = entry;
+        }
+    });
+
+    return earliest;
+}
+
+/**
+ * Register a callback that shall be called after the number of T-states
+ * of the CPU given.
+ * If the given number is less or equal to 0, return an error.
+ */
+function registerTstateCallback(callback, call_tstates) {
+    if (call_tstates < 0) {
+        return null;
+    }
+
+    var obj = null;
+
+    if (call_tstates == 0) {
+        callback();
+    } else {
+        obj = { tstates: t_state + call_tstates, callback, period: 0 };
+        tstates_callbacks.add(obj);
+    }
+
+    return obj;
+}
+
+function registerTstateInterval(callback, call_tstates) {
+    if (call_tstates < 0) {
+        return null;
+    }
+
+    const obj = { tstates: t_state + call_tstates, callback, period: call_tstates };
+    tstates_callbacks.add(obj);
+    return obj;
+}
+
+function removeTstateCallback(callback) {
+    if (callback != null) {
+        tstates_callbacks.delete(callback);
+    }
 }
 
 function interrupt(interrupt_vector) {
-    //zpu.interrupt(false, interrupt_vector);
-    //step_cpu();
+    zpu.interrupt(false, interrupt_vector);
+    step_cpu();
 }
 
 function parseDumpLine(i, line) {
@@ -365,24 +484,10 @@ $("#read-button").on('click', function() {
 
 
 $("#screen").on("keydown", function(e) {
-    const intcount = pio.key_pressed(e.keyCode);
+    const handled = keyboard.key_pressed(e.keyCode);
 
-    for (var i = 0; i < intcount; i++) {
-        zpu.interrupt(false, pio.interrupt_vector());
+    if (handled) {
         e.preventDefault();
-        /* If we still have some interrupt to send to the CPU,
-         * let the CPU run a bit in order to process the current
-         * interrupt */ 
-        if (i != intcount - 1) {
-            for (var j = 0; j < 256; j++) {
-                t_state += zpu.run_instruction();
-            }
-        }
-    }
-
-    /* Continue CPU execution if at least one interrupt occured */
-    if (intcount != 0) {
-        cont();
     }
 });
 
@@ -454,5 +559,4 @@ $(".tab").on("click", function(){
     $(".bottompanel .panel").addClass("hidden");
     $(".bottompanel .panel").eq(index).removeClass("hidden");
     $(this).addClass("active");
-
 });

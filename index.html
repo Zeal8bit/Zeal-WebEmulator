@@ -10,6 +10,8 @@
   <head>
     <meta charset="utf-8">
     <title>Zeal v1-RC Emulator</title>
+    <link rel="stylesheet" href="xterm/xterm.css" />
+    <script src="xterm/xterm.js"></script>
     <link rel="stylesheet" type="text/css" href="emulator.css" media="screen" />
   </head>
   
@@ -81,10 +83,11 @@
 
     <section class="bottompanel">
       <section class="tabs">
-        <div class="tab active">Disassemble</div>
+        <div class="tab">Disassemble</div>
         <div class="tab">Memory view</div>
+        <div class="tab active">Terminal (UART)</div>
       </section>
-      <section id="memdump" class="panel">
+      <section id="memdump" class="panel hidden">
       </section>
       <section id="memview" class="panel hidden">
         <section id="dumpfields">
@@ -94,18 +97,33 @@
         </section>
         <section id="dumpcontent">
 
-        </section>        
+        </section>
+      </section>        
+      <section id="uartview" class="panel">
+        <div id="terminal"></div>
       </section>
     </section>
-
+  
     <script>
       const KB = 1024;
+      /* 10MHz frequency */
+      const CPUFREQ = 10000000;
+      const TSTATES_US = 1/CPUFREQ * 1000000;
+
+      function us_to_tstates(us) {
+        return Math.floor(us / TSTATES_US);
+      }
+
+      var terminal = new Terminal();
+      terminal.open(document.getElementById('terminal'));
     </script>
     <script src="jquery-3.6.0.min.js"></script>
     <script src="characters.js"></script>
     <script src="screen.js"></script>
     <script src="rom.js"></script>
+    <script src="uart.js"></script>
     <script src="pio.js"></script>
+    <script src="keyboard.js"></script>
     <script src="ram.js"></script>
     <script src="mmu.js"></script>
     <script src="Z80.js"></script>
