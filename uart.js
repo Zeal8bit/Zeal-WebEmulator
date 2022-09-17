@@ -6,6 +6,8 @@
 function UART(Zeal, PIO) {
     const zeal = Zeal;
     const pio = PIO;
+    const IO_UART_RX_PIN = 3;
+    const IO_UART_TX_PIN = 4;
 
     /* The baudrate is expressed in microseconds per bit sent/received */
     var tx_baudrate = 8.681;    // 115200
@@ -41,7 +43,14 @@ function UART(Zeal, PIO) {
 
     /* Function called when a BIT is written to the UART, not a byte
      * The T-states will let us calculate the elapsed time between two write */
-    function write(bit, tstates) {
+    function write_tx(read, pin, bit) {
+        console.assert(pin == IO_UART_TX_PIN);
+
+        if (read) {
+            return;
+        }
+
+        const tstates = zeal.getTstates();
         /* Ignore the case where a transfer hasn't been started and the line is set to 1 */
         if (bit == 1 && tx_fifo.length == 0) {
             /* Nothing to do */
@@ -54,5 +63,14 @@ function UART(Zeal, PIO) {
         }
     }
 
-    this.write = write;
+    function read_rx(read, pin, bit) {
+        if (!read) {
+            return;
+        }
+    }
+
+    /* Connect the TX pin to the PIO */
+    pio.pio_listen_b_pin(IO_UART_TX_PIN, write_tx);
+    /* Connect the RX pin to the PIO */
+    pio.pio_listen_b_pin(IO_UART_RX_PIN, read_rx);
 }

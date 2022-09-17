@@ -13,8 +13,6 @@ const DIR_OUTPUT = 0;
 
 function PIO(Zeal) {
     const zeal = Zeal;
-    const uart = new UART(Zeal, this);
-    const i2c = new I2C(Zeal, this);
     var port_a = {
         mode: MODE_OUTPUT,
         state: 0xf0,        /* Current value of pins */
@@ -25,7 +23,10 @@ function PIO(Zeal) {
         and_op: true,       /* True = AND, False = OR */
         active_high: false,  /* True = Active high, False = Active low */
         mask_follows: false,
-        dir_follows: false
+        dir_follows: false,
+        /* Each listener is a callback that needs to be called when a write or read occurs on a pin.
+         * So we have a most 8 listeners */
+        listeners: [],
     };
     var port_b = {
         mode: MODE_OUTPUT,
@@ -37,16 +38,11 @@ function PIO(Zeal) {
         and_op: true,       /* True = AND, False = OR */
         active_high: false, /* True = Active high, False = Active low */
         mask_follows: false,
-        dir_follows: false
+        dir_follows: false,
+        /* Each listener is a callback that needs to be called when a write or read occurs on a pin.
+         * So we have a most 8 listeners */
+        listeners: []
     };
-
-    const IO_I2C_SDA_OUT_PIN = 0;
-    const IO_I2C_SCL_OUT_PIN = 1;
-    const IO_I2C_SDA_IN_PIN  = 2;
-    const IO_UART_RX_PIN     = 3;
-    const IO_UART_TX_PIN     = 4;
-    const IO_HBLANK_PIN      = 5;
-    const IO_VBLANK_PIN      = 6;
     
     const IO_PIO_DATA_A = 0xd0;
     const IO_PIO_DATA_B = 0xd1;
@@ -56,55 +52,6 @@ function PIO(Zeal) {
     /* Private functions */
     function BIT(value, bit) {
         return (value >> bit) & 1;
-    }
-
-    var vblank_interval = null;
-    var vblank_interval_end = null;
-
-    function set_vblank_enabled(enabled) {
-        /* 16.66ms in T-states */
-        const VBLANK_TSTATES_PERIOD = us_to_tstates(16666.666) - 1;
-        const VBLANK_TSTATES_PERIOD_END = us_to_tstates(63.55) - 1;
-
-        /* When vblank_interval is not NULL, the interrupt is already enabled */
-        if (enabled && vblank_interval == null) {
-            /* TODO: Put this part in the video part */
-            vblank_interval = zeal.registerTstateInterval(() => {
-                /* Clear VBLANK bit in the PIO state */
-                pio_set_pin(port_b, IO_VBLANK_PIN, 0);
-            }, VBLANK_TSTATES_PERIOD);
-            /* Register the same interval but for disabling the signal (after 63us) */
-            vblank_interval_end = zeal.registerTstateInterval(() => {
-                pio_set_pin(port_b, IO_VBLANK_PIN, 1);
-            }, VBLANK_TSTATES_PERIOD_END);
-        } else if (!enabled && vblank_interval != null) {
-            /* Disable the intervals */
-            zeal.removeTstateCallback(vblank_interval);
-            zeal.removeTstateCallback(vblank_interval_end);
-            vblank_interval = null;
-        }
-    }
-
-    /**
-     * Set the pin of a port to a certain value: 0 or 1.
-     */
-    function pio_set_pin(port, pin, value) {
-        console.assert(pin >= 0 && pin <= 7);
-        const previous_state = port.state;
-        if (value == 0) {
-            port.state &= (~(1 << pin)) & 0xff;
-        } else {
-            port.state |= (1 << pin);
-        }
-        /* Check if the bit actually changed */
-        const changed = (previous_state ^ port.state) != 0;
-        /* Check if an interrupt need to be generated */
-        if (port.int_enable && changed &&
-            port.mode != MODE_OUTPUT &&
-            (port.mode != MODE_BITCTRL || pio_check_bitctrl_interrupt(port, pin, value)))
-        {
-            zeal.interrupt(port.int_vector);
-        }
     }
 
     /**
@@ -178,12 +125,6 @@ function PIO(Zeal) {
             hw_port.mask_follows = false;
             /* Save the mask */
             hw_port.int_mask = value & 0xff;
-            /* ONLY FOR PORT B: TARGET RELATED */
-            if (hw_port == port_b) {
-                /* Enable or disable the V_BLANK interrupts */
-                const enable_vblank = BIT(value, IO_VBLANK_PIN) == 0;
-                set_vblank_enabled(enable_vblank);
-            }
         } else if (ctrl && (value & 0xf) == 0xf) {
             /* Word Set */
             /* Upper two bits define the mode to operate in */
@@ -217,24 +158,44 @@ function PIO(Zeal) {
                 hw_port.state = (hw_port.state & hw_port.dir) | new_out_val;
             }
             
-            /* TARGET DEPENDENT */
-            /* Send a write command to the UART and I2C in case the pins are configured as OUTPUT */
-            if (hw_port == port_b) {
-                /* The number of T-states will be useful to determine the elapsed time between two writes */
-                const t_states = zeal.getTstates();
-                if (hw_port.mode != MODE_BITCTRL || BIT(hw_port.dir, IO_UART_TX_PIN) == DIR_OUTPUT) {
-                    uart.write(BIT(hw_port.state, IO_UART_TX_PIN), t_states);
-                }
-                /* TODO: Any module should be able to register itself on a pin, making the PIO implementation independent from
-                 * the modules outside */
-                if (hw_port.mode != MODE_BITCTRL ||
-                    BIT(hw_port.dir, IO_I2C_SCL_OUT_PIN) == DIR_OUTPUT ||
-                    BIT(hw_port.dir, IO_I2C_SDA_OUT_PIN) == DIR_OUTPUT)
-                {
-                    i2c.write(BIT(hw_port.state, IO_I2C_SCL_OUT_PIN), BIT(hw_port.state, IO_I2C_SDA_OUT_PIN), t_states);
+            for (var pin = 0; pin < 8; pin++) {
+                const listener = hw_port.listeners[pin];
+                if (BIT(hw_port.dir, pin) == DIR_OUTPUT && listener) {
+                    /* Parameters(read, pin, value) */
+                    listener(false, pin, BIT(hw_port.state, pin));
                 }
             }
         }
+    }
+
+    /**
+     * Set the pin of a port to a certain value: 0 or 1.
+     */
+     function pio_set_pin(port, pin, value) {
+        console.assert(pin >= 0 && pin <= 7);
+        const previous_state = port.state;
+        if (value == 0) {
+            port.state &= (~(1 << pin)) & 0xff;
+        } else {
+            port.state |= (1 << pin);
+        }
+        /* Check if the bit actually changed */
+        const changed = (previous_state ^ port.state) != 0;
+        /* Check if an interrupt need to be generated */
+        if (port.int_enable && changed &&
+            port.mode != MODE_OUTPUT &&
+            (port.mode != MODE_BITCTRL || pio_check_bitctrl_interrupt(port, pin, value)))
+        {
+            zeal.interrupt(port.int_vector);
+        }
+    }
+
+    function pio_listen_pin(port, pin, callback) {
+        /* If the pin is invalid or if there is already a listener (except if callback is null), fail */
+        if (pin < 0 || pin > 7 || (callback != null && port.listeners[pin])) {
+            return false;
+        }
+        port.listeners[pin] = callback;
     }
 
     this.is_valid_address = is_valid_address;
@@ -243,18 +204,24 @@ function PIO(Zeal) {
     this.mem_write = mem_write;
     this.io_read = io_read;
     this.io_write = io_write;
-    this.pio_set_b_pin = (pin, value) => {
-        return pio_set_pin(port_b, pin, value);
-    }
+    this.pio_set_a_pin = (pin, value) => pio_set_pin(port_a, pin, value);
+    this.pio_set_b_pin = (pin, value) => pio_set_pin(port_b, pin, value);
+    this.pio_listen_a_pin = (pin, cb) => pio_listen_pin(port_a, pin, cb);
+    this.pio_listen_b_pin = (pin, cb) => pio_listen_pin(port_b, pin, cb);
+    this.pio_unlisten_a_pin = (pin) => pio_listen_pin(port_a, pin, null);
+    this.pio_unlisten_b_pin = (pin) => pio_listen_pin(port_b, pin, null);
 }
 
 
 function I2C(Zeal, PIO) {
     const zeal = Zeal;
     const pio = PIO;
+    const IO_I2C_SDA_OUT_PIN = 0;
+    const IO_I2C_SCL_OUT_PIN = 1;
+    const IO_I2C_SDA_IN_PIN  = 2;
 
     function write() {
-        
+
     }
 
     this.write = write;

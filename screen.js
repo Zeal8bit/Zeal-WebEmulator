@@ -21,7 +21,9 @@ function resolutionOfMode(mode) {
     return {width: 640, height: 480};
 }
 
-function VideoChip() {
+function VideoChip(Zeal, PIO) {
+    const zeal = Zeal;
+    const pio = PIO;
     var video_mode = DEFAULT_MODE;
     var text_color_index = 0xf;
     var background_color_index = 0x0;
@@ -327,6 +329,28 @@ function VideoChip() {
             background_color_index = (value >> 4) & 0xf;
         }
     }
+
+    /* PIO and signal generation related */
+    const IO_HBLANK_PIN      = 5;
+    const IO_VBLANK_PIN      = 6;
+    /* 16.66ms in T-states */
+    const VBLANK_TSTATES_PERIOD = us_to_tstates(16666.666) - 1;
+    const VBLANK_TSTATES_PERIOD_END = us_to_tstates(63.55) - 1;
+
+    /* We don't need to add a listener on the PIO, as they are mainly for OUTPUT pins.
+     * But let's keep in mind that this may change in the future */
+    /* Start the V_Blank signal generation */
+    const vblank_interval = zeal.registerTstateInterval(() => {
+        /* Clear VBLANK bit in the PIO state */
+        pio.pio_set_b_pin(IO_VBLANK_PIN, 0);
+    }, VBLANK_TSTATES_PERIOD);
+
+    /* Register the same interval but for disabling the signal
+     * So the period is the same as the one above, but we need to start it
+     * a bit later (after 63us) */
+    const vblank_interval_end = zeal.registerTstateInterval(() => {
+        pio.pio_set_b_pin(IO_VBLANK_PIN, 1);
+    }, VBLANK_TSTATES_PERIOD, VBLANK_TSTATES_PERIOD_END);
 
 
     this.is_valid_address = is_valid_address;

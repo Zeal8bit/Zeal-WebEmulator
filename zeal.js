@@ -4,18 +4,15 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-const rom = new ROM();
-const ram = new RAM();
-const vchip = new VideoChip();
-const pio = new PIO(this);
-const keyboard = new Keyboard(this, pio);
-const mmu = new MMU();
+/**
+ * Before initializing the components/peripherals, create the callback set.
+ * Indeed, one of them may need to register a callback on init. */
 
-/* Memdump related */
-const byte_per_line = 0x20;
-
-const devices = [ rom, ram, vchip, pio, keyboard, mmu ];
-
+ /* Set of T-states callbacks Object: { tstates, callback, period }
+ * In theory, a Binary Heap (min heap) would be better. In practice,
+ * We won't have a lot on entries in here. At most 4.
+ */
+var tstates_callbacks = new Set();
 var t_state = 0;
 var breakpoints = [];
 var running = true;
@@ -28,6 +25,22 @@ var dump = {
     table: [],
     labels: []
 };
+
+ 
+const mmu = new MMU();
+const rom = new ROM();
+const ram = new RAM();
+const pio = new PIO(this);
+/* Peripherals */
+const vchip = new VideoChip(this, pio);
+const uart = new UART(this, pio);
+const i2c = new I2C(this, pio);
+const keyboard = new Keyboard(this, pio);
+
+/* Memdump related */
+const byte_per_line = 0x20;
+
+const devices = [ rom, ram, vchip, pio, keyboard, mmu ];
 
 const zpu = new Z80({ mem_read, mem_write, io_read, io_write });
 
@@ -329,28 +342,24 @@ function getTstates() {
     return t_state;
 }
 
-/**
- * Set of T-states callbacks Object: { tstates, callback, period }
- * In theory, a Binary Heap (min heap) would be better. In practice,
- * We won't have a lot on entries in here. At most 4.
- */
-var tstates_callbacks = new Set();
-var in_callback = false;
-
 function addTstates(count) {
     t_state += count;
+    
+    /* Kind-of static variable within function scope */
+    addTstates.in_callback = addTstates.in_callback || false;
+
     /* Check if any callback can be called, if we aren't in any */
-    if (!in_callback) {
+    if (!addTstates.in_callback) {
         tstates_callbacks.forEach(entry => {
             if (entry.tstates <= t_state) {
-                in_callback = true;
+                addTstates.in_callback = true;
                 entry.callback();
                 if (entry.period == 0) {
                     tstates_callbacks.delete(entry);
                 } else {
                     entry.tstates += entry.period;
                 }
-                in_callback = false;
+                addTstates.in_callback = false;
             }
         });
     }
@@ -393,12 +402,20 @@ function registerTstateCallback(callback, call_tstates) {
     return obj;
 }
 
-function registerTstateInterval(callback, call_tstates) {
+/* Register a callback to be called every call_tstates T-states.
+ * The delay parameter will let us, defer the start of the first call,
+ * without altering the period. This is handy for period signal that changes
+ * values for a short period of time (pulses)
+ */ 
+function registerTstateInterval(callback, call_tstates, delay) {
     if (call_tstates < 0) {
         return null;
     }
 
-    const obj = { tstates: t_state + call_tstates, callback, period: call_tstates };
+    /* If the delay parameter is not defined, set it to 0 */
+    delay = delay || 0;
+
+    const obj = { tstates: t_state + delay + call_tstates, callback, period: call_tstates };
     tstates_callbacks.add(obj);
     return obj;
 }
