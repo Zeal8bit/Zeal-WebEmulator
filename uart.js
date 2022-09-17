@@ -43,7 +43,7 @@ function UART(Zeal, PIO) {
 
     /* Function called when a BIT is written to the UART, not a byte
      * The T-states will let us calculate the elapsed time between two write */
-    function write_tx(read, pin, bit) {
+    function write_tx(read, pin, bit, transition) {
         console.assert(pin == IO_UART_TX_PIN);
 
         if (read) {
@@ -63,7 +63,7 @@ function UART(Zeal, PIO) {
         }
     }
 
-    function read_rx(read, pin, bit) {
+    function read_rx(read, pin, bit, transition) {
         if (!read) {
             return;
         }
