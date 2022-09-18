@@ -3,6 +3,7 @@
  * 
  * SPDX-License-Identifier: Apache-2.0
  */
+
 function UART(Zeal, PIO) {
     const zeal = Zeal;
     const pio = PIO;
@@ -15,6 +16,7 @@ function UART(Zeal, PIO) {
 
     /* One bit in T-states */
     const tx_bit_tstates = us_to_tstates(tx_baudrate) + 1;
+    const rx_bit_tstates = us_to_tstates(rx_baudrate);
 
     /* TX FIFO containing pairs of { tstates, bit } */
     var tx_fifo = [];
@@ -63,10 +65,61 @@ function UART(Zeal, PIO) {
         }
     }
 
-    function read_rx(read, pin, bit, transition) {
-        if (!read) {
-            return;
+    /* On the real hardware, there is no FIFO. All the byte received on the UART must be done
+     * synchronously. Else, data will be lost. In any case, let's do the same thing in this emulation.
+     * As soon as we have data coming from the UART (Terminal), we are going to shift them in the PIO,
+     * bit by bit. */
+    var received = [];
+    var shift_register = null;
+
+    function start_shifting() {
+        console.assert(shift_register != null);
+        var callback = true;
+        if (!shift_register.start) {
+            /* Send a start bit */
+            pio.pio_set_b_pin(IO_UART_RX_PIN, 0);
+            shift_register.start = true;
+        } else if (shift_register.stop) {
+            /* Stop was sent, continue with the next register */
+            if (received.length > 0) {
+                shift_register = { data, start: false, stop: false, shifted: 0 };
+                start_shifting();
+                return;
+            } else {
+                shift_register = null;
+                callback = false;
+            }
+        } else if (shift_register.shifted == 8) {
+            /* Stop bit */
+            pio.pio_set_b_pin(IO_UART_RX_PIN, 1);
+            shift_register.stop = true;
+        } else {
+            pio.pio_set_b_pin(IO_UART_RX_PIN, shift_register.data & 1);
+            shift_register.data >>= 1
+            shift_register.shifted++;
         }
+
+        /* If we have to register a callback, do it now */
+        if (callback) {
+            zeal.registerTstateCallback(start_shifting, rx_bit_tstates);
+        }
+    }
+
+    terminal.onData((data) => {
+        /* Put the current bytes in the waiting list */
+        for (var i = 0; i < data.length; i++){  
+            received.push(data.charCodeAt(i) & 0xff);
+        }
+
+        if (shift_register == null) {
+            /* Shift data right away */
+            shift_register = { data: received.shift(), start: false, stop: false, shifted: 0 };
+            start_shifting();
+        }
+    });
+
+    function read_rx(read, pin, bit, transition) {
+        /* Nothing to do if a read is occurring, we already notify the PIO of any changes (asynchronously) */
     }
 
     /* Connect the TX pin to the PIO */

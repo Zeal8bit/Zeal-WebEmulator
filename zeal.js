@@ -36,6 +36,7 @@ const vchip = new VideoChip(this, pio);
 const uart = new UART(this, pio);
 const i2c = new I2C(this, pio);
 const keyboard = new Keyboard(this, pio);
+const ds1307 = new I2C_DS1307(this, i2c);
 
 /* Memdump related */
 const byte_per_line = 0x20;

@@ -34,11 +34,15 @@ Writing a native emulator in **C** (w/ SDL) would cover the requirement of a ful
 
 Currently, the following features from Zeal 8-bit Computer are emulated:
 * Z80 CPU ([thanks to *Molly Howell*](https://github.com/DrGoldfire/Z80.js))
+* Z80 PIO: all modes supported, both port A and B. Implementation is independent from connected devices.
 * 22-bit MMU
 * 256KB ROM
 * 512KB RAM
 * Video chip: 640x480 text mode w/ colors, 640x480 graphic mode w/ colors
 * PS/2 Keyboard, with interrupts
+* UART: it is possible to send and receive bytes
+* I2C: bus emulated, supporting write/read/write-read operations
+* I2C RTC: always returns the current date
 
 Features of the emulator itself implemented:
 * Debugger: breakpoints, step, step over instruction, continue until next breakpoint
@@ -46,14 +50,15 @@ Features of the emulator itself implemented:
 * Load a dump file generated from `z88dk-dis` to view assembly code while doing step by step debugging
 * Set breakpoints with either a **hexadecimal** PC address or a symbol (from the dump file)
 * View memory content when doing step by step debugging
+* Dedicated tab for the UART view
 
 ## TODO
 
 Of course a lot of things are still remaining to do. On the emulation side:
-* PIO: complete the implementation for the user port (A) to act as a regular GPIO, and system port (port B) to activate/deactivate the interrupts, the H-blank, V-blank, I2C, UART, etc...
-* UART emulation (needs PIO port B)
-* I2C 32KB EEPROM emulation (needs PIO port B) 
-* I2C RTC (needs PIO port B)
+* <s>PIO: complete the implementation for the user port (A) to act as a regular GPIO, and system port (port B) to activate/deactivate the interrupts, the H-blank, V-blank, I2C, UART, etc...</s> (Done, PIO is now a regular GPIO component, separated from connected components)
+* <s>UART emulation (needs PIO port B)</s> (Done, it is possible to read and write characters, baudrates are hardcoded at the moment. Would be interesting to be able to send a file through UART)
+* <s>I2C RTC (needs PIO port B)</s> (Partially implemented: it always returns the current browser date, so writing to it will have no effect)
+* I2C 32KB EEPROM emulation <s>(needs PIO port B)</s> 
 * Sound support¹
 * SD Card emulation²
 * Video chip: 320x240 text mode, 320x240 graphic mode², sprites², 4-bit palettes², etc...
