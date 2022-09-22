@@ -11,14 +11,8 @@ function RAM() {
     
     var ram = new Array(size);
 
-    for (var i = 0; i < ram.length; i++)
+    for (var i = 0; i < ram.length; i++) {
         ram[i] = 0;
-
-    function initialize() {
-        const banks = new Array(size / bank_size);
-        for (var i = 0; i < banks.length; i++)
-            banks[i] = new Array(bank_size).fill(0);
-        return banks;
     }
 
     function is_valid_address(read, address) {

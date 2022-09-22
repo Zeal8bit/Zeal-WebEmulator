@@ -11,15 +11,18 @@ function UART(Zeal, PIO) {
     const IO_UART_TX_PIN = 4;
 
     /* The baudrate is expressed in microseconds per bit sent/received */
-    var tx_baudrate = 8.681;    // 115200
-    var rx_baudrate = 17.361;   // 57600
-
+    var baudrate_us = 17.361;    // Default to 57600 baud
+    
     /* One bit in T-states */
-    const tx_bit_tstates = us_to_tstates(tx_baudrate) + 1;
-    const rx_bit_tstates = us_to_tstates(rx_baudrate);
+    const bit_tstates = us_to_tstates(baudrate_us) + 1;
 
     /* TX FIFO containing pairs of { tstates, bit } */
     var tx_fifo = [];
+
+    function set_baudrate(baudrate) {
+        baudrate_us = 1000000/baudrate;
+        test = baudrate_us;
+    }
 
     function transferComplete() {
         /* Pop the first element, which must be 0 */
@@ -29,7 +32,7 @@ function UART(Zeal, PIO) {
         var line = 0;
         var value = 0;
         for (var i = 0; i < 8; i++) {
-            time += tx_bit_tstates;
+            time += bit_tstates;
             /* Peek the next entry in the FIFO */
             while (tx_fifo.length > 0 && tx_fifo[0].tstates <= time) {
                 const { bit } = tx_fifo.shift();
@@ -58,7 +61,7 @@ function UART(Zeal, PIO) {
             /* Nothing to do */
         } else if (bit == 0 && tx_fifo.length == 0) {
             /* Register a callback in 10 UART bits */
-            zeal.registerTstateCallback(transferComplete, Math.floor(9.1 * tx_bit_tstates));
+            zeal.registerTstateCallback(transferComplete, Math.floor(9.1 * bit_tstates));
             tx_fifo.push({ tstates, bit });
         } else {
             tx_fifo.push({ tstates, bit });
@@ -82,7 +85,7 @@ function UART(Zeal, PIO) {
         } else if (shift_register.stop) {
             /* Stop was sent, continue with the next register */
             if (received.length > 0) {
-                shift_register = { data, start: false, stop: false, shifted: 0 };
+                shift_register = { data: received.shift(), start: false, stop: false, shifted: 0 };
                 start_shifting();
                 return;
             } else {
@@ -101,7 +104,15 @@ function UART(Zeal, PIO) {
 
         /* If we have to register a callback, do it now */
         if (callback) {
-            zeal.registerTstateCallback(start_shifting, rx_bit_tstates);
+            zeal.registerTstateCallback(start_shifting, bit_tstates - 1);
+        }
+    }
+
+    function start_transfer() {
+        if (shift_register == null) {
+            /* Shift data right away */
+            shift_register = { data: received.shift(), start: false, stop: false, shifted: 0 };
+            start_shifting();
         }
     }
 
@@ -111,19 +122,32 @@ function UART(Zeal, PIO) {
             received.push(data.charCodeAt(i) & 0xff);
         }
 
-        if (shift_register == null) {
-            /* Shift data right away */
-            shift_register = { data: received.shift(), start: false, stop: false, shifted: 0 };
-            start_shifting();
-        }
+        start_transfer();
     });
 
     function read_rx(read, pin, bit, transition) {
         /* Nothing to do if a read is occurring, we already notify the PIO of any changes (asynchronously) */
     }
 
+    function send_binary_array(binary) {
+        for (var i = 0; i < binary.length; i++) {
+            received.push(binary.charCodeAt(i));
+        }
+
+        start_transfer();
+    }
+
+
     /* Connect the TX pin to the PIO */
     pio.pio_listen_b_pin(IO_UART_TX_PIN, write_tx);
     /* Connect the RX pin to the PIO */
     pio.pio_listen_b_pin(IO_UART_RX_PIN, read_rx);
+    /* Set RX pin to 1 (idle) */
+    pio.pio_set_b_pin(IO_UART_RX_PIN, 1);
+
+    /* Set the baudrate */
+    this.set_baudrate = set_baudrate;
+
+    /* Send a binary array to the UART */
+    this.send_binary_array = send_binary_array;
 }
