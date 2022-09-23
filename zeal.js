@@ -384,7 +384,7 @@ function getEarliestCallback() {
 /**
  * Register a callback that shall be called after the number of T-states
  * of the CPU given.
- * If the given number is less or equal to 0, return an error.
+ * If the given number is less than 0, return an error.
  */
 function registerTstateCallback(callback, call_tstates) {
     if (call_tstates < 0) {
@@ -393,12 +393,17 @@ function registerTstateCallback(callback, call_tstates) {
 
     var obj = null;
 
+    /* If the CPU is halted, not registering this event in the list
+     * will make us completely miss it when function getEarliestCallback()
+     * is called. Because of that, the CPU will miss this interrupt/event.
+     * Keeping call_tstates as 0 should work, but let's be safe and make it
+     * happen in the upcoming T-state.  */
     if (call_tstates == 0) {
-        callback();
-    } else {
-        obj = { tstates: t_state + call_tstates, callback, period: 0 };
-        tstates_callbacks.add(obj);
+        call_tstates = 1;
     }
+
+    obj = { tstates: t_state + call_tstates, callback, period: 0 };
+    tstates_callbacks.add(obj);
 
     return obj;
 }
