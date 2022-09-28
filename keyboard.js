@@ -230,6 +230,9 @@ function Keyboard(Zeal, PIO) {
         return [...js_to_ps2[code]];
     }
 
+    /* FIFO containing the pressed keys to send to the hardware */
+    var ps2_fifo = [];
+
     /**
      * Call this function whenever a key is pressed in the emulator.
      * The key code corresponds to Javascript keyboard key code.
@@ -244,17 +247,28 @@ function Keyboard(Zeal, PIO) {
             return false;
         }
 
-        /* If a transfer is already on-going, ignore the key */
-        if (transfer_active) {
-            return true;
+        /* Enqueue the scan codes list */
+        ps2_fifo.push({ keycode, list });
+        send_next_keypress();
+
+        return true;
+    }
+
+
+    function send_next_keypress() {
+        /* If the fifo is empty or a transfer is on-going, do nothing */
+        if (ps2_fifo.length == 0 || transfer_active) {
+            return;
         }
+
+        const { keycode, list } = ps2_fifo.shift();
 
         transfer_active = true;
 
         /* The release code happens 79ms after the first code is issued */
         const PS2_RELEASE_DELAY = us_to_tstates(79000);
-        ps2_send_byte_list(list, 0, true);
-        /* Create a list where we add the BREAK scancode */
+        ps2_send_byte_list(list, 0);
+        /* Create a list where we add the BREAK scan code */
         /* PAUSE has no break code */
         if (keycode != KEYCODE_PAUSE) {
             var list_break = [...list];
@@ -270,16 +284,28 @@ function Keyboard(Zeal, PIO) {
             }
 
             /* Send the bytes on the PS/2 bus with a delay */ 
-            ps2_send_byte_list(list_break, PS2_RELEASE_DELAY, false);
+            ps2_send_byte_list(list_break, PS2_RELEASE_DELAY, send_finished);
         }
-
 
         return true;
     }
 
+    function send_finished() {
+        /* If the FIFO is not empty, do not terminated the transfer */
+        if (ps2_fifo.length == 0) {
+            transfer_active = false;
+        } else {
+            /* Schedule the next key in 1ms */
+            zeal.registerTstateCallback(() => {
+                transfer_active = false;
+                send_next_keypress();
+            }, us_to_tstates(1000));
+        }
+    }
+
     /* Function to simulate a key press on the PS/2 bus. A key can be composed of several scancodes.
      * Take that scancode list as a parameter. */ 
-    function ps2_send_byte_list(scancodes, delay, hold_transfer) {
+    function ps2_send_byte_list(scancodes, delay, end_callback) {
         /* On the real hardware, the active signal stays on for 19.7 microseconds */
         const PS2_SCANCODE_DURATION = us_to_tstates(19.7);
         /* We have a delay of 3.9ms between each scancode */
@@ -298,8 +324,8 @@ function Keyboard(Zeal, PIO) {
                 /* Reset the keyboard signal */
                 pio.pio_set_b_pin(IO_KEYBOARD_PIN, 1);
                 /* Disable the flag too */
-                if (index == scancodes.length - 1 && !hold_transfer) {
-                    transfer_active = false;
+                if (index == scancodes.length - 1 && end_callback) {
+                    end_callback();
                 }
             }, i * PS2_KEY_TIMING + PS2_SCANCODE_DURATION + delay);
         }
