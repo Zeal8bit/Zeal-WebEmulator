@@ -14,14 +14,14 @@ function UART(Zeal, PIO) {
     var baudrate_us = 17.361;    // Default to 57600 baud
     
     /* One bit in T-states */
-    const bit_tstates = us_to_tstates(baudrate_us) + 1;
+    var bit_tstates = us_to_tstates(baudrate_us) + 1;
 
     /* TX FIFO containing pairs of { tstates, bit } */
     var tx_fifo = [];
 
     function set_baudrate(baudrate) {
         baudrate_us = 1000000/baudrate;
-        test = baudrate_us;
+        bit_tstates = us_to_tstates(baudrate_us) + 1;
     }
 
     function transferComplete() {
