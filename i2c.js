@@ -183,7 +183,7 @@ function I2C(Zeal, PIO) {
 function I2C_DS1307(Zeal, I2C) {
     const zeal = Zeal;
     const i2c = I2C;
-    const DEVICE_ADDR = 0x20;
+    const DEVICE_ADDR = 0x68;
 
     var pm_am = false;
 
