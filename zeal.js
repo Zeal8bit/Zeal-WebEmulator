@@ -28,7 +28,7 @@ var dump = {
 
  
 const mmu = new MMU();
-const rom = new ROM();
+const rom = new ROM(this);
 const ram = new RAM();
 const pio = new PIO(this);
 /* Peripherals */
@@ -97,14 +97,22 @@ function io_write(port, value) {
     });
 }
 
-function hex(str) {
+function hex(str, noprefix) {
     const leading = ('000' + str.toString(16).toUpperCase()).substr(-4);
+    if (noprefix) {
+        return leading;
+    }
     return "0x" + leading;
 }
 
-function hex16(high, lower) {
+function hex8(str, noprefix) {
+    const value = hex(str, true);
+    return (noprefix ? "" : "0x") + value.substring(2);
+}
+
+function hex16(high, lower, noprefix) {
     const value = (high << 8) + lower;
-    return "0x" + value.toString(16).toUpperCase();
+    return (noprefix ? "" : "0x") + hex(value, true);
 }
 
 function isprint(char) {
@@ -113,14 +121,14 @@ function isprint(char) {
 
 function dumpRamContent(virtaddr, physaddr, lines) {
     var result = "";
-    for (var i = physaddr; i < physaddr + lines * byte_per_line; i += byte_per_line, virtaddr += byte_per_line) {
+    for (var i = 0; i < lines * byte_per_line; i += byte_per_line) {
         result += '<section class="memline">' +
                     '<section class="memaddr">' +
-                    virtaddr.toString(16) + " (" + i.toString(16) + ")" +
+                    hex(virtaddr + i, true) + " (" + hex(physaddr + i, true) + ")" +
                     '</section>' + 
                   '<section class="membytes" data-addr="' + i + '">';
         for (var j = 0; j < byte_per_line; j++) {
-            var byte = ram.mem_read(i + j);
+            var byte = mem_read(virtaddr + i + j);
             str = byte.toString(16);
             if (str.length == 1)
                 str = "0" + str
@@ -191,13 +199,13 @@ function updateAndShowRAM () {
 }
 
 function updateRegistersHTML() {
-    $("#rega").text(hex(registers.a));
-    $("#regb").text(hex(registers.b));
-    $("#regc").text(hex(registers.c));
-    $("#regd").text(hex(registers.d));
-    $("#rege").text(hex(registers.e));
-    $("#regh").text(hex(registers.h));
-    $("#regl").text(hex(registers.l));
+    $("#rega").text(hex8(registers.a));
+    $("#regb").text(hex8(registers.b));
+    $("#regc").text(hex8(registers.c));
+    $("#regd").text(hex8(registers.d));
+    $("#rege").text(hex8(registers.e));
+    $("#regh").text(hex8(registers.h));
+    $("#regl").text(hex8(registers.l));
     $("#regix").text(hex(registers.ix));
     $("#regiy").text(hex(registers.iy));
     $("#regbc").text(hex16(registers.b, registers.c));
@@ -250,14 +258,6 @@ function step_cpu() {
             /* In 16ms, the number of T-states the CPU could execute is Math.floor(16666.666 / TSTATES_US) */
             const to_execute = us_to_tstates(16666.666);
             const end = t_state + to_execute;
-
-            /* If the CPU is halted, there is no need to execute all the instructions nothing may happen.
-             * Instead, we have to check whether the earliest callback will happen during this iteration.
-             * If that's the case, let it happen right now. Else, no need to execute anything, let's just
-             * jump to the total amount of T-states we should have had executed. */
-            if (registers && registers.halted) {
-                adjustTStatesWhenHalted(end);
-            }
 
             /* t_state is global and will be incremented by addTstates */
             while (t_state <= end && running) {
