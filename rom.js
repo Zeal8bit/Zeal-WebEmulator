@@ -78,19 +78,20 @@
         /* Make sure we aren't already erasing or writing a byte */
         if (writing || erasing) {
             /* Nothing */
-        } else  if ((address == 0x5555 || address == 0x2AAA) && (value != 0x90 && value != 0xf0)) {
+            return;
+        }
+
+        if (check_and_perform_erase(address, value) ||
+            check_and_perform_write(address, value) ||
+            check_and_perform_software_id(address, value)) {
+            previous_write = [];
+        } else {
             previous_write.push({ address, value });
             /* In practice, the case where we will have the most transaction is an erase, we will have
              * to check the previous five transactions. So if we have more than that, drop the oldest. */
-            if (previous_write.length >= 6) {
+            if (previous_write.length > 6) {
                 previous_write.shift();
             }
-        } else if (check_and_perform_erase(address, value) ||
-                   check_and_perform_write(address, value) ||
-                   check_and_perform_software_id(address, value)) {
-            previous_write = [];
-        } else {
-            previous_write = [];
         }
     }
 
