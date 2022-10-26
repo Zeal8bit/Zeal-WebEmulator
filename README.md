@@ -40,7 +40,7 @@ Currently, the following features from Zeal 8-bit Computer are emulated:
 * 512KB RAM
 * Video chip: 640x480 text mode w/ colors, 640x480 graphic mode w/ colors
 * PS/2 Keyboard, with interrupts
-* UART: it is possible to send and receive bytes
+* UART: it is possible to send and receive bytes. It is also possible to send files. The baudrate can be changed from the GUI
 * I2C: bus emulated, supporting write/read/write-read operations
 * I2C RTC: always returns the current date
 
@@ -56,7 +56,7 @@ Features of the emulator itself implemented:
 
 Of course a lot of things are still remaining to do. On the emulation side:
 * <s>PIO: complete the implementation for the user port (A) to act as a regular GPIO, and system port (port B) to activate/deactivate the interrupts, the H-blank, V-blank, I2C, UART, etc...</s> (Done, PIO is now a regular GPIO component, separated from connected components)
-* <s>UART emulation (needs PIO port B)</s> (Done, it is possible to read and write characters, baudrates are hardcoded at the moment. Would be interesting to be able to send a file through UART)
+* <s>UART emulation (needs PIO port B)</s> (<s>Done, it is possible to read and write characters, baudrates are hardcoded at the moment. Would be interesting to be able to send a file through UART</s> Done)
 * <s>I2C RTC (needs PIO port B)</s> (Partially implemented: it always returns the current browser date, so writing to it will have no effect)
 * I2C 32KB EEPROM emulation <s>(needs PIO port B)</s> 
 * Sound support¹
