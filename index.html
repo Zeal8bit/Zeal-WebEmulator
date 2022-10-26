@@ -134,6 +134,10 @@
       terminal.open(document.getElementById('terminal'));
     </script>
     <script src="jquery-3.6.0.min.js"></script>
+    <script>
+      const left_panel_height = $("#debug").height();
+      $("#rightpanel").height(left_panel_height);
+    </script>
     <script src="characters.js"></script>
     <script src="screen.js"></script>
     <script src="rom.js"></script>

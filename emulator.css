@@ -18,8 +18,11 @@
     box-shadow: 5px 0 10px -4px #040404;
     margin: 0;
     display: inline-block;
-    height: 65vh;
+    height: auto;
     width:15em;
+    border-bottom-right-radius: 10px;
+    border-bottom-left-radius: 10px;
+    margin-bottom: 1em;
 }
 
 #debug table {
@@ -80,17 +83,19 @@ hr {
     box-shadow: -5px 0 5px -3px #040404;
     margin: 0 0 0em 2em;
     display: inline-block;
-    height: 65vh;
     width:15em;
     padding: 1em;
     box-sizing: border-box;
+    border-bottom-right-radius: 10px;
+    border-bottom-left-radius: 10px;
 }
 
 #romfile {
+    padding-left: 0.5em;
+    padding-bottom: 0.5em;
     margin-top: 1em;
     position: static;
     display: inline-block;
-    bottom: 0;
 }
 
 #breakpoints {
