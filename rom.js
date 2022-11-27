@@ -1,14 +1,14 @@
 /**
  * SPDX-FileCopyrightText: 2022 Zeal 8-bit Computer <contact@zeal8bit.com>
- * 
+ *
  * SPDX-License-Identifier: Apache-2.0
  */
 
  function ROM(Zeal) {
     const zeal = Zeal;
-    const size = 32*KB;
+    const size = 256*KB;
     const from = 0x00_0000;
-    const to = 0x04_0000;
+    const to = 0x08_0000;
 
     /* If we are emulating the SST39 NOR flash, write/erase is supported */
     const emulate_sst39 = true;
@@ -39,7 +39,7 @@
         for (var i = 0; i < binary.length; i++)
             data[i] = binary.charCodeAt(i);
     }
-    
+
     function is_valid_address(read, address) {
         /* Only accept writes if we are emulating the SST39 Flash */
         return (read || emulate_sst39) && address >= from && address < to;
@@ -50,7 +50,10 @@
     }
 
     function mem_read(address) {
-        console.assert (address >= from && address < to, "Wrong address for ROM");
+        console.assert (address >= from && address < to, "Wrong read address for ROM");
+        /* On real hardware, the upper addresses (bigger than ROM) are a mirror of the
+         * lower part, reproduce the same scheme here too. */
+        address &= (size - 1);
         if (erasing) {
             /* TODO: Check read-during-erase on real hardware */
             return 0xFF;
@@ -74,7 +77,10 @@
     }
 
     function mem_write(address, value) {
+        console.assert (address >= from && address < to, "Wrong write address for ROM");
         console.assert(emulate_sst39, "Write is only supported with SST39 emulation");
+        /* Same reasons as explained in the read function */
+        address &= (size - 1);
         /* Make sure we aren't already erasing or writing a byte */
         if (writing || erasing) {
             /* Nothing */
