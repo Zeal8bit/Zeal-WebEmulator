@@ -1,6 +1,6 @@
 /**
  * SPDX-FileCopyrightText: 2022 Zeal 8-bit Computer <contact@zeal8bit.com>
- * 
+ *
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -26,7 +26,7 @@ var dump = {
     labels: []
 };
 
- 
+
 const mmu = new MMU();
 const rom = new ROM(this);
 const ram = new RAM();
@@ -49,7 +49,7 @@ function mem_read(address) {
     var rd = 0;
     var found = false;
     const ext_addr = mmu.get_ext_addr(address);
- 
+
     devices.forEach(function (device) {
         if (device.is_valid_address(true, ext_addr)) {
             console.assert(found == false, "Two devices have valid address " + ext_addr);
@@ -77,7 +77,7 @@ function mem_write(address, value) {
 function io_read(port) {
     var rd = 0;
     var found = false;
-    
+
     devices.forEach(function (device) {
         if (device.is_valid_port(true, port)) {
             console.assert(found == false, "Two devices have valid ports " + port);
@@ -85,7 +85,7 @@ function io_read(port) {
             found = true;
         }
     });
-    
+
     return rd;
 }
 
@@ -125,7 +125,7 @@ function dumpRamContent(virtaddr, physaddr, lines) {
         result += '<section class="memline">' +
                     '<section class="memaddr">' +
                     hex(virtaddr + i, true) + " (" + hex(physaddr + i, true) + ")" +
-                    '</section>' + 
+                    '</section>' +
                   '<section class="membytes" data-addr="' + i + '">';
         for (var j = 0; j < byte_per_line; j++) {
             var byte = mem_read(virtaddr + i + j);
@@ -150,7 +150,7 @@ function setASMView() {
     if (false && !rom.is_valid_address(true, pc)) {
         const ramdump = dumpRamContent(registers.pc, pc, 4);
         $("#memdump").html("<div>PC address not in ROM</div>" + ramdump);
-        return;    
+        return;
     }
     const line = dump.table[pc];
     if (typeof line === "undefined") {
@@ -212,7 +212,7 @@ function updateRegistersHTML() {
     $("#regde").text(hex16(registers.d, registers.e));
     $("#reghl").text(hex16(registers.h, registers.l));
     $("#regpc").text(hex(registers.pc));
-    $("#regsp").text(hex(registers.sp));    
+    $("#regsp").text(hex(registers.sp));
     /* Special treatment for the flags */
     var flags = (registers.flags.S == 1 ? "S" : "") +
                 (registers.flags.Z == 1 ? "Z" : "") +
@@ -345,7 +345,7 @@ function getTstates() {
 
 function addTstates(count) {
     t_state += count;
-    
+
     /* Kind-of static variable within function scope */
     addTstates.in_callback = addTstates.in_callback || false;
 
@@ -366,7 +366,7 @@ function addTstates(count) {
     }
 }
 
-/** 
+/**
  * Get the earliest callback out of the list.
  */
 function getEarliestCallback() {
@@ -412,7 +412,7 @@ function registerTstateCallback(callback, call_tstates) {
  * The delay parameter will let us, defer the start of the first call,
  * without altering the period. This is handy for period signal that changes
  * values for a short period of time (pulses)
- */ 
+ */
 function registerTstateInterval(callback, call_tstates, delay) {
     if (call_tstates < 0) {
         return null;
@@ -445,7 +445,7 @@ function parseDumpLine(i, line) {
         dump.table[addr] = i;
         return addr;
     }
-    return -1;   
+    return -1;
 }
 
 function binaryReady() {
@@ -461,7 +461,7 @@ $("#read-button").on('click', function() {
     let fdump = $("#file-dump")[0].files[0];
     let rdump = new FileReader();
     rdump.addEventListener('load', function(e) {
-        const lines = e.target.result.split("\n"); 
+        const lines = e.target.result.split("\n");
         dump.lines = lines;
         for (var i = 0; i < lines.length; i++) {
             const line = lines[i];
@@ -508,6 +508,14 @@ $("#read-button").on('click', function() {
 
 $("#screen").on("keydown", function(e) {
     const handled = keyboard.key_pressed(e.keyCode);
+
+    if (handled) {
+        e.preventDefault();
+    }
+});
+
+$("#screen").on("keyup", function(e) {
+    const handled = keyboard.key_released(e.keyCode);
 
     if (handled) {
         e.preventDefault();
