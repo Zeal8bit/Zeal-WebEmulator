@@ -1,6 +1,6 @@
 /**
  * SPDX-FileCopyrightText: 2022 Zeal 8-bit Computer <contact@zeal8bit.com>
- * 
+ *
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -8,7 +8,7 @@ function RAM() {
     const size = 512*KB;
     const from = 0x08_0000;
     const to = 0x10_0000;
-    
+
     var ram = new Array(size);
 
     for (var i = 0; i < ram.length; i++) {
@@ -22,18 +22,18 @@ function RAM() {
     function is_valid_port(read, port) {
         return false;
     }
- 
+
     function mem_read(address) {
         console.assert (address >= from && address < to, "Wrong read address for SRAM");
-        return ram[address - from];
+        /* As the RAM doesn't start at physical address 0, we need to subtract its start offset */
+        address = (address - from) & (size - 1);
+        return ram[address];
     }
 
     function mem_write(address, value) {
         console.assert (address >= from && address < to, "Wrong write address for SRAM");
-        if (address == 0x8fb11) {
-            console.log(registers.pc.toString(16) + " writing scroll_y to " + value);
-        }
-        ram[address - from] = value;
+        address = (address - from) & (size - 1);
+        ram[address] = value;
     }
 
     function io_read(port) {
