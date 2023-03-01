@@ -1,9 +1,8 @@
 /**
  * SPDX-FileCopyrightText: 2022 Zeal 8-bit Computer <contact@zeal8bit.com>
- * 
+ *
  * SPDX-License-Identifier: Apache-2.0
  */
-
 function I2C(Zeal, PIO) {
     const zeal = Zeal;
     const pio = PIO;
@@ -15,9 +14,9 @@ function I2C(Zeal, PIO) {
     const STATE_WAIT_ADDR = 1;
     const STATE_WR_REQ = 2;
     const STATE_RD_REQ = 3;
-    
+
     /* List of devices connected to the I2C bus */
-    const connected_devices = []; 
+    const connected_devices = [];
 
     var state = STATE_IDLE;
     var shift_register = 0;
@@ -42,7 +41,7 @@ function I2C(Zeal, PIO) {
         if (!connected_devices[real_address]) {
             /* NACK */
             pio.pio_set_b_pin(IO_I2C_SDA_IN_PIN, 1);
-            return;            
+            return;
         }
 
         /* Check if this is a write-read request.
@@ -84,7 +83,7 @@ function I2C(Zeal, PIO) {
      */
     function write_sda(read, pin, bit, transition) {
         if (read || !transition) return;
-        
+
         const scl = pio.pio_get_b_pin(IO_I2C_SCL_OUT_PIN);
         if (bit == 0 && scl == 1) {
             if (state == STATE_IDLE) {
@@ -139,7 +138,7 @@ function I2C(Zeal, PIO) {
             }
         } else if (sending_ack) {
             /* One clock cycle for ACK bit */
-            sending_ack = false;  
+            sending_ack = false;
         } else if (state == STATE_WAIT_ADDR) {
             const sda = pio.pio_get_b_pin(IO_I2C_SDA_OUT_PIN);
             /* Enqueue the value */
@@ -217,9 +216,86 @@ function I2C_DS1307(Zeal, I2C) {
     }
 
     function write_read(wr_fifo) {
-        const from = wr_fifo > 0 ? wr_fifo.shift() : 0; 
+        const from = wr_fifo.length > 0 ? wr_fifo.shift() : 0;
         const time = generate_time();
         return time.slice(from);
+    }
+
+    this.read = read;
+    this.write = write;
+    this.write_read = write_read;
+}
+
+
+function I2C_EEPROM(Zeal, I2C, content) {
+    const zeal = Zeal;
+    const i2c = I2C;
+    const DEVICE_ADDR = 0x50;
+    const size = 64*KB;
+    const page_size = 64;
+
+    var data = new Array(size);
+
+    for (var i = 0; i < size; i++) {
+        if (content) {
+            data[i] = content[i];
+        } else {
+            data[i] = 0;
+        }
+    }
+
+    /* Format the EEPROM to use ZealFS */
+    if (!content) {
+        data[0] = 0x5A;
+        data[1] = 0x01;
+        data[2] = 0x20;
+        data[3] = 0xFF;
+        data[4] = 0x01;
+    }
+
+    function dumpToFile() {
+        const array = new Uint8Array(data);
+        const blob = new Blob([array], { type: "octet/stream" });
+        const url = window.URL.createObjectURL(blob);
+        $("#dump-eeprom-link").attr("href", url);
+        $("#dump-eeprom-link")[0].click();
+        window.URL.revokeObjectURL(url);
+    }
+
+    $("#dump-eeprom-button").click(dumpToFile);
+
+    /* Connect to the bus directly */
+    i2c.device_connect(DEVICE_ADDR, this);
+
+    var acc = 0;
+    function read() {
+        return data[acc++];
+    }
+
+    function write(wr_fifo) {
+        if (wr_fifo.length < 2) {
+            console.log("Invalid WRITE request to I2C EEPROM");
+            return;
+        }
+        const high = wr_fifo.shift();
+        const low  = wr_fifo.shift();
+        const address = ((high << 8) | low) & (size - 1);
+        var page_index = 0;
+        while (wr_fifo.length > 0) {
+            data[address + page_index] = wr_fifo.shift();
+            page_index = (page_index + 1) % page_size;
+        }
+    }
+
+    function write_read(wr_fifo) {
+        if (wr_fifo.length != 2) {
+            console.log("Invalid WRITE-READ request to I2C EEPROM");
+        }
+        const high = wr_fifo.length > 0 ? wr_fifo.shift() : 0;
+        const low  = wr_fifo.length > 0 ? wr_fifo.shift() : 0;
+        const address = ((high << 8) | low) & (size - 1);
+        /* Read from the EEPROM memory */
+        return data.slice(address);
     }
 
     this.read = read;

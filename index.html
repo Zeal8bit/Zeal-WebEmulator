@@ -1,7 +1,7 @@
 <!--
 /**
  * SPDX-FileCopyrightText: 2022 Zeal 8-bit Computer <contact@zeal8bit.com>
- * 
+ *
  * SPDX-License-Identifier: Apache-2.0
  */
 -->
@@ -14,7 +14,7 @@
     <script src="xterm/xterm.js"></script>
     <link rel="stylesheet" type="text/css" href="emulator.css" media="screen" />
   </head>
-  
+
   <body>
     <section id="debug">
       <table>
@@ -54,13 +54,13 @@
           <div id="symready" class="status">Symbols</div>
         </div>
         <pre id="file-contents"></pre>
-      </section>        
+      </section>
     </section>
 
     <div id="container">
       <canvas id="screen" tabindex="1" style="outline: none;"></canvas>
     </div>
-  
+
     <section id="rightpanel">
       <section id="controls">
         <button id="step">Step</button>
@@ -97,13 +97,15 @@
           <input type="text" id="dumpsize" placeholder="Size" />
           <input type="button" id="dumpnow" value="Dump" />
           <button id="dump-button">Dump ROM</button>
+          <button id="dump-eeprom-button">Dump EEPROM</button>
           <a id="dump-link" href="#" download="rom_dump.bin" style="display: none;">Dump ROM</a>
-  
+          <a id="dump-eeprom-link" href="#" download="eeprom_dump.bin" style="display: none;">Dump EEPROM</a>
+
         </section>
         <section id="dumpcontent">
 
         </section>
-      </section>        
+      </section>
       <section id="uartview" class="panel">
         <input type="button" id="clearterm" value="Clear" />
         <label for="baudrate">Baudrate: </label>
@@ -119,7 +121,7 @@
         <div id="terminal"></div>
       </section>
     </section>
-  
+
     <script>
       const KB = 1024;
       /* 10MHz frequency */
