@@ -505,6 +505,17 @@ $("#read-button").on('click', function() {
     if (typeof file !== "undefined") {
         reader.readAsBinaryString(file);
     }
+
+    /* Read the EEPROM image */
+    file = $("#eeprom-bin")[0].files[0];
+    let eepromr = new FileReader();
+    eepromr.addEventListener('load', function(e) {
+        let binary = e.target.result;
+        eeprom.loadFile(binary);
+    });
+    if (typeof file !== "undefined") {
+        eepromr.readAsBinaryString(file);
+    }
 });
 
 
