@@ -105,6 +105,7 @@ function Keyboard(Zeal, PIO) {
     const KEYCODE_DASH = 189;
     const KEYCODE_PERIOD = 190;
     const KEYCODE_FORWARDSLASH = 191;
+    const KEYCODE_BACKQUOTE = 191;
     const KEYCODE_OPENBRACKET = 219;
     const KEYCODE_BACKSLASH = 220;
     const KEYCODE_CLOSEBRAKET = 221;
@@ -212,6 +213,7 @@ function Keyboard(Zeal, PIO) {
         js_to_ps2[KEYCODE_BACKSLASH] = [0x5D];
         js_to_ps2[KEYCODE_CLOSEBRAKET] = [0x5B];
         js_to_ps2[KEYCODE_SINGLEQUOTE] = [0x52];
+        js_to_ps2[KEYCODE_BACKQUOTE] = [0x0E]
     }
 
     /* Attributes related to PIO */

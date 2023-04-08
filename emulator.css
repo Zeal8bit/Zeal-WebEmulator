@@ -3,17 +3,70 @@
  * 
  * SPDX-License-Identifier: Apache-2.0
  */
+:root, :root.dark {
+    --first-bg-color: #002b36;
+    --second-bg-color: #093642;
+    --third-bg-color: #0a4d5f;
+    --fourth-bg-color: #042d38;
+    --first-txt-color: #93a1a1;
+    --second-txt-color: #c7c7c7;
+}
+
+:root.light {
+    --first-bg-color: #fdf6e3;
+    --second-bg-color: #eee8d5;
+    --third-bg-color: #c8c6bc;
+    --fourth-bg-color:#fff7dd;
+    --first-txt-color: #657b83;
+    --second-txt-color:#586e75;
+}
+
 
  body {
     padding: 0;
     margin: 0;
     font-family: Calibri;
-    background-color: #002b36;
-    color: #93a1a1;
+    background-color: var(--first-bg-color);
+    color: var(--first-txt-color);
 }
 
+a {
+    color: var(--first-txt-color);
+}
+
+button, input[type=button] {
+    border: var(--second-txt-color) solid 1px;
+    border-radius: 5px;
+    background: var(--second-bg-color);
+    color: var(--second-txt-color);
+    padding: 0.25em;
+    min-width: 10em;
+    height: 2em;
+    display: inline-block;
+    cursor: pointer;
+}
+
+button:hover, input[type=button]:hover {
+    background: var(--fourth-bg-color);
+}
+
+
+button:active, input[type=button]:active {
+    background:#9b9b9b;
+    color: var(--second-bg-color);
+}
+
+
+input[type=text] {
+    border: var(--first-txt-color) solid 1px;
+    border-radius: 5px;
+    outline: none;
+    height: 1.7em;
+}
+
+
 #debug {
-    background-color:#093642;
+    background-color:var(--second-bg-color);
     vertical-align: top;
     box-shadow: 5px 0 10px -4px #040404;
     margin: 0;
@@ -55,12 +108,12 @@ hr {
 }
 
 #debug table tr:nth-child(2n) {
-    background-color: #042d38;
+    background-color: var(--fourth-bg-color);
 }
 
 
 #debug table tr:hover {
-    background-color: #0a4d5f;
+    background-color: var(--third-bg-color);
 }
 
 #container {
@@ -77,17 +130,17 @@ hr {
 #rightpanel {
     position: absolute;
     right: 0;
-    background-color:#093642;
-    color: #93a1a1;
+    background-color:var(--second-bg-color);
+    color: var(--first-txt-color);
     vertical-align: top;
     box-shadow: -5px 0 5px -3px #040404;
     margin: 0 0 0em 2em;
     display: inline-block;
     width:15em;
-    padding: 1em;
     box-sizing: border-box;
     border-bottom-right-radius: 10px;
     border-bottom-left-radius: 10px;
+    padding-bottom: 1em;
 }
 
 #romfile {
@@ -100,12 +153,13 @@ hr {
 
 #breakpoints {
     width: 100%;
+    box-sizing: border-box;
     vertical-align: top;
     display: inline-block;
 }
 
 #bps {
-    width: 100%;
+    width: 96%;
     list-style: none;
     padding: 0;
     margin: 0;
@@ -121,7 +175,7 @@ hr {
 }
 
 #bps li:hover {
-    background-color: #0a4d5f;
+    background-color: var(--third-bg-color);
     cursor: pointer;
 }
 
@@ -187,13 +241,13 @@ hr {
     border-top-left-radius: 25px;
     border-top-right-radius: 25px;
     color: #6d6d6d;
-    background: linear-gradient(0deg, #093642, #002b36 30%);
+    background: linear-gradient(0deg, var(--second-bg-color), var(--first-bg-color) 30%);
 }
 
 .tab.active {
-    color: #93a1a1;
+    color: var(--first-txt-color);
     background: inherit;
-    background-color: #093642 !important;
+    background-color: var(--second-bg-color) !important;
 }
 
 .panel {
@@ -205,7 +259,7 @@ hr {
     display: inline-block;
     width: 100%;
     height: 34vh;
-    background-color:#093642;
+    background-color:var(--second-bg-color);
     padding-top: 1em;
     padding-left: 0.5em;
     cursor: pointer;
@@ -214,13 +268,17 @@ hr {
     user-select: none;
 }
 
+#dumpfields {
+    margin-bottom: 1em;
+}
+
 .dumpline {
     white-space: pre;
 }
 
-.dumpline.activeline {
-    background-color: #93a1a1;
-    color: #042d38;
+.dumpline.activeline, .activefield {
+    background-color: var(--first-txt-color);
+    color: var(--fourth-bg-color);
 }
 
 .memaddr {
@@ -229,20 +287,24 @@ hr {
     font-weight: bold;
 }
 
-.membytes {
+.membytes, .asciichars {
     display: inline-block;
     padding-left:1.5em;
 }
 
-.membytes div {
+.membytes div, .asciichars div {
     display: inline-block;
     padding: 0 0.37em 0 0.37em;
     line-height: 1.5em;
 }
 
+.membytes div:hover, .asciichars div:hover {
+    background-color: var(--first-txt-color);
+    color: var(--fourth-bg-color);
+}
 
 .membytes div.selected {
-    background-color: #0a4d5f;
+    background-color: var(--third-bg-color);
 }
 
 
@@ -253,4 +315,83 @@ h3 {
 
 .hide .memline {
     display: none !important;
+}
+
+.regaddr {
+    text-decoration: underline;
+    cursor: pointer;
+}
+
+#current_memaddr {
+    margin-left: 9.3em;
+    padding: 0 0.37em 0 0.37em;
+}
+
+.asciichar {
+    padding: 0em !important;
+}
+
+#controls {
+    width: 100%;
+    text-align: center;
+}
+
+#controls img {
+    padding-top: 0.5em;
+    padding-bottom: 0.5em;
+    cursor: pointer;
+    width: 2em;
+}
+
+.menutitle {
+    font-variant: small-caps;
+    font-weight: bolder;
+    cursor: pointer;
+    margin-top: 0.5em;
+    margin-bottom: 0.5em;
+}
+
+.menu {
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.menu::after {
+    content:'';
+    width: 100%;
+    display: block;
+    border-bottom: var(--first-txt-color) solid 1px;
+}
+
+.menuicon {
+    display: inline-block;
+    width: 1em;
+    text-align: middle;
+    vertical-align: middle;
+    padding: 0 0.25em 0.2em 0.25em;
+}
+
+.menucontent {
+    padding: 0.5em 0 0.5em 1em;
+    box-sizing: border-box;
+    width: 100%;
+}
+
+#addbp {
+    display: none;
+}
+
+#bpaddr {
+    width: 90%;
+    border: var(--first-txt-color) solid 1px;
+    border-radius: 5px;
+}
+
+button {
+    border: 1px solid black;
+}
+
+#bpaddr:focus {
+    outline: none;
+    border: rgb(217 68 49) solid 1px;
 }

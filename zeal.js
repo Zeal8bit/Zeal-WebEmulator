@@ -26,13 +26,18 @@ var dump = {
     labels: []
 };
 
+/* Check which scale to use for the video */
+var scale = 1;
+if ($(window).height() > 920 && $(window).width() > 1280) {
+    // scale = 2;
+}
 
 const mmu = new MMU();
 const rom = new ROM(this);
 const ram = new RAM();
 const pio = new PIO(this);
 /* Peripherals */
-const vchip = new VideoChip(this, pio);
+const vchip = new VideoChip(this, pio, scale);
 const uart = new UART(this, pio);
 const i2c = new I2C(this, pio);
 const keyboard = new Keyboard(this, pio);
@@ -99,8 +104,16 @@ function io_write(port, value) {
     });
 }
 
-function hex(str, noprefix) {
-    const leading = ('000' + str.toString(16).toUpperCase()).substr(-4);
+function hex(str, noprefix, digits) {
+    if (typeof digits === "undefined") {
+        digits = 4;
+    }
+    var result = "";
+    for (var i = 0; i < digits; i++)
+        result += "0";
+
+    const leading = (result + str.toString(16).toUpperCase()).substr(-digits);
+
     if (noprefix) {
         return leading;
     }
@@ -117,26 +130,39 @@ function hex16(high, lower, noprefix) {
     return (noprefix ? "" : "0x") + hex(value, true);
 }
 
-function isprint(char) {
-    return !( /[\x00-\x08\x0E-\x1F\x80-\xFF]/.test(char));
+function isPrintable(byteCode) {
+    return byteCode >= 32 && byteCode <= 126;
 }
 
 function dumpRamContent(virtaddr, physaddr, lines) {
     var result = "";
     for (var i = 0; i < lines * byte_per_line; i += byte_per_line) {
+        let ascii = [];
+
         result += '<section class="memline">' +
                     '<section class="memaddr">' +
-                    hex(virtaddr + i, true) + " (" + hex(physaddr + i, true) + ")" +
+                    hex(virtaddr + i, true) + " (" + hex(physaddr + i, true, 6) + ")" +
                     '</section>' +
-                  '<section class="membytes" data-addr="' + i + '">';
+                  '<section class="membytes">';
         for (var j = 0; j < byte_per_line; j++) {
-            var byte = mem_read(virtaddr + i + j);
+            const virt = virtaddr + i + j
+            var byte = mem_read(virt);
+            if (isPrintable(byte)) {
+                ascii.push(String.fromCharCode(byte));
+            } else {
+                ascii.push('.');
+            }
             str = byte.toString(16);
             if (str.length == 1)
-                str = "0" + str
-            result += '<div data-byte="' + byte + '">' + str + '</div>';
+                str = "0" + str;
+            result += '<div data-byte="' + byte + '" data-addr="' + virt + '">' + str + '</div>';
         }
-        result += '</section></section>';
+        result += '</section>';
+        /* Generate the ASCII result */
+        ascii = ascii.map(c => c == ' ' ? '&nbsp;' : c);
+        ascii = ascii.map(c => '<div class="asciichar">' + c + '</div>');
+        result += '<section class="asciichars">' + ascii.join('') + '</section>';
+        result += '</section>';
     }
     return result;
 }
@@ -163,21 +189,19 @@ function setASMView() {
     const from = (line - totallines/2) < 0 ? 0 : (line - totallines/2);
 
     for (var i = from; i <= from + totallines; i++) {
-        var classes = "dumpline ";
+        var classes = "dumpline";
         if (i == line) {
-            classes += "activeline"
+            classes += " activeline"
         }
-        result += "<div class=\""+ classes +"\">"+dump.lines[i]+
-                  "</div>";
+        result += '<div data-addr="' + i.toString() + '" class="' + classes + '">'
+                  + dump.lines[i] + '</div>';
     }
 
     $("#memdump").html(result);
 }
 
-function setRAMView() {
+function setRAMView(virtaddr, size) {
     // TODO: Add the addr to a watchlist that will be updates after a breakpoint is reached
-    const virtaddr = parseInt($("#dumpaddr").val(), 16);
-    const size = parseInt($("#dumpsize").val());
     const physaddr = mmu.get_ext_addr(virtaddr);
     const dumptxt = dumpRamContent(virtaddr, physaddr, size / byte_per_line);
     $("#dumpcontent").html(dumptxt);
@@ -526,6 +550,8 @@ $("#screen").on("keyup", function(e) {
 
 $("#addbp").on("click", function (){
     const written = $("#bpaddr").val();
+    /* Empty the text field */
+    $("#bpaddr").val("");
     if (written.length < 1) return;
     var result = parseInt(written, 16);
     if (isNaN(result)) {
@@ -567,7 +593,11 @@ $("#stepover").on("click", step_over);
 $("#continue").on("click", cont);
 $("#bps").on("click", "li", togglebreakpoint);
 
-$("#dumpnow").on("click", setRAMView);
+$("#dumpnow").on("click", function() {
+    const virtaddr = parseInt($("#dumpaddr").val(), 16);
+    const size = parseInt($("#dumpsize").val());
+    setRAMView(virtaddr, size);
+});
 
 var mousepressed = false;
 
@@ -617,3 +647,78 @@ $("#uart-file-send").on("click", function() {
         reader.readAsBinaryString(file);
     }
 });
+
+document.addEventListener('keydown', function(event) {
+    const binding = {'F9': cont, 'F10': step, 'F11': step_over};
+    if (binding[event.key]) {
+        binding[event.key]();
+    }
+  });
+
+
+$("#bpaddr").on('keydown', function(event) {
+    if (event.key === "Enter") {
+        $("#addbp").click();
+    }
+});
+
+$(".regaddr").click(function() {
+    const virtaddr = parseInt($(this).text(), 16);
+    if (virtaddr || virtaddr == 0) {
+        const size = 256;
+        setRAMView(virtaddr, size);
+        $("#memory-tab").click();
+    }
+});
+
+
+function setClassToASCIIChar(object, classname, add) {
+    const index = object.index();
+    /* Add/Remove classname to the ascii cahracter corresponding to the current address */
+    const asciiline = object.parent().next();
+    /* ascii line is made out of divs, get the children */
+    if (add) {
+        asciiline.children().eq(index).addClass(classname);
+    } else {
+        asciiline.children().eq(index).removeClass(classname);
+    }
+}
+
+function setClassToMemoryByte(object, classname, add) {
+    const index = object.index();
+    /* Add/Remove classname to the ascii cahracter corresponding to the current address */
+    const memoryline = object.parent().prev();
+    /* Memory bytes is made out of divs, get the children */
+    const child = memoryline.children().eq(index);
+    if (add) {
+        child.addClass(classname);
+        setMemoryByteAddress(child);
+    } else {
+        child.removeClass(classname);
+    }
+}
+
+function setMemoryByteAddress(object) {
+    const str = parseInt(object.attr("data-addr"));
+    const val = hex(str, true, 4);
+    $("#current_memaddr").text(val);
+}
+
+$("#dumpcontent").on("mouseleave", ".membytes div", function() {
+    setClassToASCIIChar($(this), "activefield", false);
+});
+
+$("#dumpcontent").on("mouseenter", ".membytes div", function() {
+    setClassToASCIIChar($(this), "activefield", true);
+    setMemoryByteAddress($(this));
+});
+
+$("#dumpcontent").on("mouseleave", ".asciichars div", function() {
+    setClassToMemoryByte($(this), "activefield", false);
+});
+
+$("#dumpcontent").on("mouseenter", ".asciichars div", function() {
+    setClassToMemoryByte($(this), "activefield", true);
+});
+
+$("#romadvanced").click(function () { $("#romfile").toggle(500); });

@@ -1,6 +1,6 @@
 /**
  * SPDX-FileCopyrightText: 2022 Zeal 8-bit Computer <contact@zeal8bit.com>
- * 
+ *
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -12,7 +12,7 @@ function UART(Zeal, PIO) {
 
     /* The baudrate is expressed in microseconds per bit sent/received */
     var baudrate_us = 17.361;    // Default to 57600 baud
-    
+
     /* One bit in T-states */
     var bit_tstates = us_to_tstates(baudrate_us) + 1;
 
@@ -118,7 +118,7 @@ function UART(Zeal, PIO) {
 
     terminal.onData((data) => {
         /* Put the current bytes in the waiting list */
-        for (var i = 0; i < data.length; i++){  
+        for (var i = 0; i < data.length; i++){
             received.push(data.charCodeAt(i) & 0xff);
         }
 
