@@ -105,7 +105,7 @@ function Keyboard(Zeal, PIO) {
     const KEYCODE_DASH = 189;
     const KEYCODE_PERIOD = 190;
     const KEYCODE_FORWARDSLASH = 191;
-    const KEYCODE_BACKQUOTE = 191;
+    const KEYCODE_BACKQUOTE = 192;
     const KEYCODE_OPENBRACKET = 219;
     const KEYCODE_BACKSLASH = 220;
     const KEYCODE_CLOSEBRAKET = 221;
