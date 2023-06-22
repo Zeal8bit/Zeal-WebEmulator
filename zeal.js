@@ -512,23 +512,37 @@ $("#read-button").on('click', function() {
     }
 
     /* Read the binary executable */
-    let file = $("#file-input")[0].files[0];
-    let reader = new FileReader();
-    const isos = $("#os").prop("checked");
-    reader.addEventListener('load', function(e) {
-        let binary = e.target.result;
-        if (isos) {
-            rom.loadFile(binary);
-            binaryReady();
-        } else {
-            const addr = $("#address").val();
-            const result = parseInt(addr, 16);
-            ram.loadFile(result, binary);
-        }
-    });
-    if (typeof file !== "undefined") {
-        reader.readAsBinaryString(file);
+    // let file = $("#file-input")[0].files[0];
+
+    // 使用fetch API
+    function createFile() {
+        return fetch("https://github.com/JasonMo1/ZealOS-Prebuild/releases/download/23-06-22/owr0.3.0_master.img")
+          .then(response => response.blob())
+          .then(blob => {
+            return blob;
+          });
     }
+
+    let file = createFile().then(file => {
+        let reader = new FileReader();
+        const isos = $("#os").prop("checked");
+        reader.addEventListener('load', function(e) {
+            let binary = e.target.result;
+            if (isos) {
+                rom.loadFile(binary);
+                binaryReady();
+            } else {
+                const addr = $("#address").val();
+                const result = parseInt(addr, 16);
+                ram.loadFile(result, binary);
+            }
+        });
+        if (typeof file !== "undefined") {
+            reader.readAsBinaryString(file);
+        } // Blob对象
+    });
+
+
 
     /* Read the EEPROM image */
     file = $("#eeprom-bin")[0].files[0];
