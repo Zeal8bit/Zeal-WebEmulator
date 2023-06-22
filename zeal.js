@@ -507,23 +507,19 @@ $("#read-button").on('click', function() {
         }
         symbolsReady();
     });
+
     if (typeof fdump !== "undefined") {
         rdump.readAsText(fdump);
     }
 
     /* Read the binary executable */
-    // let file = $("#file-input")[0].files[0];
 
-    // 使用fetch API
-    function createFile() {
-        return fetch("https://github.com/JasonMo1/ZealOS-Prebuild/releases/download/23-06-22/owr0.3.0_master.img")
+    function readfromurl() {
+        return fetch(pburl)
           .then(response => response.blob())
-          .then(blob => {
-            return blob;
-          });
     }
 
-    let file = createFile().then(file => {
+    function read_owr(file) {
         let reader = new FileReader();
         const isos = $("#os").prop("checked");
         reader.addEventListener('load', function(e) {
@@ -540,19 +536,24 @@ $("#read-button").on('click', function() {
         if (typeof file !== "undefined") {
             reader.readAsBinaryString(file);
         } // Blob对象
-    });
+    }
+    
+    let fileread = $("#file-input")[0].files[0];
 
+    var pboptions = $("#romchoice option:selected");
+    let pburl = pboptions.val();
 
+    if (typeof fileread !== "undefined"){
+        let file = fileread;
+        read_owr(file);
 
-    /* Read the EEPROM image */
-    file = $("#eeprom-bin")[0].files[0];
-    let eepromr = new FileReader();
-    eepromr.addEventListener('load', function(e) {
-        let binary = e.target.result;
-        eeprom.loadFile(binary);
-    });
-    if (typeof file !== "undefined") {
-        eepromr.readAsBinaryString(file);
+    } else if (pburl !== "None"){
+        readfromurl().then(file => {
+            read_owr(file);
+        });
+
+    } else {
+        window.alert("No os_with_romdisk chosen")
     }
 
     /* Read the EEPROM image */
@@ -565,6 +566,7 @@ $("#read-button").on('click', function() {
     if (typeof file !== "undefined") {
         eepromr.readAsBinaryString(file);
     }
+
 });
 
 
