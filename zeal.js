@@ -52,6 +52,25 @@ const devices = [ rom, ram, vchip, pio, keyboard, mmu ];
 
 const zpu = new Z80({ mem_read, mem_write, io_read, io_write });
 
+function readindex() {
+    // Zos-Index-Mirror
+    return fetch('https://github.com/JasonMo1/ZOS-Index-demo/releases/download/v0.0.5/index.json')
+      .then(response => response.json())
+      .then(indexsrc => {initindex(indexsrc)});
+}
+
+function initindex(indexjson) {
+    // load index in index.json into romchoise
+    var index = indexjson;
+    
+    for (var jsonindex = 0; jsonindex < index.index.length; jsonindex++){
+        var option = "<option value=" + index.index[jsonindex].urls + " version=" + index.index[jsonindex].version + " upload=" + index.index[jsonindex].upload + " hash=" + index.index[jsonindex].hash + ">" + index.index[jsonindex].name + "</option>";
+        $("#romchoice").append(option)
+    }
+}
+
+readindex();
+
 function mem_read(address) {
     var rd = 0;
     var found = false;
@@ -482,6 +501,11 @@ function symbolsReady() {
     $("#symready").addClass("ready");
 }
 
+function readblobfromurl(pburl) {
+    return fetch(pburl)
+      .then(response => response.blob());
+}
+
 $("#read-button").on('click', function() {
     /* Read the binary dump */
     let fdump = $("#file-dump")[0].files[0];
@@ -514,9 +538,23 @@ $("#read-button").on('click', function() {
 
     /* Read the binary executable */
 
-    function readfromurl() {
-        return fetch(pburl)
-          .then(response => response.blob())
+    function filehash(file1, SHA2) {
+        // Check for hash value
+        const fileReader = new FileReader();
+        fileReader.onloadend = (ev) => {
+            const SHA256 = CryptoJS.SHA256(CryptoJS.enc.Latin1.parse(ev.target.result)).toString(CryptoJS.enc.Hex);
+            // console.log("SHA256: " + SHA256);
+            if (String(SHA256) == String(SHA2)) {
+                read_owr(file1)
+            } 
+            else {
+                r = confirm("Warning: Hash values do not match. Continue?");
+                if (r == true) {
+                    read_owr(file1);
+                }
+            }
+        }
+        fileReader.readAsBinaryString(file1);
     }
 
     function read_owr(file) {
@@ -535,24 +573,29 @@ $("#read-button").on('click', function() {
         });
         if (typeof file !== "undefined") {
             reader.readAsBinaryString(file);
-        } // Blob对象
+        } 
     }
     
     let fileread = $("#file-input")[0].files[0];
 
     var pboptions = $("#romchoice option:selected");
-    let pburl = pboptions.val();
+    // var pbuildnam = pboptions.text();
+    var pbuildurl = pboptions.val();
+    // var pbuildupl = pboptions.attr('upload');
+    // var pbuildver = pboptions.attr('version');
+    var pbuildhas = pboptions.attr('hash');
+
 
     if (typeof fileread !== "undefined"){
         let file = fileread;
         read_owr(file);
-
-    } else if (pburl !== "None"){
-        readfromurl().then(file => {
-            read_owr(file);
+    } 
+    else if (pbuildurl !== "None"){
+        readblobfromurl(pbuildurl).then(file => {
+            filehash(file, pbuildhas);
         });
-
-    } else {
+    } 
+    else {
         window.alert("No os_with_romdisk chosen")
     }
 
@@ -568,7 +611,6 @@ $("#read-button").on('click', function() {
     }
 
 });
-
 
 $("#screen").on("keydown", function(e) {
     const handled = keyboard.key_pressed(e.keyCode);
