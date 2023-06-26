@@ -54,7 +54,7 @@ const zpu = new Z80({ mem_read, mem_write, io_read, io_write });
 
 function readindex() {
     // Zos-Index-Mirror
-    return fetch('https://github.com/JasonMo1/ZOS-Index-demo/releases/download/v0.0.5/index.json')
+    return fetch('https://github.com/JasonMo1/ZOS-Index-demo/releases/download/v0.1.0/index.json')
       .then(response => response.json())
       .then(indexsrc => {initindex(indexsrc)});
 }
