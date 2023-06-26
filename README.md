@@ -61,26 +61,6 @@ There are 4 scripts to publish zos.
 yarn run publish
 ```
 
-###### Electron-packager:
-
-Windows:
-
-```
-yarn run buildwin
-```
-
-Linux:
-
-```
-yarn run buildlin
-```
-
-Macos:
-
-```
-yarn run buildmac
-```
-
 ###### Electron-builder:
 
 Add dependencies:

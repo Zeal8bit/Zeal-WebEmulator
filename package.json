@@ -45,8 +45,7 @@
     "appId": "com.zealwebemulator",
     "productName": "Zeal-WebEmulator",
     "files": [
-      "**/*",
-	    "!node_modules/**/*"
+      "**/*"
 	  ],
 
     "directories": {
