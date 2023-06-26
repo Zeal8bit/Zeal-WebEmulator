@@ -39,19 +39,75 @@ If it doesn't work, you can find some information at [here.](https://www.electro
 
 ##### Run
 
-Yarn:
-
 ```
-Yarn start
+yarn start
 ```
 
-Npm:
+or
 
 ```
 npm start
 ```
 
 For more informations, check for [Get Started - Electron forge](https://www.electronforge.io/).
+
+##### Publish
+
+There are 4 scripts to publish zos.
+
+###### Basic:
+
+```
+yarn run publish
+```
+
+###### Electron-packager:
+
+Windows:
+
+```
+yarn run buildwin
+```
+
+Linux:
+
+```
+yarn run buildlin
+```
+
+Macos:
+
+```
+yarn run buildmac
+```
+
+###### Electron-builder:
+
+Add dependencies:
+
+```
+yarn add electron-builder
+```
+
+Win32:
+
+```
+yarn dist-win
+```
+
+Win64:
+
+```
+yarn dist-win64
+```
+
+Linux:
+
+```
+yarn dist-linux
+```
+
+It's too complex for me to pass Macos config, so you can't build it for Macos now. If you can do it, plese make contribution.
 
 ## Why a web-based emulator ? (HTML/CSS/JavaScript)
 
@@ -98,7 +154,7 @@ Features of the emulator itself implemented:
 Of course a lot of things are still remaining to do. On the emulation side:
 
 * `<s>`PIO: complete the implementation for the user port (A) to act as a regular GPIO, and system port (port B) to activate/deactivate the interrupts, the H-blank, V-blank, I2C, UART, etc...`</s>` (Done, PIO is now a regular GPIO component, separated from connected components)
-* `<s>`UART emulation (needs PIO port B)`</s>` (`<s>`Done, it is possible to read and write characters, baudrates are hardcoded at the moment. Would be interesting to be able to send a file through UART`</s>` Done)
+* `<s>`UART emulation (needs PIO port B)`</s>` (`<s>`Done, it is possible to read and write characters, baudrates are hardcoded at the moment. Would be interesting to be able to send a file through UART `</s>` Done)
 * `<s>`I2C RTC (needs PIO port B)`</s>` (Partially implemented: it always returns the current browser date, so writing to it will have no effect)
 * I2C 32KB EEPROM emulation `<s>`(needs PIO port B)`</s>`
 * Sound support¹

@@ -9,7 +9,17 @@
     "package": "electron-forge package",
     "make": "electron-forge make",
     "publish": "electron-forge publish",
-    "lint": "echo \"No linting configured\""
+    "lint": "echo \"No linting configured\"",
+    "buildwin": "electron-packager ./ Zeal-WebEmulator --platform=win32 --out ./out/electron-packager --icon=imgs/zeal.ico --overwrite --ignore=.git",
+    "buildlin": "electron-packager ./ Zeal-WebEmulator --platform=linux --out ./out/electron-packager --icon=imgs/zeal.ico --overwrite --ignore=.git",
+    "buildmac": "electron-packager ./ Zeal-WebEmulator --platform=darwin --out ./out/electron-packager --icon=imgs/zeal.ico --overwrite --ignore=.git",
+    "pack": "electron-builder --dir",
+    "postinstall": "electron-builder install-app-deps",
+    "dist": "electron-builder",
+    "dist-win": "electron-builder --win --ia32",
+    "dist-win64": "electron-builder --win --x64",
+    "dist-mac": "electron-builder --mac",
+    "dist-linux": "electron-builder --linux"
   },
   "keywords": [],
   "author": {
@@ -28,6 +38,46 @@
     "@electron-forge/maker-zip": "^6.2.1",
     "@electron-forge/plugin-auto-unpack-natives": "^6.2.1",
     "electron": "25.2.0",
+    "electron-builder": "^24.4.0",
     "electron-squirrel-startup": "^1.0.0"
+  },
+  "build": {
+    "appId": "com.zealwebemulator",
+    "productName": "Zeal-WebEmulator",
+    "files": [
+      "**/*",
+	    "!node_modules/**/*"
+	  ],
+
+    "directories": {
+      "output": "build/app",
+      "app": "./"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "installerIcon": "./installer/zeal.ico",
+      "installerHeader": "./installer/DM_20230626150514_001.jpg",
+      "uninstallerIcon": "./installer/zeal.ico",
+      "perMachine": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "license": "./installer/license.txt"
+    },
+    "win": {
+      "icon": "./installer/zeal.ico",
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64",
+            "ia32"
+          ]
+        }
+      ]
+    },
+    "linux": {
+      "icon": "./installer/zeal.png"
+    }
   }
 }

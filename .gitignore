@@ -1,4 +1,10 @@
+# The largest thing in the world:
 node_modules/
 
+# package manager files:
+yarn-error.log
 *.lock
+
+# User publish:
 out/
+build/
