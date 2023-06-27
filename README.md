@@ -12,13 +12,13 @@ This project is a software emulator for Zeal 8-bit Computer: a homebrew 8-bit co
 
 ## Why this project?
 
-The goal of this project is to reproduce the exact same behavior of the real machine, in order to be able to execute and mainly **debug** the programs written for it directly from a host computer, without the need to flash any EEPROM or NOR Flash in order to test it. This makes development and test cycles much faster and more convenient.
+The goal of this project is to reproduce the exact same behavior of the real machine, in order to be able to execute and mainly **debug** the programs written for it directly from a host computer, without the need to flash any EEPROM or NOR Flash in order to test it. This makes development and test cycles much faster and more convenient. 
 
-## Why a web-based emulator? (HTML/CSS/JavaScript)
+## Why a web-based emulator ? (HTML/CSS/JavaScript)
 
 The main goal is to integrate this emulator as part of [zeal8bit.com](https://zeal8bit.com) website. Thus, choosing HTML/CSS and Javascript was a bit obvious on this side.
 
-On the other side, another goal of this project is also to let anybody test or write programs for Zeal 8-bit Computer on any platform (Linux/Windows/Mac OS X) without the need of a toolchain installed.
+On the other side, another goal of this project is also to let anybody test or write programs for Zeal 8-bit Computer on any platform (Linux/Windows/Mac OS X) without the need of a toolchain installed. 
 
 The emulator has been tested on Opera and Google Chrome.
 
@@ -28,54 +28,13 @@ The emulator is slower than the real hardware, even though the real hardware is 
 
 Moreover, the emulator is not really accurate it terms of timings, more details below, in the *features* section.
 
-Writing a native emulator in **C** (w/ SDL) would cover the requirement of a full-speed emulator, which would be more accurate in terms of timing. However, this needs some time investment. Feel free to contact me or contribute if such a project interest you.
+Writing a native emulator in **C** (w/ SDL) would cover the requirement of a full-speed emulator, which would be more accurate in terms of timings. However, this needs some time investment. Feel free to contact me or contribute if such project interest you. 
 
-## How to start using the emulator?
-
-Several choices are offered to you:
-
-* Use the live version of the emulator: [live version of the emulator](https://zeal8bit.github.io/Zeal-WebEmulator/). This will let you use the emulator without the need to install anything
-* Clone this repository and open the `index.html` page with a web browser: Chrome or Opera preferred.
-* Create an application out of this repo by using electron. More details below.
-
-### Get started with electron?
-
-#### Importing
-
-First of all, you will need to clone this current repository, after that use a package manager to install electron forge. If you are using `yarn`, use the following commands:
-```bash
-$ cd /path/to/Zeal-WebEmulator
-$ yarn add --dev @electron-forge/cli
-$ yarn electron-forge import
-```
-
-If you are using `npm`, the commands are as follows:
-```bash
-$ cd /path/to/Zeal-WebEmulator
-$ npm install --save-dev @electron-forge/cli
-$ npm exec --package=@electron-forge/cli -c "electron-forge import"
-```
-
-If you encounter any issues, you can find more information on [the official electron forge website.](https://www.electronforge.io/import-existing-project)
-
-#### Running
-
-Once the project has been imported, it can be executed thanks to
-```
-$ yarn start
-```
-or
-```
-$ npm start
-```
-commands.
-
-## Supported Features
+## Features
 
 Currently, the following features from Zeal 8-bit Computer are emulated:
-
 * Z80 CPU ([thanks to *Molly Howell*](https://github.com/DrGoldfire/Z80.js))
-* Z80 PIO: all modes supported, both port A and B. Implementation is independent of connected devices.
+* Z80 PIO: all modes supported, both port A and B. Implementation is independent from connected devices.
 * 22-bit MMU
 * 256KB ROM
 * 512KB RAM
@@ -84,35 +43,37 @@ Currently, the following features from Zeal 8-bit Computer are emulated:
 * UART: it is possible to send and receive bytes. It is also possible to send files. The baudrate can be changed from the GUI
 * I2C: bus emulated, supporting write/read/write-read operations
 * I2C RTC: always returns the current date
-* I2C EEPROM: 24C512 is emulated, so hardcoded to be a 64KB EEPROM. Content can be loaded through the GUI.
 
 Features of the emulator itself implemented:
-
 * Debugger: breakpoints, step, step over instruction, continue until next breakpoint
 * Load a binary file, loaded into ROM directly
-* Load a dump file generated from `z88dk-dis` to view assembly code while doing step-by-step debugging
+* Load a dump file generated from `z88dk-dis` to view assembly code while doing step by step debugging
 * Set breakpoints with either a **hexadecimal** PC address or a symbol (from the dump file)
-* View memory content when doing step-by-step debugging
+* View memory content when doing step by step debugging
 * Dedicated tab for the UART view
 
 ## TODO
 
-On the emulation side, the remaining tasks to do are:
-
-* I2C RTC set date. Currently, it always returns the current browser date, so writing to it will have no effect.
+Of course a lot of things are still remaining to do. On the emulation side:
+* <s>PIO: complete the implementation for the user port (A) to act as a regular GPIO, and system port (port B) to activate/deactivate the interrupts, the H-blank, V-blank, I2C, UART, etc...</s> (Done, PIO is now a regular GPIO component, separated from connected components)
+* <s>UART emulation (needs PIO port B)</s> (<s>Done, it is possible to read and write characters, baudrates are hardcoded at the moment. Would be interesting to be able to send a file through UART</s> Done)
+* <s>I2C RTC (needs PIO port B)</s> (Partially implemented: it always returns the current browser date, so writing to it will have no effect)
+* I2C 32KB EEPROM emulation <s>(needs PIO port B)</s> 
 * Sound support¹
-* SD Card emulation¹
-* Video chip: 320x240 text mode, 320x240 graphic mode¹, sprites¹, 4-bit palettes¹, etc...
+* SD Card emulation²
+* Video chip: 320x240 text mode, 320x240 graphic mode², sprites², 4-bit palettes², etc...
 
-¹: features **not** in high priority as they have not been implemented on real hardware yet.
+¹: feature that may be modified on the real hardware.
+
+²: features **not** in high priority as they have not been implemented on real hardware yet.
+
 
 On the project/debugger side itself:
-
 * A better **interface** for the debugger's buttons, with some shortcuts
-* A better way to **parse breakpoint input**. A known bug is that providing a label starting with a hexadecimal letter would be interpreted as a PC value instead of a label. For example, inputting *date_routine* as a label to break in would result in the addition of a breakpoint at address 0xda instead of the address of label *date_routine* (because *date* starts with hex letters *da*)
-* **Refactoring**. Some parts of the code, mainly in `zeal.js` are a bit dirty in the sense that several different things are managed by this file: breakpoints, disassembly view, memory viewer, Zeal emulation, etc... It should be cleaned and split up between multiple files.
+* A better way to **parse breakpoint input**. A know bug is providing a label starting hex letters would be interpreted as a PC value instead of a label. For example, inputting *date_routine* as a label to break in would result in the addition of a breakpoint at address 0xda instead of the address of label *date_routine* (because *date* starts with hex letters *da*)
+* **Refactoring**. Some part of the code, mainly in `zeal.js` are a bit dirty in the sense that several different things are managed by this file: breakpoints, disassembly view, memory viewer, Zeal emulation, etc... It should be cleaned and split up between multiple files.
 * A **disassembler**! Today, the disassembler view only takes the disassembly from a file generated by `z88dk-dis` toolchain. A much better (or complementary) way is to disassemble the instructions on the fly and show them in the *disassembly* view at the bottom of the screen.
-* An **integrated code editor** with an assembler! In the (far?) future, integrating a code editor, ideally, *CodeMirror*, would be a very nice addition. It would let anyone write code, assemble it, inject it in the emulator and test it directly. No need to have a toolchain or an assembler installed. Everything would be available directly from the browser. It would also be possible to connect the debugger to the code editor to be able to debug the code written more easily.
+* An **integrated code editor** with an assembler! In the (far?) future, integrating a code editor, ideally *CodeMirror*, would be a very nice addition. It would let anyone write code, assemble it, inject it in the emulator and test it directly. No need to have a toolchain, or an assembler installed. Everything would be available directly from the browser. It would also be possible to connect the debugger to the code editor in order to be able to debug the code written more easily.
 
 # Contributing
 
@@ -121,23 +82,20 @@ Anyone can contribute to this project, contributions are welcome!
 Feel free to fix any bug that you may see or encounter, implement any feature that is present in the TODO list or a new one that you find useful or important.
 
 To contribute:
+  * Fork the Project
+  * Create your feature Branch (*optional*)
+  * Commit your changes. Please make a clear and concise commit message (*)
+  * Push to the branch
+  * Open a Pull Request
 
-* Fork the Project
-* Create your feature Branch (*optional*)
-* Commit your changes. Please make a clear and concise commit message (*)
-* Push to the branch
-* Open a Pull Request
 
-(*) A good commit message is as follows:
-
+(*) A good commit message is as follow:
 ```
 Module: add/fix/remove a from b
 
 Explanation on what/how/why
 ```
-
 For example:
-
 ```
 Video chip: implement 320x240 text-mode
 
@@ -156,4 +114,4 @@ You are free to use it for personal and commercial use, the boilerplate present 
 
 For any suggestion or request, you can contact me at contact [at] zeal8bit [dot] com
 
-For feature requests, you can also open an issue or a pull request.
+For features requests, you can also open an issue or a pull request.

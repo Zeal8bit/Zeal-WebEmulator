@@ -507,27 +507,53 @@ $("#read-button").on('click', function() {
         }
         symbolsReady();
     });
+
     if (typeof fdump !== "undefined") {
         rdump.readAsText(fdump);
     }
 
     /* Read the binary executable */
-    let file = $("#file-input")[0].files[0];
-    let reader = new FileReader();
-    const isos = $("#os").prop("checked");
-    reader.addEventListener('load', function(e) {
-        let binary = e.target.result;
-        if (isos) {
-            rom.loadFile(binary);
-            binaryReady();
-        } else {
-            const addr = $("#address").val();
-            const result = parseInt(addr, 16);
-            ram.loadFile(result, binary);
-        }
-    });
-    if (typeof file !== "undefined") {
-        reader.readAsBinaryString(file);
+
+    function readfromurl() {
+        return fetch(pburl)
+          .then(response => response.blob())
+    }
+
+    function read_owr(file) {
+        let reader = new FileReader();
+        const isos = $("#os").prop("checked");
+        reader.addEventListener('load', function(e) {
+            let binary = e.target.result;
+            if (isos) {
+                rom.loadFile(binary);
+                binaryReady();
+            } else {
+                const addr = $("#address").val();
+                const result = parseInt(addr, 16);
+                ram.loadFile(result, binary);
+            }
+        });
+        if (typeof file !== "undefined") {
+            reader.readAsBinaryString(file);
+        } // Blob对象
+    }
+    
+    let fileread = $("#file-input")[0].files[0];
+
+    var pboptions = $("#romchoice option:selected");
+    let pburl = pboptions.val();
+
+    if (typeof fileread !== "undefined"){
+        let file = fileread;
+        read_owr(file);
+
+    } else if (pburl !== "None"){
+        readfromurl().then(file => {
+            read_owr(file);
+        });
+
+    } else {
+        window.alert("No os_with_romdisk chosen")
     }
 
     /* Read the EEPROM image */
@@ -540,6 +566,7 @@ $("#read-button").on('click', function() {
     if (typeof file !== "undefined") {
         eepromr.readAsBinaryString(file);
     }
+
 });
 
 
