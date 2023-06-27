@@ -47,6 +47,7 @@ First of all, you will need to clone this current repository, after that use a p
 ```bash
 $ cd /path/to/Zeal-WebEmulator
 $ yarn add --dev @electron-forge/cli
+$ yarn global add electron-builder
 $ yarn electron-forge import
 ```
 
@@ -55,6 +56,7 @@ If you are using `npm`, the commands are as follows:
 ```bash
 $ cd /path/to/Zeal-WebEmulator
 $ npm install --save-dev @electron-forge/cli
+$ npm install -g electron-builder
 $ npm exec --package=@electron-forge/cli -c "electron-forge import"
 ```
 

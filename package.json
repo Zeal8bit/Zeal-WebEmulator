@@ -38,7 +38,6 @@
     "@electron-forge/maker-zip": "^6.2.1",
     "@electron-forge/plugin-auto-unpack-natives": "^6.2.1",
     "electron": "25.2.0",
-    "electron-builder": "^24.4.0",
     "electron-squirrel-startup": "^1.0.0"
   },
   "build": {
@@ -46,8 +45,7 @@
     "productName": "Zeal-WebEmulator",
     "files": [
       "**/*"
-	  ],
-
+    ],
     "directories": {
       "output": "build/app",
       "app": "./"
