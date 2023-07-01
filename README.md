@@ -20,7 +20,7 @@ The main goal is to integrate this emulator as part of [zeal8bit.com](https://ze
 
 On the other side, another goal of this project is also to let anybody test or write programs for Zeal 8-bit Computer on any platform (Linux/Windows/Mac OS X) without the need of a toolchain installed.
 
-The emulator has been tested on Opera and Google Chrome.
+The emulator has been tested on Opera, Google Chrome and Microsoft Edge.
 
 ## What about performance then?
 
@@ -45,35 +45,31 @@ Several choices are offered to you:
 First of all, you will need to clone this current repository, after that use a package manager to install electron forge. If you are using `yarn`, use the following commands:
 
 ```bash
-$ cd /path/to/Zeal-WebEmulator
-$ yarn add --dev @electron-forge/cli
-$ yarn global add electron-builder
-$ yarn electron-forge import
+cd /path/to/Zeal-WebEmulator
+yarn install
 ```
 
 If you are using `npm`, the commands are as follows:
 
 ```bash
-$ cd /path/to/Zeal-WebEmulator
-$ npm install --save-dev @electron-forge/cli
-$ npm install -g electron-builder
-$ npm exec --package=@electron-forge/cli -c "electron-forge import"
+cd /path/to/Zeal-WebEmulator
+npm install
 ```
 
-If you encounter any issues, you can find more information on [the official electron forge website.](https://www.electronforge.io/import-existing-project)
+If you encounter any issues, you can find more information on [the official electron forge website](https://www.electronforge.io/import-existing-project).
 
 #### Running
 
 Once the project has been imported, it can be executed thanks to
 
-```
-$ yarn start
+```bash
+yarn start
 ```
 
 or
 
-```
-$ npm start
+```bash
+npm start
 ```
 
 commands.
@@ -168,7 +164,7 @@ To contribute:
 
 (*) A good commit message is as follows:
 
-```
+```example
 Module: add/fix/remove a from b
 
 Explanation on what/how/why
@@ -176,7 +172,7 @@ Explanation on what/how/why
 
 For example:
 
-```
+```example
 Video chip: implement 320x240 text-mode
 
 It is now possible to switch to 320x240 text-mode and display text.
@@ -184,7 +180,7 @@ It is now possible to switch to 320x240 text-mode and display text.
 
 # License
 
-`Z80.js` file is distributed under the MIT licence (originated from Molly Howell repository: https://github.com/DrGoldfire/Z80.js)
+`Z80.js` file is distributed under the MIT licence (originated from Molly Howell repository: [Z80.js](https://github.com/DrGoldfire/Z80.js))
 
 All the other files are distributed under the Apache 2.0 License. See `LICENSE` file for more information.
 
@@ -192,6 +188,6 @@ You are free to use it for personal and commercial use, the boilerplate present 
 
 # Contact
 
-For any suggestion or request, you can contact me at contact [at] zeal8bit [dot] com
+For any suggestion or request, you can contact me at `contact@zeal8bit.com`
 
 For feature requests, you can also open an issue or a pull request.
