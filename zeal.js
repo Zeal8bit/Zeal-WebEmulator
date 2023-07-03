@@ -52,21 +52,92 @@ const devices = [ rom, ram, vchip, pio, keyboard, mmu ];
 
 const zpu = new Z80({ mem_read, mem_write, io_read, io_write });
 
-function readindex() {
+
+async function readindex() {
     // Zos-Index-Mirror
-    return fetch('https://github.com/JasonMo1/ZOS-Index-demo/releases/download/v0.1.0/index.json')
-      .then(response => response.json())
-      .then(indexsrc => {initindex(indexsrc)});
+    try {
+        let response = await fetch('https://github.com/JasonMo1/ZOS-Index-demo/releases/download/v0.1.2/index.json');
+        var indexsrc = await response.json();
+        initindex(indexsrc);
+    } catch (error) {
+        console.error(error.message);
+    }
 }
 
-function initindex(indexjson) {
+async function initindex(indexjson) {
     // load index in index.json into romchoise
-    var index = indexjson;
+    let index = indexjson;
     
-    for (var jsonindex = 0; jsonindex < index.index.length; jsonindex++){
-        var option = "<option value=" + index.index[jsonindex].urls + " version=" + index.index[jsonindex].version + " upload=" + index.index[jsonindex].upload + " hash=" + index.index[jsonindex].hash + ">" + index.index[jsonindex].name + "</option>";
-        $("#romchoice").append(option)
+    for (let jsonindex = 0; jsonindex < index.index.length; jsonindex++){
+        let urls = index.index[jsonindex].urls;
+
+        if (urls.length == 1) {
+            fastestUrl = urls[0];
+        }
+        else if (urls.length > 1) {
+            let promises = [];
+            for (let i = 0; i < urls.length; i++) {
+                let promise = testSpeed(urls[i]);
+                promises.push(promise);
+            }
+    
+            try {
+                let fastest = await compareSpeeds(promises);
+                var fastestUrl = fastest.url;
+            } catch (error) {
+                console.error(error.message);
+            }
+        }
+        else {
+            window.alert("The image doesn't have a corresponding link")
+        }
+
+
+        var option = "<option value=" + fastestUrl + " version=" + index.index[jsonindex].version + " upload=" + index.index[jsonindex].upload + " hash=" + index.index[jsonindex].hash + ">" + index.index[jsonindex].name + "</option>";
+        $("#romchoice").append(option);
     }
+}
+
+async function compareSpeeds(promises) {
+    try {
+        let results = await Promise.all(promises);
+        let fastest = {speed: 0, url: ""};
+        for (let j = 0; j < results.length; j++) {
+            if (results[j].speed > fastest.speed) {
+                fastest.speed = results[j].speed;
+                fastest.url = results[j].url;
+            }
+        }
+        return fastest;
+    } catch (error) {
+        throw error;
+    }
+}
+
+async function testSpeed(url) {
+
+    let startTime = Date.now();
+    let xhr = new XMLHttpRequest();
+    
+    xhr.open("GET", url, true);
+    
+    return new Promise(function(resolve, reject) {
+        xhr.onload = function() {
+            if (xhr.status == 200) {
+                let endTime = Date.now();
+                let duration = endTime - startTime;
+                let speed = xhr.response.length / duration;
+                resolve({speed: speed, url: url});
+            } 
+            else {
+                resolve({speed: 999999999, url: url});
+            }
+        };
+        xhr.onerror = function() {
+            reject(new Error("Network error"));
+        };
+        xhr.send();
+    });
 }
 
 readindex();
@@ -543,7 +614,6 @@ $("#read-button").on('click', function() {
         const fileReader = new FileReader();
         fileReader.onloadend = (ev) => {
             const SHA256 = CryptoJS.SHA256(CryptoJS.enc.Latin1.parse(ev.target.result)).toString(CryptoJS.enc.Hex);
-            // console.log("SHA256: " + SHA256);
             if (String(SHA256) == String(SHA2)) {
                 read_owr(file1)
             } 
@@ -592,11 +662,16 @@ $("#read-button").on('click', function() {
     } 
     else if (pbuildurl !== "None"){
         readblobfromurl(pbuildurl).then(file => {
-            filehash(file, pbuildhas);
+            if (typeof file !== "undefined") {
+                filehash(file, pbuildhas);
+            } 
+            else {
+                window.alert("No os_with_romdisk chosen");
+            }
         });
     } 
     else {
-        window.alert("No os_with_romdisk chosen")
+        window.alert("No os_with_romdisk chosen");
     }
 
     /* Read the EEPROM image */
