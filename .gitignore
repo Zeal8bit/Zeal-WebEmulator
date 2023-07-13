@@ -1,7 +1,7 @@
 # The largest thing in the world:
 node_modules/
 
-# package manager files:
+# Package manager files:
 yarn-error.log
 *.lock
 
@@ -9,3 +9,6 @@ yarn-error.log
 out/
 build/
 zealemu-*
+
+# Reference file(s):
+disassembler/2011-12-21-dasm_v03.js
