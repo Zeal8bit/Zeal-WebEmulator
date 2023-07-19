@@ -168,34 +168,35 @@ function dumpRamContent(virtaddr, physaddr, lines) {
 }
 
 function setASMView() {
-    //$("#memdump").removeClass("hide");
-    /* Update RAM view */
-    var result = "";
-    $("#memdump").html(result);
-    /* Get the PC and convert it to a physical address */
+
+    /* Get the PC, which is a virtual address */
     const pc = registers != null ? (registers.pc) : 0;
-    /* Check that the physical address is still in ROM */
-    if (false && !rom.is_valid_address(true, pc)) {
-        const ramdump = dumpRamContent(registers.pc, pc, 4);
-        $("#memdump").html("<div>PC address not in ROM</div>" + ramdump);
-        return;
-    }
-    const line = dump.table[pc];
-    if (typeof line === "undefined") {
-        return;
+
+    /* Set the number of instructions we need to disassemble and show */
+    const instructions = 20;
+    /* The average number of bytes per instruction is 2 or 3 */
+    const bytes = instructions * 3;
+
+    /* Read "bytes" bytes from the Z80 virtual memory */
+    var memory = []
+    for (var i = 0; i < bytes; i++) {
+        memory.push(mem_read(pc + i));
     }
 
-    const totallines = 20;
-    const from = (line - totallines/2) < 0 ? 0 : (line - totallines/2);
+    /* Disassemble this part of the memory */
+    const instr_arr = disassemble_memory(memory, bytes, pc);
 
-    for (var i = from; i <= from + totallines; i++) {
-        var classes = "dumpline";
-        if (i == line) {
-            classes += " activeline"
-        }
-        result += '<div data-addr="' + i.toString() + '" class="' + classes + '">'
-                  + dump.lines[i] + '</div>';
-    }
+    /* The first instruction is special, it's the "active" one, treat it separately from the rest */
+    const first = `<div data-addr="${instr_arr[0].addr}" class="dumpline activeline">${instr_arr[0].instruction}</div>`;
+
+    /* Remove the first element from the array */
+    instr_arr.shift();
+
+    /* Treat all other instructions */
+    var result = instr_arr.map(entry => `<div data-addr="${entry.addr}" class="dumpline">${entry.instruction}</div>`);
+
+    /* Put the "first" string at the beginning of the "result" array */
+    result.unshift(first);
 
     $("#memdump").html(result);
 }
