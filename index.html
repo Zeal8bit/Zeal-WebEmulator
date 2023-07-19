@@ -117,7 +117,24 @@
         <div id="memory-tab" class="tab">Memory view</div>
         <div class="tab active">Terminal (UART)</div>
       </section>
-      <section id="memdump" class="panel hidden">
+      <section id="memdis" class="panel hidden">
+        <section id="disfields">
+          <input type="text" id="disaddr" placeholder="Hex address" />
+          <input type="text" id="dissize" placeholder="Size" />
+          <input type="button" id="disnow" value="Disassemble" />
+          <input type="button" id="dis-button" value="Disassemble ROM" />
+          <input type="button" id="dis-eeprom-button" value="Disassemble EEPROM" />
+          <a id="dis-link" href="#" download="rom_disassemble.bin" style="display: none;">Disassemble ROM</a>
+          <a id="dis-eeprom-link" href="#" download="eeprom_disassemble.bin" style="display: none;">Disassemble EEPROM</a>
+
+        </section>
+        <section class="memline">
+            <section id="current_memaddr" class="memaddr"></section>
+        </section>
+
+        <section id="discontent">
+        </section>
+
       </section>
       <section id="memview" class="panel hidden">
         <section id="dumpfields">
@@ -184,5 +201,6 @@
     <script src="Z80.js"></script>
     <script src="zeal.js" type="text/javascript"></script>
     <script src="menus.js"></script>
+    <script src="disassembler/disassembler.js"></script>
   </body>
 </html>

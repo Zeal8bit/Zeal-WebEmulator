@@ -258,36 +258,37 @@ function dumpRamContent(virtaddr, physaddr, lines) {
 }
 
 function setASMView() {
-    //$("#memdump").removeClass("hide");
-    /* Update RAM view */
-    var result = "";
-    $("#memdump").html(result);
-    /* Get the PC and convert it to a physical address */
+
+    /* Get the PC, which is a virtual address */
     const pc = registers != null ? (registers.pc) : 0;
-    /* Check that the physical address is still in ROM */
-    if (false && !rom.is_valid_address(true, pc)) {
-        const ramdump = dumpRamContent(registers.pc, pc, 4);
-        $("#memdump").html("<div>PC address not in ROM</div>" + ramdump);
-        return;
-    }
-    const line = dump.table[pc];
-    if (typeof line === "undefined") {
-        return;
-    }
 
-    const totallines = 20;
-    const from = (line - totallines/2) < 0 ? 0 : (line - totallines/2);
+    /* Set the number of instructions we need to disassemble and show */
+    const instructions = 20;
+    /* The average number of bytes per instruction is 2 or 3 */
+    const bytes = instructions * 3;
 
-    for (var i = from; i <= from + totallines; i++) {
-        var classes = "dumpline";
-        if (i == line) {
-            classes += " activeline"
-        }
-        result += '<div data-addr="' + i.toString() + '" class="' + classes + '">'
-                  + dump.lines[i] + '</div>';
+    /* Read "bytes" bytes from the Z80 virtual memory */
+    var memory = []
+    for (var i = 0; i < bytes; i++) {
+        memory.push(mem_read(pc + i));
     }
 
-    $("#memdump").html(result);
+    /* Disassembly this part of the memory */
+    const instr_arr = disassemble_memory(memory, bytes, pc);
+
+    /* The first instruction is special, it's the "active" one, treat it separately from the rest */
+    const first = `<div data-addr="${instr_arr[0].addr}" class="disline activeline">${instr_arr[0].instruction}</div>`;
+
+    /* Remove the first element from the array */
+    instr_arr.shift();
+
+    /* Treat all other instructions */
+    var result = instr_arr.map(entry => `<div data-addr="${entry.addr}" class="disline">${entry.instruction}</div>`);
+
+    /* Put the "first" string at the beginning of the "result" array */
+    result.unshift(first);
+
+    $("#discontent").html(result);
 }
 
 function setRAMView(virtaddr, size) {
@@ -754,6 +755,10 @@ $("#dumpnow").on("click", function() {
     setRAMView(virtaddr, size);
 });
 
+$("#disnow").on("click", function() {
+    setASMView();
+});
+
 var mousepressed = false;
 
 $(".membytes").on("mousedown", "div", function() {
@@ -761,6 +766,7 @@ $(".membytes").on("mousedown", "div", function() {
     $(".membytes .selected").removeClass("selected");
     $(this).toggleClass("selected");
 });
+
 $(".membytes").on("mouseup", "div", function() {
     mousepressed = false;
 });
@@ -808,8 +814,7 @@ document.addEventListener('keydown', function(event) {
     if (binding[event.key]) {
         binding[event.key]();
     }
-  });
-
+});
 
 $("#bpaddr").on('keydown', function(event) {
     if (event.key === "Enter") {
@@ -825,7 +830,6 @@ $(".regaddr").click(function() {
         $("#memory-tab").click();
     }
 });
-
 
 function setClassToASCIIChar(object, classname, add) {
     const index = object.index();
