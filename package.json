@@ -10,9 +10,6 @@
     "make": "electron-forge make",
     "publish": "electron-forge publish",
     "lint": "echo \"No linting configured\"",
-    "buildwin": "electron-packager ./ Zeal-WebEmulator --platform=win32 --out ./out/electron-packager --icon=imgs/zeal.ico --overwrite --ignore=.git",
-    "buildlin": "electron-packager ./ Zeal-WebEmulator --platform=linux --out ./out/electron-packager --icon=imgs/zeal.ico --overwrite --ignore=.git",
-    "buildmac": "electron-packager ./ Zeal-WebEmulator --platform=darwin --out ./out/electron-packager --icon=imgs/zeal.ico --overwrite --ignore=.git",
     "pack": "electron-builder --dir",
     "postinstall": "electron-builder install-app-deps",
     "dist": "electron-builder",
@@ -47,22 +44,22 @@
       "**/*"
     ],
     "directories": {
-      "output": "build/app",
+      "output": "out/electron-builder/app",
       "app": "./"
     },
     "nsis": {
       "oneClick": false,
       "allowToChangeInstallationDirectory": true,
-      "installerIcon": "./installer/zeal.ico",
-      "installerHeader": "./installer/DM_20230626150514_001.jpg",
-      "uninstallerIcon": "./installer/zeal.ico",
+      "installerIcon": "./imgs/installer/zeal.ico",
+      "installerHeader": "./imgs/installer/header.bmp",
+      "uninstallerIcon": "./imgs/installer/zeal.ico",
       "perMachine": true,
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
-      "license": "./installer/license.txt"
+      "license": "./imgs/installer/license.txt"
     },
     "win": {
-      "icon": "./installer/zeal.ico",
+      "icon": "./imgs/installer/zeal.ico",
       "target": [
         {
           "target": "nsis",
@@ -73,7 +70,7 @@
       ]
     },
     "linux": {
-      "icon": "./installer/zeal.png"
+      "icon": "./imgs/installer/zeal.png"
     }
   }
 }
