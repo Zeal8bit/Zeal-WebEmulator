@@ -9,6 +9,3 @@ yarn-error.log
 out/
 build/
 zealemu-*
-
-# Reference file(s):
-disassembler/2011-12-21-dasm_v03.js

@@ -10,10 +10,9 @@
   <head>
     <meta charset="utf-8">
     <title>Zeal 8-bit Computer Emulator</title>
-    <link rel="stylesheet" href="xterm/xterm.css" />
-    <script src="crypto/sha256.js"></script>
-    <script src="xterm/xterm.js"></script>
-    <link rel="stylesheet" type="text/css" href="emulator.css" media="screen" />
+    <script src="component/xterm/xterm.js"></script>
+    <link rel="stylesheet" href="component/xterm/xterm.css" />
+    <link rel="stylesheet" type="text/css" href="frontend/css/emulator.css" media="screen" />
   </head>
 
   <body>
@@ -32,7 +31,7 @@
         <tr><td>DE</td><td id="regde" class="regaddr"></td></tr>
         <tr><td>HL</td><td id="reghl" class="regaddr"></td></tr>
         <tr><td>PC</td><td id="regpc" class="regaddr"></td></tr>
-        <tr><td>SP</td><td id="regsp" class="regaddr"></td></tr>
+        <tr><td>SP</td><td id="regsp" class=""></td></tr>
         <tr><td>Flags</td><td id="flags"></td></tr>
       </table>
 
@@ -184,23 +183,29 @@
       var terminal = new Terminal();
       terminal.open(document.getElementById('terminal'));
     </script>
-    <script src="jquery-3.6.0.min.js"></script>
+    <script src="component/jquery-3.6.0.min.js"></script>
     <script>
       const left_panel_height = $("#debug").height();
       $("#rightpanel").css('min-height', left_panel_height);
     </script>
-    <script src="characters.js"></script>
-    <script src="screen.js"></script>
-    <script src="rom.js"></script>
-    <script src="pio.js"></script>
-    <script src="uart.js"></script>
-    <script src="keyboard.js"></script>
-    <script src="i2c.js"></script>
-    <script src="ram.js"></script>
-    <script src="mmu.js"></script>
-    <script src="Z80.js"></script>
-    <script src="zeal.js" type="text/javascript"></script>
-    <script src="menus.js"></script>
-    <script src="disassembler/disassembler.js"></script>
+    <script src="frontend/utils.js"></script>
+    <script src="component/disassembler/disassembler.js"></script>
+    <script src="hardemu/characters.js"></script>
+    <script src="hardemu/screen.js"></script>
+    <script src="hardemu/rom.js"></script>
+    <script src="hardemu/pio.js"></script>
+    <script src="hardemu/uart.js"></script>
+    <script src="hardemu/keyboard.js"></script>
+    <script src="hardemu/i2c.js"></script>
+    <script src="hardemu/ram.js"></script>
+    <script src="hardemu/mmu.js"></script>
+    <script src="hardemu/Z80.js"></script>
+    <script src="component/crypto/sha256.js"></script>
+    <script src="frontend/init.js"></script>
+    <script src="frontend/breakpoint.js"></script>
+    <script src="frontend/menus.js"></script>
+    <script src="frontend/misc.js"></script>
+    <script src="frontend/panel.js"></script>
+    <script src="frontend/readrom.js"></script>
   </body>
 </html>

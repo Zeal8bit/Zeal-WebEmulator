@@ -1,3 +1,9 @@
+/**
+ * SPDX-FileCopyrightText: 2023 JasonMo <jasonmo2009@hotmail.com>
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 const { app, BrowserWindow } = require('electron');
 const path = require('path');
 
