@@ -1,6 +1,6 @@
 <h1 align="center">Zeal 8-bit Computer emulator</h1>
 <p align=center>
-    <img src="imgs/screenshot.png" alt="screenshot" />
+    <img src="../imgs/screenshot.png" alt="screenshot" />
     <a href="https://opensource.org/licenses/Apache-2.0">
         <img src="https://img.shields.io/badge/License-Apache_2.0-blue.svg" alt="Licence" />
     </a>
