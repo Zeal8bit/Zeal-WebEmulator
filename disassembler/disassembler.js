@@ -1,15 +1,17 @@
-function _hex(n) {
-    return "$" + n.toString(16);
-};
+/**
+ * SPDX-FileCopyrightText: 2022-2023 Zeal 8-bit Computer <contact@zeal8bit.com>
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
 
 const opcodes = {
     0x00: ()         => ({ text: `NOP`, size: 1 }),
-    0x01: (snd, trd) => ({ text: `LD     BC, ${_hex(trd << 8 + snd)}`, size: 3 }),
+    0x01: (snd, trd) => ({ text: `LD     BC, ${hex16(trd, snd)}`, size: 3 }),
     0x02: ()         => ({ text: `LD     (BC), A`, size: 1 }),
     0x03: ()         => ({ text: `INC    BC`, size: 1 }),
     0x04: ()         => ({ text: `INC    B`, size: 1 }),
     0x05: ()         => ({ text: `DEC    B`, size: 1 }),
-    0x06: (snd)      => ({ text: `LD     B, ${_hex(snd)}`, size: 2 }),
+    0x06: (snd)      => ({ text: `LD     B, ${hex8(snd)}`, size: 2 }),
     0x07: ()         => ({ text: `RLCA`, size: 1 }),
     0x08: ()         => ({ text: `EX     AF, AF'`, size: 1 }),
     0x09: ()         => ({ text: `ADD    HL, BC`, size: 1 }),
@@ -17,15 +19,15 @@ const opcodes = {
     0x0b: ()         => ({ text: `DEC    BC`, size: 1 }),
     0x0c: ()         => ({ text: `INC    C`, size: 1 }),
     0x0d: ()         => ({ text: `DEC    C`, size: 1 }),
-    0x0e: (snd)      => ({ text: `LD     C, ${_hex(snd)}`, size: 2 }),
+    0x0e: (snd)      => ({ text: `LD     C, ${hex8(snd)}`, size: 2 }),
     0x0f: ()         => ({ text: `RRCA`, size: 1 }),
     0x10: (snd)      => ({ text: `DJNZ   ${snd}`, size: 2 }),
-    0x11: (snd, trd) => ({ text: `LD     DE, ${_hex(trd << 8 + snd)}`, size: 3 }),
+    0x11: (snd, trd) => ({ text: `LD     DE, ${hex16(trd, snd)}`, size: 3 }),
     0x12: ()         => ({ text: `LD     (DE), A`, size: 1 }),
     0x13: ()         => ({ text: `INC    DE`, size: 1 }),
     0x14: ()         => ({ text: `INC    D`, size: 1 }),
     0x15: ()         => ({ text: `DEC    D`, size: 1 }),
-    0x16: (snd)      => ({ text: `LD     D, ${_hex(snd)}`, size: 2 }),
+    0x16: (snd)      => ({ text: `LD     D, ${hex8(snd)}`, size: 2 }),
     0x17: ()         => ({ text: `RLA`, size: 1 }),
     0x18: (snd)      => ({ text: `JR     ${snd}`, size: 2 }),
     0x19: ()         => ({ text: `ADD    HL, DE`, size: 1 }),
@@ -33,39 +35,39 @@ const opcodes = {
     0x1b: ()         => ({ text: `DEC    DE`, size: 1 }),
     0x1c: ()         => ({ text: `INC    E`, size: 1 }),
     0x1d: ()         => ({ text: `DEC    E`, size: 1 }),
-    0x1e: (snd)      => ({ text: `LD     E, ${_hex(snd)}`, size: 2 }),
+    0x1e: (snd)      => ({ text: `LD     E, ${hex8(snd)}`, size: 2 }),
     0x1f: ()         => ({ text: `RRA`, size: 1 }),
     0x20: (snd)      => ({ text: `JR     NZ, ${snd}`, size: 2 }),
-    0x21: (snd, trd) => ({ text: `LD     HL, ${_hex(trd << 8 + snd)}`, size: 3 }),
-    0x22: (snd, trd) => ({ text: `LD     (${_hex(trd << 8 + snd)}), HL`, size: 3 }),
+    0x21: (snd, trd) => ({ text: `LD     HL, ${hex16(trd, snd)}`, size: 3 }),
+    0x22: (snd, trd) => ({ text: `LD     (${hex16(trd, snd)}), HL`, size: 3 }),
     0x23: ()         => ({ text: `INC    HL`, size: 1 }),
     0x24: ()         => ({ text: `INC    H`, size: 1 }),
     0x25: ()         => ({ text: `DEC    H`, size: 1 }),
-    0x26: (snd)      => ({ text: `LD     H, ${_hex(snd)}`, size: 2 }),
+    0x26: (snd)      => ({ text: `LD     H, ${hex8(snd)}`, size: 2 }),
     0x27: ()         => ({ text: `DAA`, size: 1 }),
     0x28: (snd)      => ({ text: `JR     Z, ${snd}`, size: 2 }),
     0x29: ()         => ({ text: `ADD    HL, HL`, size: 1 }),
-    0x2a: (snd, trd) => ({ text: `LD     HL, (${_hex(trd << 8 + snd)})`, size: 3 }),
+    0x2a: (snd, trd) => ({ text: `LD     HL, (${hex16(trd, snd)})`, size: 3 }),
     0x2b: ()         => ({ text: `DEC    HL`, size: 1 }),
     0x2c: ()         => ({ text: `INC    L`, size: 1 }),
     0x2d: ()         => ({ text: `DEC    L`, size: 1 }),
-    0x2e: (snd)      => ({ text: `LD     L, ${_hex(snd)}`, size: 2 }),
+    0x2e: (snd)      => ({ text: `LD     L, ${hex8(snd)}`, size: 2 }),
     0x2f: ()         => ({ text: `CPL`, size: 1 }),
     0x30: (snd)      => ({ text: `JR     NC, ${snd}`, size: 2 }),
-    0x31: (snd, trd) => ({ text: `LD     SP, ${_hex(trd << 8 + snd)}`, size: 3 }),
-    0x32: (snd, trd) => ({ text: `LD     (${_hex(trd << 8 + snd)}), A`, size: 3 }),
+    0x31: (snd, trd) => ({ text: `LD     SP, ${hex16(trd, snd)}`, size: 3 }),
+    0x32: (snd, trd) => ({ text: `LD     (${hex16(trd, snd)}), A`, size: 3 }),
     0x33: ()         => ({ text: `INC    SP`, size: 1 }),
     0x34: ()         => ({ text: `INC    (HL)`, size: 1 }),
     0x35: ()         => ({ text: `DEC    (HL)`, size: 1 }),
-    0x36: (snd)      => ({ text: `LD     (HL), ${_hex(snd)}`, size: 2 }),
+    0x36: (snd)      => ({ text: `LD     (HL), ${hex8(snd)}`, size: 2 }),
     0x37: ()         => ({ text: `SCF`, size: 1 }),
     0x38: (snd)      => ({ text: `JR     C, ${snd}`, size: 2 }),
     0x39: ()         => ({ text: `ADD    SL, SP`, size: 1 }),
-    0x3a: (snd, trd) => ({ text: `LD     A, (${_hex(trd << 8 + snd)})`, size: 3 }),
+    0x3a: (snd, trd) => ({ text: `LD     A, (${hex16(trd, snd)})`, size: 3 }),
     0x3b: ()         => ({ text: `DEC    SP`, size: 1 }),
     0x3c: ()         => ({ text: `INC    A`, size: 1 }),
     0x3d: ()         => ({ text: `DEC    A`, size: 1 }),
-    0x3e: (snd)      => ({ text: `LD     A, ${_hex(snd)}`, size: 2 }),
+    0x3e: (snd)      => ({ text: `LD     A, ${hex8(snd)}`, size: 2 }),
     0x3f: ()         => ({ text: `CCF`, size: 1 }),
     0x40: ()         => ({ text: `LD     B, B`, size: 1 }),
     0x41: ()         => ({ text: `LD     B, C`, size: 1 }),
@@ -197,72 +199,70 @@ const opcodes = {
     0xbf: ()         => ({ text: `CP     A`, size: 1 }),
     0xc0: ()         => ({ text: `RET    NZ`, size: 1 }),
     0xc1: ()         => ({ text: `POP    BC`, size: 1 }),
-    0xc2: (snd, trd) => ({ text: `JP     NZ, ${_hex(trd << 8 + snd)}`, size: 3 }),
-    0xc3: (snd, trd) => ({ text: `JP     ${_hex(trd << 8 + snd)}`, size: 3 }),
-    0xc4: (snd, trd) => ({ text: `CALL   NZ, ${_hex(trd << 8 + snd)}`, size: 3 }),
+    0xc2: (snd, trd) => ({ text: `JP     NZ, ${hex16(trd, snd)}`, size: 3 }),
+    0xc3: (snd, trd) => ({ text: `JP     ${hex16(trd, snd)}`, size: 3 }),
+    0xc4: (snd, trd) => ({ text: `CALL   NZ, ${hex16(trd, snd)}`, size: 3 }),
     0xc5: ()         => ({ text: `PUSH   BC`, size: 1 }),
-    0xc6: (snd)      => ({ text: `ADD    A, ${_hex(snd)}`, size: 2 }),
+    0xc6: (snd)      => ({ text: `ADD    A, ${hex8(snd)}`, size: 2 }),
     0xc7: ()         => ({ text: `RST    00`, size: 1 }),
     0xc8: ()         => ({ text: `RET    Z`, size: 1 }),
     0xc9: ()         => ({ text: `RET`, size: 1 }),
-    0xca: (snd, trd) => ({ text: `JP     Z, ${_hex(trd << 8 + snd)}`, size: 3 }),
-    0xcc: (snd, trd) => ({ text: `CALL   Z, ${_hex(trd << 8 + snd)}`, size: 3 }),
-    0xcd: (snd, trd) => ({ text: `CALL   ${_hex(trd << 8 + snd)}`, size: 3 }),
-    0xce: (snd)      => ({ text: `ADC    A, ${_hex(snd)}`, size: 2 }),
+    0xca: (snd, trd) => ({ text: `JP     Z, ${hex16(trd, snd)}`, size: 3 }),
+    0xcc: (snd, trd) => ({ text: `CALL   Z, ${hex16(trd, snd)}`, size: 3 }),
+    0xcd: (snd, trd) => ({ text: `CALL   ${hex16(trd, snd)}`, size: 3 }),
+    0xce: (snd)      => ({ text: `ADC    A, ${hex8(snd)}`, size: 2 }),
     0xcf: ()         => ({ text: `RST    08`, size: 1 }),
     0xd0: ()         => ({ text: `RET    NC`, size: 1 }),
     0xd1: ()         => ({ text: `POP    DE`, size: 1 }),
-    0xd2: (snd, trd) => ({ text: `JP     NC, ${_hex(trd << 8 + snd)}`, size: 3 }),
-    0xd3: (snd)      => ({ text: `OUT    ${_hex(snd)}, A`, size: 2 }),
-    0xd4: (snd, trd) => ({ text: `CALL   NC, ${_hex(trd << 8 + snd)}`, size: 3 }),
+    0xd2: (snd, trd) => ({ text: `JP     NC, ${hex16(trd, snd)}`, size: 3 }),
+    0xd3: (snd)      => ({ text: `OUT    ${hex8(snd)}, A`, size: 2 }),
+    0xd4: (snd, trd) => ({ text: `CALL   NC, ${hex16(trd, snd)}`, size: 3 }),
     0xd5: ()         => ({ text: `PUSH   DE`, size: 1 }),
-    0xd6: (snd)      => ({ text: `SUB    ${_hex(snd)}`, size: 2 }),
+    0xd6: (snd)      => ({ text: `SUB    ${hex8(snd)}`, size: 2 }),
     0xd7: ()         => ({ text: `RST    10`, size: 1 }),
     0xd8: ()         => ({ text: `RET    C`, size: 1 }),
     0xd9: ()         => ({ text: `EXX`, size: 1 }),
-    0xda: (snd, trd) => ({ text: `JP     C, ${_hex(trd << 8 + snd)}`, size: 3 }),
-    0xdb: (snd)      => ({ text: `IN     A, ${_hex(snd)}`, size: 2 }),
-    0xdc: (snd, trd) => ({ text: `CALL   C, ${_hex(trd << 8 + snd)}`, size: 3 }),
-    0xde: (snd)      => ({ text: `SBC    A, ${_hex(snd)}`, size: 2 }),
+    0xda: (snd, trd) => ({ text: `JP     C, ${hex16(trd, snd)}`, size: 3 }),
+    0xdb: (snd)      => ({ text: `IN     A, ${hex8(snd)}`, size: 2 }),
+    0xdc: (snd, trd) => ({ text: `CALL   C, ${hex16(trd, snd)}`, size: 3 }),
+    0xde: (snd)      => ({ text: `SBC    A, ${hex8(snd)}`, size: 2 }),
     0xdf: ()         => ({ text: `RST    18`, size: 1 }),
     0xe0: ()         => ({ text: `RET    PO`, size: 1 }),
     0xe1: ()         => ({ text: `POP    HL`, size: 1 }),
-    0xe2: (snd, trd) => ({ text: `JP     PO, ${_hex(trd << 8 + snd)}`, size: 3 }),
+    0xe2: (snd, trd) => ({ text: `JP     PO, ${hex16(trd, snd)}`, size: 3 }),
     0xe3: ()         => ({ text: `EX     (SP), HL`, size: 1 }),
-    0xe4: (snd, trd) => ({ text: `CALL   PO, ${_hex(trd << 8 + snd)}`, size: 3 }),
+    0xe4: (snd, trd) => ({ text: `CALL   PO, ${hex16(trd, snd)}`, size: 3 }),
     0xe5: ()         => ({ text: `PUSH   HL`, size: 1 }),
-    0xe6: (snd)      => ({ text: `AND    ${_hex(snd)}`, size: 2 }),
+    0xe6: (snd)      => ({ text: `AND    ${hex8(snd)}`, size: 2 }),
     0xe7: ()         => ({ text: `RST    20`, size: 1 }),
     0xe8: ()         => ({ text: `RET    PE`, size: 1 }),
     0xe9: ()         => ({ text: `JP     (HL)`, size: 1 }),
-    0xea: (snd, trd) => ({ text: `JP     PE, ${_hex(trd << 8 + snd)}`, size: 3 }),
+    0xea: (snd, trd) => ({ text: `JP     PE, ${hex16(trd, snd)}`, size: 3 }),
     0xeb: ()         => ({ text: `EX     DE, HL`, size: 1 }),
-    0xec: (snd, trd) => ({ text: `CALL   PE, ${_hex(trd << 8 + snd)}`, size: 3 }),
-    0xee: (snd)      => ({ text: `XOR    ${_hex(snd)}`, size: 2 }),
+    0xec: (snd, trd) => ({ text: `CALL   PE, ${hex16(trd, snd)}`, size: 3 }),
+    0xee: (snd)      => ({ text: `XOR    ${hex8(snd)}`, size: 2 }),
     0xef: ()         => ({ text: `RST    28`, size: 1 }),
     0xf0: ()         => ({ text: `RET    P`, size: 1 }),
     0xf1: ()         => ({ text: `POP    AF`, size: 1 }),
-    0xf2: (snd, trd) => ({ text: `JP     P, ${_hex(trd << 8 + snd)}`, size: 3 }),
+    0xf2: (snd, trd) => ({ text: `JP     P, ${hex16(trd, snd)}`, size: 3 }),
     0xf3: ()         => ({ text: `DI`, size: 1 }),
-    0xf4: (snd, trd) => ({ text: `CALL   P, ${_hex(trd << 8 + snd)}`, size: 3 }),
+    0xf4: (snd, trd) => ({ text: `CALL   P, ${hex16(trd, snd)}`, size: 3 }),
     0xf5: ()         => ({ text: `PUSH   AF`, size: 1 }),
-    0xf6: (snd)      => ({ text: `OR     ${_hex(snd)}`, size: 2 }),
+    0xf6: (snd)      => ({ text: `OR     ${hex8(snd)}`, size: 2 }),
     0xf7: ()         => ({ text: `RST    30`, size: 1 }),
     0xf8: ()         => ({ text: `RET    M`, size: 1 }),
     0xf9: ()         => ({ text: `LD     SP, HL`, size: 1 }),
-    0xfa: (snd, trd) => ({ text: `JP     M, ${_hex(trd << 8 + snd)}`, size: 3 }),
+    0xfa: (snd, trd) => ({ text: `JP     M, ${hex16(trd, snd)}`, size: 3 }),
     0xfb: ()         => ({ text: `EI`, size: 1 }),
-    0xfc: (snd, trd) => ({ text: `CALL   M, ${_hex(trd << 8 + snd)}`, size: 3 }),
-    0xfe: (snd)      => ({ text: `CP     ${_hex(snd)}`, size: 2 }),
+    0xfc: (snd, trd) => ({ text: `CALL   M, ${hex16(trd, snd)}`, size: 3 }),
+    0xfe: (snd)      => ({ text: `CP     ${hex8(snd)}`, size: 2 }),
     0xff: ()         => ({ text: `RST    38`, size: 1 }),
 
     /* Special cases */
-
-    // Advantaging...
-    // 0xcb: opcode_CB_x,
-    // 0xdd: opcode_DD_x,
-    // 0xed: opcode_ED_x,
-    // 0xfd: opcode_FD_x,
+    0xcb: opcode_CB_x,
+    0xdd: opcode_DD_x,
+    0xed: opcode_ED_x,
+    0xfd: opcode_FD_x,
 };
 
 /**
@@ -286,6 +286,9 @@ function disassemble_memory(memory, size, virt_addr)
     var remaining = size;
     var instructions = [];
 
+    const indent = '                    ';
+    const postfix_location = 60;
+
     while (remaining > 0) {
         const byte = memory[i];
         /* Get the instruction text and size */
@@ -295,17 +298,36 @@ function disassemble_memory(memory, size, virt_addr)
         var text = "ILL";
 
         if (lambda) {
-            const entry = lambda(memory[i], memory[i+1], memory[i+2], memory[i+3]);
+            const entry = lambda(memory[i+1], memory[i+2], memory[i+3]);
             size = entry.size;
             text = entry.text;
         }
 
         /* Add the instruction in the final array */
-        instructions.push({ addr: from + i, instruction: text });
+        var instruction = indent + text;
+        instruction = expandString(instruction, postfix_location);
+        instruction += `; [${hex(from + i, true)}] `;
+        for (var idx = 0; idx < size; idx++) {
+            instruction += hex8(memory[i + idx], true) + ' ';
+        }
+        instruction = instruction.toLowerCase();
+
+        instructions.push({ addr: from + i, instruction });
 
         remaining -= size;
         i += size;
     }
 
     return instructions;
+}
+
+
+function expandString(str, n) {
+    const difference = n - str.length;
+
+    if (difference <= 0) {
+        return str;
+    }
+
+    return str + ' '.repeat(difference);
 }

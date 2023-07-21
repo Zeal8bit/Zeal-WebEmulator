@@ -7,16 +7,15 @@
 const intructions_iy_op = 0xFD;
 const intructions_ix_op = 0xDD;
 
-const hex = str => str.toString(16)
 
 /* The following object doesn't include CB nor LD (r+n), r which are special cases */
 const dd_fd_intructions = {
     0x8E: {
-        text: (thrd_op) => `ADC A,(r+\$${hex(thrd_op)})`,
+        text: (thrd_op) => `ADC A,(r+\$${hex8(thrd_op)})`,
         size: 3
     },
     0x86: {
-        text: (thrd_op) => `ADD A,(r+\$${hex(thrd_op)})`,
+        text: (thrd_op) => `ADD A,(r+\$${hex8(thrd_op)})`,
         size: 3
     },
     0x9: {
@@ -36,15 +35,15 @@ const dd_fd_intructions = {
         size: 2
     },
     0xA6: {
-        text: (thrd_op) => `AND (r+\$${hex(thrd_op)})`,
+        text: (thrd_op) => `AND (r+\$${hex8(thrd_op)})`,
         size: 3
     },
     0xBE: {
-        text: (thrd_op) => `CP (r+\$${hex(thrd_op)})`,
+        text: (thrd_op) => `CP (r+\$${hex8(thrd_op)})`,
         size: 3
     },
     0x35: {
-        text: (thrd_op) => `DEC (r+\$${hex(thrd_op)})`,
+        text: (thrd_op) => `DEC (r+\$${hex8(thrd_op)})`,
         size: 3
     },
     0x2B: {
@@ -56,7 +55,7 @@ const dd_fd_intructions = {
         size: 2
     },
     0x34: {
-        text: (thrd_op) => `INC (r+\$${hex(thrd_op)})`,
+        text: (thrd_op) => `INC (r+\$${hex8(thrd_op)})`,
         size: 3
     },
     0x23: {
@@ -68,47 +67,47 @@ const dd_fd_intructions = {
         size: 2
     },
     0x36: {
-        text: (thrd_op, forth_op) => `LD (r+\$${hex(thrd_op)}),\$${hex(forth_op)}`,
+        text: (thrd_op, forth_op) => `LD (r+\$${hex8(thrd_op)}),\$${hex8(forth_op)}`,
         size: 4
     },
     0x22: {
-        text: (thrd_op, forth_op) => `LD (\$${hex(forth_op << 8 | thrd_op)}),r`,
+        text: (thrd_op, forth_op) => `LD (\$${hex16(forth_op, thrd_op)}),r`,
         size: 4
     },
     0x7E: {
-        text: (thrd_op) => `LD A,(r+\$${hex(thrd_op)})`,
+        text: (thrd_op) => `LD A,(r+\$${hex8(thrd_op)})`,
         size: 3
     },
     0x46: {
-        text: (thrd_op) => `LD B,(r+\$${hex(thrd_op)})`,
+        text: (thrd_op) => `LD B,(r+\$${hex8(thrd_op)})`,
         size: 3
     },
     0x4E: {
-        text: (thrd_op) => `LD C,(r+\$${hex(thrd_op)})`,
+        text: (thrd_op) => `LD C,(r+\$${hex8(thrd_op)})`,
         size: 3
     },
     0x56: {
-        text: (thrd_op) => `LD D,(r+\$${hex(thrd_op)})`,
+        text: (thrd_op) => `LD D,(r+\$${hex8(thrd_op)})`,
         size: 3
     },
     0x5E: {
-        text: (thrd_op) => `LD E,(r+\$${hex(thrd_op)})`,
+        text: (thrd_op) => `LD E,(r+\$${hex8(thrd_op)})`,
         size: 3
     },
     0x66: {
-        text: (thrd_op) => `Ld H,(r+\$${hex(thrd_op)})`,
+        text: (thrd_op) => `Ld H,(r+\$${hex8(thrd_op)})`,
         size: 3
     },
     0x2A: {
-        text: (thrd_op, forth_op) => `LD r,(\$${hex(forth_op << 8 | thrd_op)})`,
+        text: (thrd_op, forth_op) => `LD r,(\$${hex16(forth_op, thrd_op)})`,
         size: 4
     },
     0x21: {
-        text: (thrd_op, forth_op) => `LD r,\$${hex(forth_op << 8 | thrd_op)}`,
+        text: (thrd_op, forth_op) => `LD r,\$${hex16(forth_op, thrd_op)}`,
         size: 4
     },
     0x6E: {
-        text: (thrd_op) => `LD L,(r+\$${hex(thrd_op)})`,
+        text: (thrd_op) => `LD L,(r+\$${hex8(thrd_op)})`,
         size: 3
     },
     0xF9: {
@@ -116,7 +115,7 @@ const dd_fd_intructions = {
         size: 2
     },
     0xB6: {
-        text: (thrd_op) => `OR (r+\$${hex(thrd_op)})`,
+        text: (thrd_op) => `OR (r+\$${hex8(thrd_op)})`,
         size: 3
     },
     0xE1: {
@@ -128,15 +127,15 @@ const dd_fd_intructions = {
         size: 2
     },
     0x96: {
-        text: (thrd_op) => `SUB (r+\$${hex(thrd_op)})`,
+        text: (thrd_op) => `SUB (r+\$${hex8(thrd_op)})`,
         size: 3
     },
     0xAE: {
-        text: (thrd_op) => `XOR (r+\$${hex(thrd_op)})`,
+        text: (thrd_op) => `XOR (r+\$${hex8(thrd_op)})`,
         size: 3
     },
     0x9E: {
-        text: (thrd_op) => `SBC A,(r+\$${hex(thrd_op)})`,
+        text: (thrd_op) => `SBC A,(r+\$${hex8(thrd_op)})`,
         size: 3
     },
 };
@@ -145,19 +144,19 @@ const dd_fd_intructions = {
 function opcode_DD_FD_CB_x(third, fourth)
 {
     switch (fourth){
-        case 0x06: return `RLC (r+\$${hex(third)})`;
-        case 0x0e: return `RRC (r+\$${hex(third)})`;
-        case 0x16: return `RL  (r+\$${hex(third)})`;
-        case 0x1e: return `RR  (r+\$${hex(third)})`;
-        case 0x26: return `SLA (r+\$${hex(third)})`;
-        case 0x2e: return `SRA (r+\$${hex(third)})`;
-        case 0x3e: return `SRL (r+\$${hex(third)})`;
+        case 0x06: return `RLC (r+\$${hex8(third)})`;
+        case 0x0e: return `RRC (r+\$${hex8(third)})`;
+        case 0x16: return `RL  (r+\$${hex8(third)})`;
+        case 0x1e: return `RR  (r+\$${hex8(third)})`;
+        case 0x26: return `SLA (r+\$${hex8(third)})`;
+        case 0x2e: return `SRA (r+\$${hex8(third)})`;
+        case 0x3e: return `SRL (r+\$${hex8(third)})`;
         default:
             if ((fourth & 0xc7) == 0x46) {
                 const bit = (fourth >> 8) & 0x7;
-                return `BIT ${bit},(r+\$${hex(third)})`;
+                return `BIT ${bit},(r+\$${hex8(third)})`;
             } else if ((fourth & 0xc7) == 0xc) {
-                return `SET ${(fourth >> 3) & 0x7},(r+\$${hex(third)})`;
+                return `SET ${(fourth >> 3) & 0x7},(r+\$${hex8(third)})`;
             }
             return 'ILL';
     };
@@ -189,7 +188,7 @@ function opcode_DD_FD_x(second, third, fourth) {
         /* Special case because the opcode contains the parameter */
         const reg_idx = ["B", "C", "D", "E", "H", "L", "A"];
 
-        const text = `LD (r+\$${hex(third)}), ${reg_idx[second & 0x7]}`;
+        const text = `LD (r+\$${hex8(third)}), ${reg_idx[second & 0x7]}`;
         return { text, size: 3 };
 
     }
