@@ -1,3 +1,15 @@
+<!--
+    /**
+    * SPDX-FileCopyrightText: 2022 Zeal 8-bit Computer <contact@zeal8bit.com>
+    *
+    * SPDX-License-Identifier: Apache-2.0
+    */
+    Version: 0.0.1,
+    Author: Zeal 8-bit Computer
+    Translator: JasonMo
+    Last modified: 2023/07/21 8:16,
+    Last commit: "Project: Reconstitution, delete useless files",
+-->
 <h1 align="center">Zeal 8-bit Computer emulator</h1>
 <p align=center>
     <img src="../imgs/screenshot.png" alt="screenshot" />
@@ -7,7 +19,7 @@
 </p>
 
 <p align="center">
-<a href="../README.md">English</a> | 简体中文
+    <a href="../README.md">English</a> | 简体中文
 </p>
 
 该项目是Zeal 8位计算机的软件模拟器（Zeal 8位计算机是基于Z80 CPU的自制8位计算机）。

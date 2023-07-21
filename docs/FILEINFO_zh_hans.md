@@ -6,18 +6,18 @@
     */
     Version: 0.0.1,
     Author: JasonMo
-    Last modified: 2023/07/21 9:19,
+    Last modified: 2023/07/21 9:16,
     Last commit: "Project: Reconstitution, delete useless files",
 -->
-# Fileinfo
+# 文件信息
 
 <p align="center">
-    English | <a href="FILEINFO_zh_hans.md">简体中文</a>
+    <a href="FILEINFO.md">English</a> | 简体中文
 </p>
 
-This document is used to explain the meaning of various directories and files in Zeal-WebEmulator
+本文档用于解释Zeal-WebEmulator中各种目录和文件的含义
 
-directory tree:
+目录树：
 
 ```tree
 Zeal-WebEmulator:.
@@ -109,130 +109,130 @@ Zeal-WebEmulator:.
                         Zeal8bit.Zeal-WebEmulator.yaml
 ```
 
-## ./
+## 根目录
 
 * .gitignore
-Choose which files will been ignore by git
+选择将被git忽略的文件
 * forge.config.js
-Config file of electron
+Electron的配置文件
 * index.html
-Main GUI of the emulator
+模拟器的主 GUI
 * index.js
-Init eletron window
+初始化electron窗口
 * LICENSE
 Apache v2.0
 * package.json
-Config file use to describe scripts, dependencies and publish configs
+配置文件用于描述脚本、依赖项和发布配置
 * preload.js
-A part of index.js
+index.js的一部分
 * README.md
-Readme(English)
+自述文件（English）
 
 ### component
 
-This directory is where the components required by the emulator are stored
+此目录是存储模拟器所需组件的位置
 
 * jquery-3.6.0.min.js
-This is a famous JavaScript libuary, it can save development time a lot
+这是一个著名的JavaScript库，它可以节省很多开发时间
 
 #### crypto
 
-This component comes from repository [crypto.js](https://github.com/brix/crypto-js)
+此组件来自存储库 [crypto.js](https://github.com/brix/crypto-js)
 
-* sha256.js
-It is used to verify the hash value of the file
+* SHA256.js
+它用于验证文件的哈希值
 
 #### disassembler
 
-This component comes from feature/add_disassembler branch. It is not refine now, if you have any idea about it, please contribute
+此组件来自feature/add_disassembler分支。现在还不完善，如果你有什么想法，请自行改善或为我们贡献您的代码。
 
 * disassembler.js
-It is used to disassemble opcodes from Z80 cpu
+它用于反汇编Z80 CPU的操作码
 
 #### xterm
 
-This component comes from repository [xterm.js](https://github.com/xtermjs/xterm.js)
+此组件来自存储库 [xterm.js](https://github.com/xtermjs/xterm.js)
 
 * xterm.css
 * xterm.js
 * xterm.js.map
-These are used to implement a web terminal
+这些文件用于实现Web终端
 
 ### docs
 
-This folder contains the project documents
+此文件夹包含项目的文档
 
 * README_zh_hans.md
-Readme(简体中文)
+自述文件（简体中文）
 
 * FILEINFO.md
-Fileinfo(English)
+文件信息（English）
 
-<!-- * FILEINFO_zh_hans.md
-Fileinfo(简体中文) -->
+* FILEINFO_zh_hans.md
+文件信息（简体中文）
 
 ### frontend
 
-This directory contains the programs used to implement the interaction
+此目录包含用于实现图形交互的程序
 
 * breakpoint.js
-Used to implement the program debugger
+用于实现程序调试器
 * init.js
-Init hardware emulation and zos index
+初始化硬件仿真和 zos index
 * menus.js
-Implement the interaction logic for the menu bar
+实现菜单栏的交互逻辑
 * misc.js
-Include some unknown frontend codes
+包括一些未知功能的前端代码
 * panel.js
-Implement the interaction logic for the left/right panel
+实现左/右面板的交互逻辑
 * readrom.js
-Read romdisk and eeprom inputed from users
+读取用户输入的 ROM 和 EEPROM
 * utils.js
-Extracted common functions
+提取出的常用函数
 
 #### css
 
-Css(s) used to implement GUI interface
+用于实现 GUI 界面的 Css 文件
 
 * emulator.css
-Used to implement GUI interface of emulator
+用于实现模拟器的GUI界面
 
 #### fonts
 
-Contains fonts used in the emulator
+包含模拟器中使用的字体
 
 * CascadiaCode.ttf
-Truetype Font `Cascadia Code`
+Truetype 字体 `Cascadia Code`
 
 ### hardemu
 
-Emulate Zeal 8-bit Computer's hardware
+模拟 Zeal 8 位计算机的硬件
 
 * characters.js
-Implement of English glyphs
+英语字形的实现
 * i2c.js
-Emulate I2C in Zeal 8-bit Computer
+在 Zeal 8 位计算机中模拟 I2C
 * keyboard.js
-Emulate your keyboard as ps2 keyboard
+在 Zeal 8 位计算机中将你的键盘模拟为ps2键盘
 * mmu.js
-Emulate MMU in Zeal 8-bit Computer
+在 Zeal 8 位计算机中模拟 MMU
 * pio.js
-Emulate PIO in Zeal 8-bit Computer
+在 Zeal 8 位计算机中模拟 PIO
 * ram.js
-Emulate RAM in Zeal 8-bit Computer
+在 Zeal 8 位计算机中模拟 RAM
 * rom.js
-Emulate ROM in Zeal 8-bit Computer
+在 Zeal 8 位计算机中模拟 ROM
 * screen.js
-Emulate screen in Zeal 8-bit Computer
+在 Zeal 8 位计算机中模拟屏幕
 * uart.js
-Emulate uart in Zeal 8-bit Computer
+在 Zeal 8 位计算机中模拟 uart
 * Z80.js
-Emulate Z80 cpu in Zeal 8-bit Computer
+在 Zeal 8 位计算机中模拟 Z80 CPU
 
 ### imgs
 
-Images are used in installation packages, documentation, etc
+用于安装包、文档等的图片
 
 ### manifests
 
-Used to upload package related files for winget-pkgs
+用于上传 winget-pkgs 的winget配置文件

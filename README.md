@@ -1,3 +1,14 @@
+<!--
+    /**
+    * SPDX-FileCopyrightText: 2022 Zeal 8-bit Computer <contact@zeal8bit.com>
+    *
+    * SPDX-License-Identifier: Apache-2.0
+    */
+    Version: 0.0.1,
+    Author: Zeal 8-bit Computer
+    Last modified: 2023/07/21 8:15,
+    Last commit: "Project: Reconstitution, delete useless files",
+-->
 <h1 align="center">Zeal 8-bit Computer emulator</h1>
 <p align=center>
     <img src="imgs/screenshot.png" alt="screenshot" />
