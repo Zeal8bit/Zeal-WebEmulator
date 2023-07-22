@@ -157,13 +157,13 @@ function setASMView() {
     const instr_arr = disassemble_memory(memory, bytes, pc);
 
     /* The first instruction is special, it's the "active" one, treat it separately from the rest */
-    const first = `<div data-addr="${instr_arr[0].addr}" class="disline activeline">${instr_arr[0].instruction}</div>`;
+    const first = `<div><div class="disaddr">${"0x"+instr_arr[0].addr.toString().padStart(4, "0")}: </div><div data-addr="${instr_arr[0].addr}" class="disline activeline">${instr_arr[0].instruction}</div>\n</div>`;
 
     /* Remove the first element from the array */
     instr_arr.shift();
 
     /* Treat all other instructions */
-    var result = instr_arr.map(entry => `<div data-addr="${entry.addr}" class="disline">${entry.instruction}</div>`);
+    var result = instr_arr.map(entry => `<div><div class="disaddr">${"0x"+entry.addr.toString().padStart(4, "0")}: </div><div data-addr="${entry.addr}" class="disline">${entry.instruction}</div>\n</div>`);
 
     /* Put the "first" string at the beginning of the "result" array */
     result.unshift(first);

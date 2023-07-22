@@ -207,5 +207,55 @@
     <script src="frontend/misc.js"></script>
     <script src="frontend/panel.js"></script>
     <script src="frontend/readrom.js"></script>
+    <!-- Disassembler-related -->
+    <script>
+        function disassembler_hex(n) {
+            return "$" + n.toString(16);
+        }
+
+
+        function hex(str, noprefix, digits) {
+            if (typeof digits === "undefined") {
+                digits = 4;
+            }
+            var result = "";
+            for (var i = 0; i < digits; i++)
+                result += "0";
+
+            const leading = (result + str.toString(16).toUpperCase()).substr(-digits);
+
+            if (noprefix) {
+                return leading;
+            }
+            return "0x" + leading;
+        }
+
+        function hex8(str, noprefix) {
+            const value = hex(str, true);
+            return (noprefix ? "" : "0x") + value.substring(2);
+        }
+
+        function hex16(high, lower, noprefix) {
+            const value = (high << 8) + lower;
+            return (noprefix ? "" : "0x") + hex(value, true);
+        }
+    </script>
+    <script src="disassembler/opcodes_cb.js"></script>
+    <script src="disassembler/opcodes_ed.js"></script>
+    <script src="disassembler/opcodes_ixiy.js"></script>
+    <script src="disassembler/disassembler.js"></script>
+    <!-- Emulation-related -->
+    <script src="characters.js"></script>
+    <script src="screen.js"></script>
+    <script src="rom.js"></script>
+    <script src="pio.js"></script>
+    <script src="uart.js"></script>
+    <script src="keyboard.js"></script>
+    <script src="i2c.js"></script>
+    <script src="ram.js"></script>
+    <script src="mmu.js"></script>
+    <script src="Z80.js"></script>
+    <script src="zeal.js" type="text/javascript"></script>
+    <script src="menus.js"></script>
   </body>
 </html>

@@ -287,18 +287,18 @@ hr {
     color: var(--fourth-bg-color);
 }
 
-.memaddr {
+.memaddr, .disaddr {
     display: inline-block;
     color: #268bd2;
     font-weight: bold;
 }
 
-.membytes, .asciichars {
+.membytes, .asciichars, .memline {
     display: inline-block;
     padding-left:1.5em;
 }
 
-.memline, .disline {
+.memline, .disline, .disaddr {
     font-family: 'cascadiacode';
 }
 
