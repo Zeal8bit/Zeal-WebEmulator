@@ -116,24 +116,7 @@
         <div id="memory-tab" class="tab">Memory view</div>
         <div class="tab active">Terminal (UART)</div>
       </section>
-      <section id="memdis" class="panel hidden">
-        <section id="disfields">
-          <input type="text" id="disaddr" placeholder="Hex address" />
-          <input type="text" id="dissize" placeholder="Size" />
-          <input type="button" id="disnow" value="Disassemble" />
-          <input type="button" id="dis-button" value="Disassemble ROM" />
-          <input type="button" id="dis-eeprom-button" value="Disassemble EEPROM" />
-          <a id="dis-link" href="#" download="rom_disassemble.bin" style="display: none;">Disassemble ROM</a>
-          <a id="dis-eeprom-link" href="#" download="eeprom_disassemble.bin" style="display: none;">Disassemble EEPROM</a>
-
-        </section>
-        <section class="memline">
-            <section id="current_memaddr" class="memaddr"></section>
-        </section>
-
-        <section id="discontent">
-        </section>
-
+      <section id="memdump" class="panel hidden">
       </section>
       <section id="memview" class="panel hidden">
         <section id="dumpfields">
@@ -144,15 +127,12 @@
           <input type="button" id="dump-eeprom-button" value="Dump EEPROM" />
           <a id="dump-link" href="#" download="rom_dump.bin" style="display: none;">Dump ROM</a>
           <a id="dump-eeprom-link" href="#" download="eeprom_dump.bin" style="display: none;">Dump EEPROM</a>
-
         </section>
         <section class="memline">
             <section id="current_memaddr" class="memaddr"></section>
         </section>
-
         <section id="dumpcontent">
         </section>
-
       </section>
       <section id="uartview" class="panel">
         <input type="button" id="clearterm" value="Clear" />
@@ -188,25 +168,6 @@
       const left_panel_height = $("#debug").height();
       $("#rightpanel").css('min-height', left_panel_height);
     </script>
-    <script src="frontend/utils.js"></script>
-    <script src="component/disassembler/disassembler.js"></script>
-    <script src="hardemu/characters.js"></script>
-    <script src="hardemu/screen.js"></script>
-    <script src="hardemu/rom.js"></script>
-    <script src="hardemu/pio.js"></script>
-    <script src="hardemu/uart.js"></script>
-    <script src="hardemu/keyboard.js"></script>
-    <script src="hardemu/i2c.js"></script>
-    <script src="hardemu/ram.js"></script>
-    <script src="hardemu/mmu.js"></script>
-    <script src="hardemu/Z80.js"></script>
-    <script src="component/crypto/sha256.js"></script>
-    <script src="frontend/init.js"></script>
-    <script src="frontend/breakpoint.js"></script>
-    <script src="frontend/menus.js"></script>
-    <script src="frontend/misc.js"></script>
-    <script src="frontend/panel.js"></script>
-    <script src="frontend/readrom.js"></script>
     <!-- Disassembler-related -->
     <script>
         function disassembler_hex(n) {
@@ -240,22 +201,28 @@
             return (noprefix ? "" : "0x") + hex(value, true);
         }
     </script>
-    <script src="disassembler/opcodes_cb.js"></script>
-    <script src="disassembler/opcodes_ed.js"></script>
-    <script src="disassembler/opcodes_ixiy.js"></script>
-    <script src="disassembler/disassembler.js"></script>
     <!-- Emulation-related -->
-    <script src="characters.js"></script>
-    <script src="screen.js"></script>
-    <script src="rom.js"></script>
-    <script src="pio.js"></script>
-    <script src="uart.js"></script>
-    <script src="keyboard.js"></script>
-    <script src="i2c.js"></script>
-    <script src="ram.js"></script>
-    <script src="mmu.js"></script>
-    <script src="Z80.js"></script>
-    <script src="zeal.js" type="text/javascript"></script>
-    <script src="menus.js"></script>
+    <script src="frontend/utils.js"></script>
+    <script src="component/disassembler/opcodes_cb.js"></script>
+    <script src="component/disassembler/opcodes_ed.js"></script>
+    <script src="component/disassembler/opcodes_ixiy.js"></script>
+    <script src="component/disassembler/disassembler.js"></script>
+    <script src="hardemu/characters.js"></script>
+    <script src="hardemu/screen.js"></script>
+    <script src="hardemu/rom.js"></script>
+    <script src="hardemu/pio.js"></script>
+    <script src="hardemu/uart.js"></script>
+    <script src="hardemu/keyboard.js"></script>
+    <script src="hardemu/i2c.js"></script>
+    <script src="hardemu/ram.js"></script>
+    <script src="hardemu/mmu.js"></script>
+    <script src="hardemu/Z80.js"></script>
+    <script src="component/crypto/sha256.js"></script>
+    <script src="frontend/init.js"></script>
+    <script src="frontend/breakpoint.js"></script>
+    <script src="frontend/menus.js"></script>
+    <script src="frontend/misc.js"></script>
+    <script src="frontend/panel.js"></script>
+    <script src="frontend/readrom.js"></script>
   </body>
 </html>

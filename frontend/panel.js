@@ -141,6 +141,7 @@ function setASMView() {
 
     /* Get the PC, which is a virtual address */
     const pc = registers != null ? (registers.pc) : 0;
+    /* Check that the physical address is still in ROM */
 
     /* Set the number of instructions we need to disassemble and show */
     const instructions = 20;
@@ -153,22 +154,22 @@ function setASMView() {
         memory.push(mem_read(pc + i));
     }
 
-    /* Disassembly this part of the memory */
+    /* Disassemble this part of the memory */
     const instr_arr = disassemble_memory(memory, bytes, pc);
 
     /* The first instruction is special, it's the "active" one, treat it separately from the rest */
-    const first = `<div><div class="disaddr">${"0x"+instr_arr[0].addr.toString().padStart(4, "0")}: </div><div data-addr="${instr_arr[0].addr}" class="disline activeline">${instr_arr[0].instruction}</div>\n</div>`;
+    const first = `<div data-addr="${instr_arr[0].addr}" class="dumpline activeline">${instr_arr[0].instruction}</div>`;
 
     /* Remove the first element from the array */
     instr_arr.shift();
 
     /* Treat all other instructions */
-    var result = instr_arr.map(entry => `<div><div class="disaddr">${"0x"+entry.addr.toString().padStart(4, "0")}: </div><div data-addr="${entry.addr}" class="disline">${entry.instruction}</div>\n</div>`);
+    var result = instr_arr.map(entry => `<div data-addr="${entry.addr}" class="dumpline">${entry.instruction}</div>`);
 
     /* Put the "first" string at the beginning of the "result" array */
     result.unshift(first);
 
-    $("#discontent").html(result);
+    $("#memdump").html(result);
 }
 
 function dumpRamContent(virtaddr, physaddr, lines) {

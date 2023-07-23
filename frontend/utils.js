@@ -59,32 +59,6 @@ function io_write(port, value) {
     });
 }
 
-function hex(str, noprefix, digits) {
-    if (typeof digits === "undefined") {
-        digits = 4;
-    }
-    var result = "";
-    for (var i = 0; i < digits; i++)
-        result += "0";
-
-    const leading = (result + str.toString(16).toUpperCase()).substr(-digits);
-
-    if (noprefix) {
-        return leading;
-    }
-    return "0x" + leading;
-}
-
-function hex8(str, noprefix) {
-    const value = hex(str, true);
-    return (noprefix ? "" : "0x") + value.substring(2);
-}
-
-function hex16(high, lower, noprefix) {
-    const value = (high << 8) + lower;
-    return (noprefix ? "" : "0x") + hex(value, true);
-}
-
 function isPrintable(byteCode) {
     return byteCode >= 32 && byteCode <= 126;
 }
