@@ -10,9 +10,47 @@
   <head>
     <meta charset="utf-8">
     <title>Zeal 8-bit Computer Emulator</title>
+    <link rel="icon" href="imgs/zeal.png" sizes="16x16">
+    <!-- Emulator's stylesheet -->
+    <link rel="stylesheet" type="text/css" href="frontend/css/emulator.css" media="screen" />
+    <!-- jQuery -->
+    <script src="component/jquery-3.6.0.min.js"></script>
+    <!-- Xterm -->
     <script src="component/xterm/xterm.js"></script>
     <link rel="stylesheet" href="component/xterm/xterm.css" />
-    <link rel="stylesheet" type="text/css" href="frontend/css/emulator.css" media="screen" />
+    <!-- Codemirror -->
+      <!-- There are all addons in component/codemirror/addon, but I don't know how to use them.
+      If you knew something about it, please add it in.
+      It's an anti-human design.                            --JasonMo -->
+    <!-- main -->
+    <script src="component/codemirror/lib/codemirror.js"></script>
+    <link rel="stylesheet" href="component/codemirror/lib/codemirror.css"/>
+    <!-- highlight -->
+    <script src="component/codemirror/mode/z80/z80.js"></script>
+    <script src="component/codemirror/mode/clike/clike.js"></script>
+    <!-- darcula style "not dracula" -->
+    <link rel="stylesheet" href="component/codemirror/theme/darcula.css">
+    <!-- runmode -->
+    <script src="component/codemirror/addon/runmode/runmode.js"></script>
+    <!-- fold -->
+    <link rel="stylesheet" href="component/codemirror/addon/fold/foldgutter.css"/>
+    <script src="component/codemirror/addon/fold/foldcode.js"></script>
+    <script src="component/codemirror/addon/fold/foldgutter.js"></script>
+    <script src="component/codemirror/addon/fold/brace-fold.js"></script>
+    <script src="component/codemirror/addon/fold/comment-fold.js"></script>
+    <!-- 括号匹配 -->
+    <script src="component/codemirror/addon/edit/matchbrackets.js"></script>
+    <!-- 自动补全 -->
+    <link rel="stylesheet" href="component/codemirror/addon/hint/show-hint.css">
+    <script src="component/codemirror/addon/hint/show-hint.js"></script>
+    <script src="component/codemirror/addon/hint/anyword-hint.js"></script>
+    <!-- Hash value -->
+    <script src="component/crypto/sha256.js"></script>
+    <!-- Disassembler-related -->
+    <script src="component/disassembler/opcodes_cb.js"></script>
+    <script src="component/disassembler/opcodes_ed.js"></script>
+    <script src="component/disassembler/opcodes_ixiy.js"></script>
+    <script src="component/disassembler/disassembler.js"></script>
   </head>
 
   <body>
@@ -115,6 +153,7 @@
         <div class="tab">Disassemble</div>
         <div id="memory-tab" class="tab">Memory view</div>
         <div class="tab active">Terminal (UART)</div>
+        <div class="tab">Code Editor</div>
       </section>
       <section id="memdump" class="panel hidden">
       </section>
@@ -148,6 +187,12 @@
         <input type="button" id="uart-file-send" value="Send" />
         <div id="terminal"></div>
       </section>
+      <section id="codeedit" class="panel hidden">
+        <button id="downasm">Download Program</button>
+        <input type="text" placeholder="Program name" id="progname">
+        <textarea class="form-control" id="code" name="code"></textarea>
+        <script src="frontend/codeedit.js"></script>
+      </section>
     </section>
 
     <script>
@@ -163,50 +208,12 @@
       var terminal = new Terminal();
       terminal.open(document.getElementById('terminal'));
     </script>
-    <script src="component/jquery-3.6.0.min.js"></script>
     <script>
       const left_panel_height = $("#debug").height();
       $("#rightpanel").css('min-height', left_panel_height);
     </script>
-    <!-- Disassembler-related -->
-    <script>
-        function disassembler_hex(n) {
-            return "$" + n.toString(16);
-        }
-
-
-        function hex(str, noprefix, digits) {
-            if (typeof digits === "undefined") {
-                digits = 4;
-            }
-            var result = "";
-            for (var i = 0; i < digits; i++)
-                result += "0";
-
-            const leading = (result + str.toString(16).toUpperCase()).substr(-digits);
-
-            if (noprefix) {
-                return leading;
-            }
-            return "0x" + leading;
-        }
-
-        function hex8(str, noprefix) {
-            const value = hex(str, true);
-            return (noprefix ? "" : "0x") + value.substring(2);
-        }
-
-        function hex16(high, lower, noprefix) {
-            const value = (high << 8) + lower;
-            return (noprefix ? "" : "0x") + hex(value, true);
-        }
-    </script>
     <!-- Emulation-related -->
     <script src="frontend/utils.js"></script>
-    <script src="component/disassembler/opcodes_cb.js"></script>
-    <script src="component/disassembler/opcodes_ed.js"></script>
-    <script src="component/disassembler/opcodes_ixiy.js"></script>
-    <script src="component/disassembler/disassembler.js"></script>
     <script src="hardemu/characters.js"></script>
     <script src="hardemu/screen.js"></script>
     <script src="hardemu/rom.js"></script>
@@ -217,7 +224,6 @@
     <script src="hardemu/ram.js"></script>
     <script src="hardemu/mmu.js"></script>
     <script src="hardemu/Z80.js"></script>
-    <script src="component/crypto/sha256.js"></script>
     <script src="frontend/init.js"></script>
     <script src="frontend/breakpoint.js"></script>
     <script src="frontend/menus.js"></script>
