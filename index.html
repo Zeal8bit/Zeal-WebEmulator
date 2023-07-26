@@ -46,6 +46,9 @@
     <script src="component/codemirror/addon/hint/anyword-hint.js"></script>
     <!-- Hash value -->
     <script src="component/crypto/sha256.js"></script>
+    <!-- Assembler-related -->
+    <script src="component/assembler/asm.js"></script>
+    <script src="component/assembler/compile.js"></script>
     <!-- Disassembler-related -->
     <script src="component/disassembler/opcodes_cb.js"></script>
     <script src="component/disassembler/opcodes_ed.js"></script>
@@ -188,8 +191,11 @@
         <div id="terminal"></div>
       </section>
       <section id="codeedit" class="panel hidden">
-        <button id="downasm">Download Program</button>
         <input type="text" placeholder="Program name" id="progname">
+        <button id="savecode">Save</button>
+        <button id="clearcode">Clear</button>
+        <button id="asmcode">Assemble</button>
+        <button id="downasm">Download Program</button>
         <textarea class="form-control" id="code" name="code"></textarea>
         <script src="frontend/codeedit.js"></script>
       </section>

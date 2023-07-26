@@ -9,6 +9,7 @@
     Last modified: 2023/07/21 8:15,
     Last commit: "Project: Reconstitution, delete useless files",
 -->
+
 <h1 align="center">Zeal 8-bit Computer emulator</h1>
 <p align=center>
     <img src="imgs/screenshot.png" alt="screenshot" />
@@ -159,7 +160,6 @@ On the project/debugger side itself:
 
 * A better **interface** for the debugger's buttons, with some shortcuts
 * A better way to **parse breakpoint input**. A known bug is that providing a label starting with a hexadecimal letter would be interpreted as a PC value instead of a label. For example, inputting *date_routine* as a label to break in would result in the addition of a breakpoint at address 0xda instead of the address of label *date_routine* (because *date* starts with hex letters *da*)
-* An **integrated code editor** with an assembler! In the (far?) future, integrating a code editor, ideally, *CodeMirror*, would be a very nice addition. It would let anyone write code, assemble it, inject it in the emulator and test it directly. No need to have a toolchain or an assembler installed. Everything would be available directly from the browser. It would also be possible to connect the debugger to the code editor to be able to debug the code written more easily.
 
 ## Contributing
 

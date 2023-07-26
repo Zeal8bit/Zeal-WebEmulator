@@ -10,6 +10,7 @@
     Last modified: 2023/07/21 8:16,
     Last commit: "Project: Reconstitution, delete useless files",
 -->
+
 <h1 align="center">Zeal 8-bit Computer emulator</h1>
 <p align=center>
     <img src="../imgs/screenshot.png" alt="screenshot" />
@@ -157,7 +158,6 @@ yarn dist-win64
 
 * 调试器按钮的更好界面，带有一些快捷方式
 * 解析断点输入的更好方法。一个已知的错误是，提供以十六进制字母开头的标签将被解释为 PC 值而不是标签。例如，输入 *date_routine* 作为要中断的标签将导致在地址 0xda 处添加断点，而不是标签 *date_routine* 的地址（因为 *date* 以十六进制字母 *da* 开头）
-* 带有汇编程序的**汇编代码编辑器**！在（遥远的？）未来，集成代码编辑器，理想情况下，*CodeMirror*，将是一个非常好的补充。它可以让任何人编写代码，汇编它，将其注入模拟器并直接测试它。无需安装工具链或汇编程序。一切都可以直接从浏览器获得。还可以将调试器连接到代码编辑器，以便能够更轻松地调试编写的代码。
 
 ## 为项目做出贡献
 

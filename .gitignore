@@ -1,11 +1,11 @@
 # The largest thing in the world:
-node_modules/
+node_modules
 
 # Package manager files:
 yarn-error.log
 *.lock
 
 # User publish:
-out/
-build/
+out
+build
 zealemu-*
