@@ -80,34 +80,21 @@ async function compareSpeeds(promises) {
 }
 
 async function testSpeed(url) {
+    const startTime = Date.now();
+    const response = await fetch(url);
+    if (response.ok) {
+        const endTime = Date.now();
+        const duration = endTime - startTime;
+        const speed = response.headers.get("content-length") / duration;
+        return { speed, url };
+    } else {
+        return { speed: 999999999, url };
+    }
+};
 
-    let startTime = Date.now();
-    let xhr = new XMLHttpRequest();
-    
-    xhr.open("GET", url, true);
-
-    return new Promise(function(resolve, reject) {
-        xhr.onload = function() {
-            if (xhr.status == 200) {
-                let endTime = Date.now();
-                let duration = endTime - startTime;
-                let speed = xhr.response.length / duration;
-                resolve({speed: speed, url: url});
-            } 
-            else {
-                resolve({speed: 999999999, url: url});
-            }
-        };
-        xhr.onerror = function() {
-            reject(new Error("Network error"));
-        };
-        xhr.send();
-    });
-}
-
-function readblobfromurl(pburl) {
-    return fetch(pburl)
-      .then(response => response.blob());
+async function readblobfromurl(pburl) {
+    const response = await fetch(pburl);
+    return await response.blob();
 }
 
 function filehash(file1, SHA2) {
@@ -218,32 +205,23 @@ function interrupt(interrupt_vector) {
     step_cpu();
 }
 
+// About hex
+
 function disassembler_hex(n) {
     return "$" + n.toString(16);
 }
 
-function hex(str, noprefix, digits) {
-    if (typeof digits === "undefined") {
-        digits = 4;
-    }
-    var result = "";
-    for (var i = 0; i < digits; i++)
-        result += "0";
-
-    const leading = (result + str.toString(16).toUpperCase()).substr(-digits);
-
-    if (noprefix) {
-        return leading;
-    }
-    return "0x" + leading;
+function hex(str = "", noprefix = false, digits = 4) {
+    const leading = `${"0".repeat(digits)}${str.toString(16).toUpperCase()}`.substr(-digits);
+    return noprefix ? leading : `0x${leading}`;
 }
 
 function hex8(str, noprefix) {
     const value = hex(str, true);
-    return (noprefix ? "" : "0x") + value.substring(2);
+    return `${noprefix ? "" : "0x"}${value.substring(2)}`;
 }
-
+  
 function hex16(high, lower, noprefix) {
-    const value = (high << 8) + lower;
-    return (noprefix ? "" : "0x") + hex(value, true);
+    const value = (high << 8) | lower;
+    return `${noprefix ? "" : "0x"}${hex(value, true)}`;
 }

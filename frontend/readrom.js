@@ -73,29 +73,22 @@ $("#read-button").on('click', function() {
     }
 
     /* Read the binary executable */
-    let fileread = $("#file-input")[0].files[0];
+    const fileread = $("#file-input")[0].files[0];
+    const pboptions = $("#romchoice option:selected");
+    const pbuildurl = pboptions.val();
+    const pbuildhas = pboptions.attr('hash');
 
-    var pboptions = $("#romchoice option:selected");
-
-    var pbuildurl = pboptions.val();
-
-    var pbuildhas = pboptions.attr('hash');
-
-    if (typeof fileread !== "undefined"){
-        let file = fileread;
-        read_owr(file);
-    } 
-    else if (pbuildurl !== "None"){
+    if (typeof fileread !== "undefined") {
+        read_owr(fileread);
+    } else if (pbuildurl !== "None") {
         readblobfromurl(pbuildurl).then(file => {
-            if (typeof file !== "undefined") {
-                filehash(file, pbuildhas);
-            }
-            else {
-                window.alert("No os_with_romdisk chosen");
-            }
+        if (typeof file !== "undefined") {
+            filehash(file, pbuildhas);
+        } else {
+            window.alert("No os_with_romdisk chosen");
+        }
         });
-    } 
-    else {
+    } else {
         window.alert("No os_with_romdisk chosen");
     }
 
