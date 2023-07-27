@@ -17,14 +17,6 @@ var t_state = 0;
 var breakpoints = [];
 var running = true;
 var registers = null;
-var dump = {
-    /* Stores all the lines of the dump file */
-    lines: [],
-    /* table will associate the virtual address (PC) of the virtual
-     * machine to the line of the instruction in the previous field */
-    table: [],
-    labels: []
-};
 
 /* Check which scale to use for the video */
 var scale = 1;
@@ -43,7 +35,8 @@ const i2c = new I2C(this, pio);
 const keyboard = new Keyboard(this, pio);
 const ds1307 = new I2C_DS1307(this, i2c);
 /* We could pass an initial content to the EEPROM, but set it to null for the moment */
-const eeprom = new I2C_EEPROM(this, i2c, null)
+const eeprom = new I2C_EEPROM(this, i2c, null);
+const disassembler = new Disassembler();
 
 /* Memdump related */
 const byte_per_line = 0x20;
@@ -153,24 +146,20 @@ function setASMView() {
 
     /* Read "bytes" bytes from the Z80 virtual memory */
     var memory = []
-    for (var i = 0; i < bytes; i++) {
+    /* Add 4 bytes so that if the last instruction is a 4 byte instruction, we won't go out of
+     * bounds when disassembling */
+    for (var i = 0; i < bytes + 4; i++) {
         memory.push(mem_read(pc + i));
     }
 
     /* Disassemble this part of the memory */
-    const instr_arr = disassemble_memory(memory, bytes, pc);
+    const instr_arr = disassembler.disassemble(memory, bytes, pc);
 
-    /* The first instruction is special, it's the "active" one, treat it separately from the rest */
-    const first = `<div data-addr="${instr_arr[0].addr}" class="dumpline activeline">${instr_arr[0].instruction}</div>`;
-
-    /* Remove the first element from the array */
-    instr_arr.shift();
-
-    /* Treat all other instructions */
-    var result = instr_arr.map(entry => `<div data-addr="${entry.addr}" class="dumpline">${entry.instruction}</div>`);
-
-    /* Put the "first" string at the beginning of the "result" array */
-    result.unshift(first);
+    const result = instr_arr.map(entry => {
+        const active = (entry.instruction && (entry.addr == pc)) ? "activeline" : "";
+        const text = entry.label || entry.instruction;
+        return `<div data-addr="${entry.addr}" class="dumpline ${active}">${text}</div>`;
+    });
 
     $("#memdump").html(result);
 }
@@ -438,51 +427,22 @@ function interrupt(interrupt_vector) {
     step_cpu();
 }
 
-function parseDumpLine(i, line) {
-    var idx = line.indexOf(";");
-    if (idx != -1) {
-        /* Extract number from the [ ] */
-        const addr = parseInt(line.substr(idx+2, 4), 16);
-        dump.table[addr] = i;
-        return addr;
-    }
-    return -1;
-}
-
 function binaryReady() {
     $("#binready").addClass("ready");
 }
 
-function symbolsReady() {
-    $("#symready").addClass("ready");
-}
-
 $("#read-button").on('click', function() {
-    /* Read the binary dump */
+    /* If a dump/map file was provided, try to load it */
     let fdump = $("#file-dump")[0].files[0];
-    let rdump = new FileReader();
-    rdump.addEventListener('load', function(e) {
-        const lines = e.target.result.split("\n");
-        dump.lines = lines;
-        for (var i = 0; i < lines.length; i++) {
-            const line = lines[i];
-            const addr = parseDumpLine(i, line);
-            /* If error in parsing, it may be a label */
-            if (addr == -1 && line.indexOf(":") != -1) {
-                /* Check if the next line can be parsed */
-                const naddr = parseDumpLine(i + 1, lines[i + 1]);
-                if (naddr != -1) {
-                    /* Extract the label, without the : */
-                    const label = line.substr(0, line.length - 1);
-                    dump.labels[label] = naddr;
-                    /* Skip the next line as we just treated it */
-                    i++;
-                }
-            }
-        }
-        symbolsReady();
-    });
     if (typeof fdump !== "undefined") {
+        let rdump = new FileReader();
+        rdump.addEventListener('load', (e) => {
+            const success = disassembler.loadSymbols(e.target.result);
+            if (success) {
+                /* symbols are ready! */
+                $("#symready").addClass("ready");
+            }
+        });
         rdump.readAsText(fdump);
     }
 
@@ -542,10 +502,11 @@ $("#addbp").on("click", function (){
     var result = parseInt(written, 16);
     if (isNaN(result)) {
         /* Could be a label, let's check this */
-        result = dump.labels[written];
-        if (typeof result === "undefined") {
+        const addr = disassembler.labelAddress(written);
+        if (addr === null) {
             return;
         }
+        result = addr;
     }
     /* Only add the breakpoint if not in the list */
     if (!breakpoints.includes(result) && result <= 0xFFFF) {

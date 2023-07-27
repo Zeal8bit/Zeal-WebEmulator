@@ -269,6 +269,6 @@ function opcode_CB_x(snd) {
     };
 
     /* Return the opcode from the table above, or 'ILL' if it doesn't exist */
-    const text = cb_opcodes[snd] | 'ILL';
+    const text = cb_opcodes[snd] || 'ILL';
     return { text, size: 2 };
 };
