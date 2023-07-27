@@ -1,9 +1,9 @@
 /**
  * SPDX-FileCopyrightText: 2022 Zeal 8-bit Computer <contact@zeal8bit.com>
- * 
+ *
  * SPDX-License-Identifier: Apache-2.0
  */
-:root, :root.dark {
+ :root, :root.dark {
     --first-bg-color: #002b36;
     --second-bg-color: #093642;
     --third-bg-color: #0a4d5f;
@@ -64,14 +64,15 @@ input[type=text] {
     height: 1.7em;
 }
 
+#toppanel {
+    display: flex;
+    justify-content: space-between;
+}
 
 #debug {
     background-color:var(--second-bg-color);
-    vertical-align: top;
     box-shadow: 5px 0 10px -4px #040404;
     margin: 0;
-    display: inline-block;
-    height: auto;
     width:15em;
     border-bottom-right-radius: 10px;
     border-bottom-left-radius: 10px;
@@ -116,26 +117,16 @@ hr {
     background-color: var(--third-bg-color);
 }
 
-#container {
-    display: inline-block;
-    width: calc(100% - 15em - 15em);
-}
-
 #screen {
-    display: block;
     margin: 2em auto;
     background-color: black;
 }
 
 #rightpanel {
-    position: absolute;
-    right: 0;
     background-color:var(--second-bg-color);
     color: var(--first-txt-color);
-    vertical-align: top;
     box-shadow: -5px 0 5px -3px #040404;
     margin: 0 0 0em 2em;
-    display: inline-block;
     width:15em;
     box-sizing: border-box;
     border-bottom-right-radius: 10px;
@@ -213,7 +204,7 @@ hr {
 }
 
 .bottompanel {
-    position: relative;   
+    position: relative;
 }
 
 .hidden {
@@ -272,13 +263,34 @@ hr {
     margin-bottom: 1em;
 }
 
-.dumpline {
+
+.dumpline::before {
+    color: rgb(207 49 28);
+    display: inline-block;
+    width: 1.5em;
+    content: " ";
+    vertical-align: middle;
+    padding-left: 0.25em;
+    margin-top: -0.4em;
+}
+
+.dumpline.brk::before {
+    content: "●";
+}
+
+.dumpline, .labelline {
     white-space: pre;
+    border-radius: 10px;
 }
 
 .dumpline.activeline, .activefield {
     background-color: var(--first-txt-color);
     color: var(--fourth-bg-color);
+}
+
+.dumpline:not(.activeline):hover {
+    background-color: var(--fourth-bg-color);
+    color: var(--first-txt-color);
 }
 
 .memaddr {

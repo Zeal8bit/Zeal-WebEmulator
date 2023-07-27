@@ -156,9 +156,22 @@ function setASMView() {
     const instr_arr = disassembler.disassemble(memory, bytes, pc);
 
     const result = instr_arr.map(entry => {
-        const active = (entry.instruction && (entry.addr == pc)) ? "activeline" : "";
-        const text = entry.label || entry.instruction;
-        return `<div data-addr="${entry.addr}" class="dumpline ${active}">${text}</div>`;
+        var cssclass = (entry.instruction && (entry.addr == pc)) ? "activeline" : "";
+        var text = "";
+
+        if (entry.label) {
+            cssclass += " labelline";
+            text = entry.label
+        } else {
+            cssclass += " dumpline";
+            text = entry.instruction;
+        }
+
+        /* Check if the current address has a breakpoint */
+        const breakpoint = getBreakpoint(entry.addr);
+        const brk = breakpoint == null ? "" : "brk";
+
+        return `<div data-addr="${entry.addr}" class="${cssclass} ${brk}">${text}</div>`;
     });
 
     $("#memdump").html(result);
@@ -494,6 +507,16 @@ $("#screen").on("keyup", function(e) {
     }
 });
 
+/**
+ * Add listeners on the add breakpoint field
+ */
+
+$("#bpaddr").on('keydown', function(event) {
+    if (event.key === "Enter") {
+        $("#addbp").click();
+    }
+});
+
 $("#addbp").on("click", function (){
     const written = $("#bpaddr").val();
     /* Empty the text field */
@@ -509,11 +532,17 @@ $("#addbp").on("click", function (){
         result = addr;
     }
     /* Only add the breakpoint if not in the list */
-    if (!breakpoints.includes(result) && result <= 0xFFFF) {
-        breakpoints.push({ address: result, enabled: true });
-        $("#bps").append('<li data-addr="' + result + '">' + hex(result) + '</li>');
-    }
+    addBreakpoint(result);
 });
+
+function addBreakpoint(addr) {
+    if (!breakpoints.includes(addr) && addr <= 0xFFFF) {
+        breakpoints.push({ address: addr, enabled: true });
+        $("#bps").append(`<li data-addr="${addr}">${hex(addr)}</li>`);
+        /* If the line is currently being disassembled, mark it as a breakpoint */
+        $(`.dumpline[data-addr='${addr}']`).addClass("brk");
+    }
+}
 
 function getBreakpoint(addr) {
     /* Find the breakpoint object in the breakpoint list */
@@ -521,24 +550,43 @@ function getBreakpoint(addr) {
     return (bkrobj != undefined) ? bkrobj : null;
 }
 
-function togglebreakpoint() {
-    /* Get the breakpoint address */
-    const bkpaddr = $(this).data("addr");
-    /* Same, for the DOM */
-    $(this).toggleClass("disabled");
+function toggleBreakpoint(brkaddr) {
+    $(`#bps li[data-addr='${brkaddr}']`).toggleClass("disabled");
+    $(`.dumpline[data-addr='${brkaddr}']`).toggleClass("brk");
 
     /* Find the breakpoint object in the breakpoint list */
-    const bkrobj = breakpoints.find(element => element.address == bkpaddr);
+    const bkrobj = breakpoints.find(element => element.address == brkaddr);
     /* Toggle enabled field in the breakpoint */
     if (bkrobj != undefined)
         bkrobj.enabled ^= true;
 }
 
+/**
+ * Add a listener on each disassembled line. On click, we can toggle the breakpoints.
+ * Because these dumplines are geenrated at runtime, we must install the listener on the
+ * parent element.
+ */
+$("#memdump").on("click", ".dumpline", function() {
+    const brkaddr = $(this).data("addr");
+    /* If the address is not in the breakpoint list, add it */
+    const brk = getBreakpoint(brkaddr);
+    if (brk == null) {
+        addBreakpoint(brkaddr);
+    } else {
+        toggleBreakpoint(brkaddr);
+    }
+});
+
+
 $("#step").on("click", step);
 $("#stop").on("click", stop);
 $("#stepover").on("click", step_over);
 $("#continue").on("click", cont);
-$("#bps").on("click", "li", togglebreakpoint);
+$("#bps").on("click", "li", function() {
+    /* Get the breakpoint address */
+    const bkpaddr = $(this).data("addr");
+    toggleBreakpoint(bkpaddr);
+});
 
 $("#dumpnow").on("click", function() {
     const virtaddr = parseInt($("#dumpaddr").val(), 16);
@@ -602,12 +650,6 @@ document.addEventListener('keydown', function(event) {
     }
   });
 
-
-$("#bpaddr").on('keydown', function(event) {
-    if (event.key === "Enter") {
-        $("#addbp").click();
-    }
-});
 
 $(".regaddr").click(function() {
     const virtaddr = parseInt($(this).text(), 16);
