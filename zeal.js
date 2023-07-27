@@ -440,10 +440,6 @@ function interrupt(interrupt_vector) {
     step_cpu();
 }
 
-function binaryReady() {
-    $("#binready").addClass("ready");
-}
-
 $("#read-button").on('click', function() {
     /* If a dump/map file was provided, try to load it */
     let fdump = $("#file-dump")[0].files[0];
@@ -467,7 +463,7 @@ $("#read-button").on('click', function() {
         let binary = e.target.result;
         if (isos) {
             rom.loadFile(binary);
-            binaryReady();
+            $("#binready").addClass("ready");
         } else {
             const addr = $("#address").val();
             const result = parseInt(addr, 16);
@@ -484,6 +480,7 @@ $("#read-button").on('click', function() {
     eepromr.addEventListener('load', function(e) {
         let binary = e.target.result;
         eeprom.loadFile(binary);
+        $("#eepromready").addClass("ready");
     });
     if (typeof file !== "undefined") {
         eepromr.readAsBinaryString(file);

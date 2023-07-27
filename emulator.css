@@ -407,3 +407,16 @@ button {
     outline: none;
     border: rgb(217 68 49) solid 1px;
 }
+
+.help {
+    cursor: pointer;
+    display: inline-block;
+    color:#fff;
+    background-color:#699de1;
+    width: 1.2em;
+    vertical-align: middle;
+    border-radius:100%;
+    font-size:7pt;
+    text-align:center;
+    box-shadow: inset -1px -1px 1px 0px rgba(0,0,0,0.25);
+}
