@@ -45,49 +45,51 @@ const devices = [ rom, ram, vchip, pio, keyboard, mmu ];
 const zpu = new Z80({ mem_read, mem_write, io_read, io_write });
 
 // Init zos index
-async function readindex() {
+async function initindex() {
     // Zos-Index-Mirror
     try {
-        let response = await fetch('https://jasonmo1.github.io/ZOS-Index-demo/index.json');
+        let response = await fetch('https://zeal8bit.com/roms/index.json');
         var indexsrc = await response.json();
-        initindex(indexsrc);
-    } catch (error) {
-        console.error(error.message);
+            // load index in index.json into romchoise
+        let index = indexsrc;
+
+        for (let jsonindex = 0; jsonindex < index.index.length; jsonindex++){
+            let urls = index.index[jsonindex].urls;
+
+            // if (urls.length == 1) {
+            //     fastestUrl = urls[0];
+            // }
+            // else if (urls.length > 1) {
+            //     let promises = [];
+            //     for (let i = 0; i < urls.length; i++) {
+            //         let promise = testSpeed(urls[i]);
+            //         promises.push(promise);
+            //     }
+
+            //     try {
+            //         let fastest = await compareSpeeds(promises);
+            //         var fastestUrl = fastest.url;
+            //     } catch (error) {
+            //         console.error(error.message);
+            //     }
+            // }
+            // else {
+            //     window.alert("The image doesn't have a corresponding link")
+            // }
+            if (urls == undefined || urls == null) {
+                window.alert("The image doesn't have a corresponding link")
+            }
+            else {
+                var option = "<option value=" + urls + " version=" + index.index[jsonindex].version + " upload=" + index.index[jsonindex].upload + " hash=" + index.index[jsonindex].hash + ">" + index.index[jsonindex].name + "</option>";
+                $("#romchoice").append(option);
+            }
+        }
+    }
+    catch (error) {
+        console.error("Error while init zos-index:\n"+error.message);
+        $("#romload").hide();
+        console.warn("Feature: Preload romdisk has been disabled");
     }
 }
 
-async function initindex(indexjson) {
-    // load index in index.json into romchoise
-    let index = indexjson;
-    
-    for (let jsonindex = 0; jsonindex < index.index.length; jsonindex++){
-        let urls = index.index[jsonindex].urls;
-
-        if (urls.length == 1) {
-            fastestUrl = urls[0];
-        }
-        else if (urls.length > 1) {
-            let promises = [];
-            for (let i = 0; i < urls.length; i++) {
-                let promise = testSpeed(urls[i]);
-                promises.push(promise);
-            }
-    
-            try {
-                let fastest = await compareSpeeds(promises);
-                var fastestUrl = fastest.url;
-            } catch (error) {
-                console.error(error.message);
-            }
-        }
-        else {
-            window.alert("The image doesn't have a corresponding link")
-        }
-
-
-        var option = "<option value=" + fastestUrl + " version=" + index.index[jsonindex].version + " upload=" + index.index[jsonindex].upload + " hash=" + index.index[jsonindex].hash + ">" + index.index[jsonindex].name + "</option>";
-        $("#romchoice").append(option);
-    }
-}
-
-readindex();
+initindex();

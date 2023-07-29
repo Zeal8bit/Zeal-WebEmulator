@@ -11,7 +11,7 @@ function read_owr(file) {
         let binary = e.target.result;
         if (isos) {
             rom.loadFile(binary);
-            $("#symready").addClass("ready");
+            $("#binready").addClass("ready");
         } else {
             const addr = $("#address").val();
             const result = parseInt(addr, 16);
