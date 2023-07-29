@@ -304,6 +304,8 @@ function Zeal8bitComputer() {
         clearInterval(interval);
         interval = null;
         running = false;
+        vchip.clear();
+        terminal.clear();
         zealcom = new Zeal8bitComputer();
         /* Reset all the file inputs */
         $("#romfile [type=file]").val("");
@@ -316,12 +318,14 @@ function Zeal8bitComputer() {
 
     function reset() {
         zpu.reset();
+        vchip.clear();
+        terminal.clear();
         step_cpu();
     }
 
     function interrupt(interrupt_vector) {
-            zpu.interrupt(false, interrupt_vector);
-            step_cpu();
+        zpu.interrupt(false, interrupt_vector);
+        step_cpu();
     }
 
     function destroy() {

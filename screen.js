@@ -362,4 +362,5 @@ function VideoChip(Zeal, PIO, scale) {
     this.mem_write = mem_write;
     this.io_read = io_read;
     this.io_write = io_write;
+    this.clear = initialize;
 }

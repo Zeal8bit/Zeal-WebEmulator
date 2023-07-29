@@ -11,11 +11,15 @@
     <meta charset="utf-8">
     <title>Zeal 8-bit Computer Emulator</title>
     <link rel="stylesheet" href="xterm/xterm.css" />
+    <script src="crypto/sha256.js"></script>
     <script src="xterm/xterm.js"></script>
     <link rel="stylesheet" type="text/css" href="emulator.css" media="screen" />
   </head>
 
   <body>
+    <section id="popup-message">
+    </section>
+
     <section id="toppanel">
         <section id="debug">
         <table>
@@ -36,8 +40,9 @@
             <tr><td>Flags</td><td id="flags"></td></tr>
         </table>
 
-        <!-- <section id="romload">
-            <label for="romchoice">Choose a pre-built ROM:</label><br>
+        <section id="romload">
+            <label for="romchoice">Choose a pre-built ROM:</label>
+            <img src="imgs/loading.gif" id="loading_img" alt="loading..." />
             <select name="romchoice" id="romchoice">
                 <option value="">Loading...</option>
             </select>
@@ -45,7 +50,7 @@
             <section id="romadvanced">
                 <a href="#">Advanced...</a>
             </section>
-        </section> -->
+        </section>
 
         <section id="romfile">
             <div style="display: none;">
@@ -85,7 +90,8 @@
             <img id="step" title="Step (F10)" src="imgs/step.png" alt="Step" />
             <img id="stepover" title="Step Over (F11)" src="imgs/stepover.png" alt="Step over" />
             <img id="stop" title="Stop" src="imgs/stop.png" alt="Stop" />
-            <img id="restart" title="Restart" src="imgs/restart.png" alt="Restart">
+            <img id="reset" title="Reset" src="imgs/restart.png" alt="Reset">
+            <img id="clean" title="Clean" src="imgs/clean.png" alt="Clean">
         </section>
 
         <section class="menu">
@@ -179,10 +185,17 @@
     <script src="jquery-3.6.0.min.js"></script>
     <!-- Disassembler-related -->
     <script>
+        jQuery.fn.visible = function() {
+            return this.css('visibility', 'visible');
+        };
+
+        jQuery.fn.invisible = function() {
+            return this.css('visibility', 'hidden');
+        };
+
         function disassembler_hex(n) {
             return "$" + n.toString(16);
         }
-
 
         function hex(str, noprefix, digits) {
             if (typeof digits === "undefined") {

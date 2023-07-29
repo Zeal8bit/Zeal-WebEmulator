@@ -1,5 +1,5 @@
 /**
- * SPDX-FileCopyrightText: 2022 Zeal 8-bit Computer <contact@zeal8bit.com>
+ * SPDX-FileCopyrightText: 2022-2023 Zeal 8-bit Computer <contact@zeal8bit.com>
  *
  * SPDX-License-Identifier: Apache-2.0
  */
@@ -35,9 +35,17 @@
         return bytes;
     }
 
+    /**
+     * Accept both a string or an array as "binary" data
+     */
     function loadFile(binary) {
-        for (var i = 0; i < binary.length; i++)
-            data[i] = binary.charCodeAt(i);
+        if (typeof binary === "string") {
+            for (var i = 0; i < binary.length; i++)
+                data[i] = binary.charCodeAt(i);
+        } else {
+            for (var i = 0; i < binary.length; i++)
+                data[i] = binary[i];
+        }
     }
 
     function is_valid_address(read, address) {
