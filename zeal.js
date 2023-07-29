@@ -1,5 +1,5 @@
 /**
- * SPDX-FileCopyrightText: 2022 Zeal 8-bit Computer <contact@zeal8bit.com>
+ * SPDX-FileCopyrightText: 2022-2023 Zeal 8-bit Computer <contact@zeal8bit.com>
  *
  * SPDX-License-Identifier: Apache-2.0
  */
@@ -707,4 +707,112 @@ $("#dumpcontent").on("mouseenter", ".asciichars div", function() {
     setClassToMemoryByte($(this), "activefield", true);
 });
 
-$("#romadvanced").click(function () { $("#romfile").toggle(500); });
+
+/**
+ * Manage the "advanced" link that shows all the files uploader
+ * If the URL has "advanced" parameters, show these uploaders directly
+ */
+const urlGetParam = new URLSearchParams(window.location.search);
+var advancedMode = urlGetParam.get("advanced") === "true";
+
+if (advancedMode) {
+    $("#romload").hide();
+    $("#romfile").show();
+}
+
+$("#romadvanced a").click(() => {
+    $("#romfile").toggle(500);
+});
+
+/**
+ * Manage the popup message
+ */
+
+/* Add a listener on the popup that will close it on click */
+$("#popup-message").on("click", function() {
+    $(this).fadeOut(500);
+});
+
+function showErrorPopup(message) {
+    const popup = $("#popup-message");
+
+    popup.addClass("poperror");
+    popup.html(message);
+    popup.fadeIn(1000);
+    setTimeout(() => {
+        popup.fadeOut(1000);
+    }, 3000);
+}
+
+function switchToAdvancedMode(error) {
+    showErrorPopup("Could not fetch remote data, switched to advanced mode");
+
+    /* Hide advanced link option and ROMs list */
+    $("#romload").hide(250, function() {
+        /* Show file uploaders */
+        $("#romfile").show(250);
+    });
+}
+
+
+/**
+ * Manage the pre-built ROMs list. Available ROMs will be fetched from a remote JSON file that contains
+ * names and links to all of the available ROMs, the first one will always be the default.
+ */
+const prebuilt_json_url = "https://zeal8bit.com/roms/index.json";
+
+/* Process the index JSON object that contains all the ROMs available */
+function processIndex(index) {
+    /* Generate an HTML option out of each entry */
+    const options = index.index.map(entry =>
+        `<option value="${entry.urls}" data-version="${entry.version}" data-hash="${entry.hash}">${entry.name}</option>`
+    );
+
+    const all_options =
+        `<option value="">Choose an image...</option>` +
+        options.join("");
+
+    $("#romchoice").html(all_options);
+}
+
+ /* Fetch the remote JSON file, and pass the content to the previous function */
+ if (!advancedMode) {
+    fetch(prebuilt_json_url)
+        .then(response => response.json())
+        .then(response => processIndex(response))
+        .catch(switchToAdvancedMode);
+}
+
+
+function readBinaryFromURL(pburl) {
+    return fetch(pburl)
+        .then(response => response.blob())
+        .then(res => new Response(res).arrayBuffer())
+        .then(res => new Uint8Array(res));
+}
+
+/**
+ * Add a listener to the romchoice list, load the ROM when selected
+ */
+$("#romchoice").on("change", function() {
+    /* Get the URL of the current choice */
+    const url = $(this).val();
+    /* Get the hash for the current binary */
+    const hash = $('#romchoice option:selected').data("hash");
+
+    if (!url) {
+        return;
+    }
+
+    $("#loading_img").visible();
+
+    readBinaryFromURL(url)
+    .then(data => {
+        stop();
+        rom.loadFile(data);
+        $("#loading_img").invisible();
+        cont();
+    })
+    .catch(switchToAdvancedMode);
+
+});
