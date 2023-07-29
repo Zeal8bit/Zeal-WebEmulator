@@ -4,25 +4,6 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-function binaryReady() {
-    $("#binready").addClass("ready");
-}
-
-function symbolsReady() {
-    $("#symready").addClass("ready");
-}
-
-function parseDumpLine(i, line) {
-    var idx = line.indexOf(";");
-    if (idx != -1) {
-        /* Extract number from the [ ] */
-        const addr = parseInt(line.substr(idx+2, 4), 16);
-        dump.table[addr] = i;
-        return addr;
-    }
-    return -1;
-}
-
 function read_owr(file) {
     let reader = new FileReader();
     const isos = $("#os").prop("checked");
@@ -30,7 +11,7 @@ function read_owr(file) {
         let binary = e.target.result;
         if (isos) {
             rom.loadFile(binary);
-            binaryReady();
+            $("#symready").addClass("ready");
         } else {
             const addr = $("#address").val();
             const result = parseInt(addr, 16);
@@ -43,30 +24,19 @@ function read_owr(file) {
 }
 
 $("#read-button").on('click', function() {
-    /* Read the binary dump */
+    /* If a dump/map file was provided, try to load it */
     let fdump = $("#file-dump")[0].files[0];
-    let rdump = new FileReader();
-    rdump.addEventListener('load', function(e) {
-        const lines = e.target.result.split("\n");
-        dump.lines = lines;
-        for (var i = 0; i < lines.length; i++) {
-            const line = lines[i];
-            const addr = parseDumpLine(i, line);
-            /* If error in parsing, it may be a label */
-            if (addr == -1 && line.indexOf(":") != -1) {
-                /* Check if the next line can be parsed */
-                const naddr = parseDumpLine(i + 1, lines[i + 1]);
-                if (naddr != -1) {
-                    /* Extract the label, without the : */
-                    const label = line.substr(0, line.length - 1);
-                    dump.labels[label] = naddr;
-                    /* Skip the next line as we just treated it */
-                    i++;
-                }
+    if (typeof fdump !== "undefined") {
+        let rdump = new FileReader();
+        rdump.addEventListener('load', (e) => {
+            const success = disassembler.loadSymbols(e.target.result);
+            if (success) {
+                /* symbols are ready! */
+                $("#symready").addClass("ready");
             }
-        }
-        symbolsReady();
-    });
+        });
+        rdump.readAsText(fdump);
+    }
 
     if (typeof fdump !== "undefined") {
         rdump.readAsText(fdump);
@@ -98,6 +68,7 @@ $("#read-button").on('click', function() {
     eepromr.addEventListener('load', function(e) {
         let binary = e.target.result;
         eeprom.loadFile(binary);
+        $("#eepromready").addClass("ready");
     });
     if (typeof file !== "undefined") {
         eepromr.readAsBinaryString(file);

@@ -73,7 +73,7 @@ function opcode_ED_x(snd, third, fourth) {
     const regs_16 = ['BC', 'DE', 'HL', 'SP'];
 
     /* Return the opcode from the table above, or 'ILL' if it doesn't exist */
-    const text = ed_opcodes[snd] | 'ILL';
+    const text = ed_opcodes[snd] || 'ILL';
 
     if (text != 'ILL') {
         return { text, size: 2 };

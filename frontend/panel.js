@@ -10,7 +10,6 @@ $("#disnow").on("click", function() {
     setASMView();
 });
 
-
 $("#dumpnow").on("click", function() {
     const virtaddr = parseInt($("#dumpaddr").val(), 16);
     const size = parseInt($("#dumpsize").val());
@@ -52,6 +51,21 @@ $(".membytes").on("mouseenter", "div", function() {
     }
 });
 
+/**
+ * Add a listener on each disassembled line. On click, we can toggle the breakpoints.
+ * Because these dumplines are geenrated at runtime, we must install the listener on the
+ * parent element.
+ */
+$("#memdump").on("click", ".dumpline", function() {
+    const brkaddr = $(this).data("addr");
+    /* If the address is not in the breakpoint list, add it */
+    const brk = getBreakpoint(brkaddr);
+    if (brk == null) {
+        addBreakpoint(brkaddr);
+    } else {
+        toggleBreakpoint(brkaddr);
+    }
+});
 
 /* It is possible to send files as raw binary data on the UART, place
  * a listener on the send button for that */
@@ -72,15 +86,6 @@ $("#baudrate").on("change", function() {
     const baudrate = $(this).val();
     uart.set_baudrate(baudrate);
 });
-
-var dump = {
-    /* Stores all the lines of the dump file */
-    lines: [],
-    /* table will associate the virtual address (PC) of the virtual
-     * machine to the line of the instruction in the previous field */
-    table: [],
-    labels: []
-};
 
 function updateRegistersHTML() {
     $("#rega").text(hex8(registers.a));
@@ -138,36 +143,42 @@ function setMMUView() {
 }
 
 function setASMView() {
-
     /* Get the PC, which is a virtual address */
     const pc = registers != null ? (registers.pc) : 0;
-    /* Check that the physical address is still in ROM */
-
     /* Set the number of instructions we need to disassemble and show */
     const instructions = 20;
     /* The average number of bytes per instruction is 2 or 3 */
     const bytes = instructions * 3;
 
     /* Read "bytes" bytes from the Z80 virtual memory */
-    var memory = []
-    for (var i = 0; i < bytes; i++) {
+    var memory = [];
+    /* Add 4 bytes so that if the last instruction is a 4 byte instruction, we won't go out of
+     * bounds when disassembling */
+    for (var i = 0; i < bytes + 4; i++) {
         memory.push(mem_read(pc + i));
     }
 
     /* Disassemble this part of the memory */
-    const instr_arr = disassemble_memory(memory, bytes, pc);
+    const instr_arr = disassembler.disassemble(memory, bytes, pc);
 
-    /* The first instruction is special, it's the "active" one, treat it separately from the rest */
-    const first = `<div data-addr="${instr_arr[0].addr}" class="dumpline activeline">${instr_arr[0].instruction}</div>`;
+    const result = instr_arr.map(entry => {
+        var cssclass = (entry.instruction && (entry.addr == pc)) ? "activeline" : "";
+        var text = "";
 
-    /* Remove the first element from the array */
-    instr_arr.shift();
+        if (entry.label) {
+            cssclass += " labelline";
+            text = entry.label
+        } else {
+            cssclass += " dumpline";
+            text = entry.instruction;
+        }
 
-    /* Treat all other instructions */
-    var result = instr_arr.map(entry => `<div data-addr="${entry.addr}" class="dumpline">${entry.instruction}</div>`);
+        /* Check if the current address has a breakpoint */
+        const breakpoint = getBreakpoint(entry.addr);
+        const brk = breakpoint == null ? "" : "brk";
 
-    /* Put the "first" string at the beginning of the "result" array */
-    result.unshift(first);
+        return `<div data-addr="${entry.addr}" class="${cssclass} ${brk}">${text}</div>`;
+    });
 
     $("#memdump").html(result);
 }

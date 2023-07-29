@@ -28,7 +28,7 @@ This project is a software emulator for Zeal 8-bit Computer: a homebrew 8-bit co
 
 ## Why this project?
 
-The goal of this project is to reproduce the exact same behavior of the real machine, in order to be able to execute and mainly **debug** the programs written for it directly from a host computer, without the need to flash any EEPROM or NOR Flash in order to test it. This makes development and test cycles much faster and more convenient.
+The goal of this project is to reproduce the same behavior as the real machine, to be able to execute and **debug** the programs written for it directly from a host computer. As such, there is no need to flash any EEPROM or NOR Flash to test programs. This makes development and test cycles much faster and more convenient.
 
 ## Why a web-based emulator? (HTML/CSS/JavaScript)
 
@@ -42,9 +42,8 @@ The emulator has been tested on Opera, Google Chrome and Microsoft Edge.
 
 The emulator is slower than the real hardware, even though the real hardware is using a Z80 running at 10MHz. This is due to the overhead of Javascript itself and the web browser itself. But as I said above, the main feature this was made for is **debugging** programs and for this, there is no doubt it is efficient.
 
-Moreover, the emulator is not really accurate it terms of timings, more details below, in the *features* section.
 
-Writing a native emulator in **C** (w/ SDL) would cover the requirement of a full-speed emulator, which would be more accurate in terms of timing. However, this needs some time investment. Feel free to contact me or contribute if such a project interest you.
+Writing a native emulator in **C** (w/ SDL) would cover the requirement of a full-speed emulator. However, this needs some time investment. Feel free to contact me or contribute if such a project interest you.
 
 ## How to start using the emulator?
 
@@ -139,6 +138,7 @@ Currently, the following features from Zeal 8-bit Computer are emulated:
 Features of the emulator itself implemented:
 
 * Debugger: breakpoints, step, step over instruction, continue until next breakpoint
+* Assembler: when the emulator reaches a breakpoint, the code at *Program Counter* is disassembled. Clicking on one of the instructions will toggle a breakpoint. A map file can be provided to specify symbols.
 * Load a binary file, loaded into ROM directly
 * Load a dump file generated from `z88dk-dis` to view assembly code while doing step-by-step debugging
 * Set breakpoints with either a **hexadecimal** PC address or a symbol (from the dump file)
@@ -158,7 +158,6 @@ On the emulation side, the remaining tasks to do are:
 
 On the project/debugger side itself:
 
-* A better **interface** for the debugger's buttons, with some shortcuts
 * A better way to **parse breakpoint input**. A known bug is that providing a label starting with a hexadecimal letter would be interpreted as a PC value instead of a label. For example, inputting *date_routine* as a label to break in would result in the addition of a breakpoint at address 0xda instead of the address of label *date_routine* (because *date* starts with hex letters *da*)
 
 ## Contributing
