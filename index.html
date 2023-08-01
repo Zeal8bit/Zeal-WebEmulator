@@ -14,14 +14,12 @@
     <!-- Emulator's stylesheet -->
     <link rel="stylesheet" type="text/css" href="frontend/css/emulator.css" media="screen" />
     <!-- jQuery -->
-    <script src="component/jquery-3.6.0.min.js"></script>
+    <script src="component/jquery/jquery-3.6.0.min.js"></script>
+    <script src="component/jquery/extend.js"></script>
     <!-- Xterm -->
     <script src="component/xterm/xterm.js"></script>
     <link rel="stylesheet" href="component/xterm/xterm.css" />
     <!-- Codemirror -->
-      <!-- There are all addons in component/codemirror/addon, but I don't know how to use them.
-      If you knew something about it, please add it in.
-      It's an anti-human design.                            --JasonMo -->
     <!-- main -->
     <script src="component/codemirror/lib/codemirror.js"></script>
     <link rel="stylesheet" href="component/codemirror/lib/codemirror.css"/>
@@ -57,6 +55,9 @@
   </head>
 
   <body>
+    <section id="popup-message">
+    </section>
+
     <section id="toppanel">
         <section id="debug">
         <table>
@@ -78,12 +79,17 @@
         </table>
 
         <section id="romload">
-          <label for="romchoice">Choose a pre-built ROM:</label><br>
-          <select name="romchoice" id="romchoice">
-              <option value="None">Choose:</option>
-              <!-- Actually, you can add default prebuild here. Here is an example: -->
-              <!-- <option value="https://github.com/Zeal8bit/Zeal-8-bit-OS/releases/download/v0.3.0/os_with_romdisk.img">offical-master-0.3.0</option> -->
-          </select>
+            <label for="romchoice">Choose a pre-built ROM:</label>
+            <img src="imgs/loading.gif" id="loading_img" alt="loading..." />
+            <select name="romchoice" id="romchoice">
+                <option value="">Loading...</option>
+                <!-- Actually, you can add default prebuild here. Here is an example: -->
+                <!-- <option value="https://github.com/Zeal8bit/Zeal-8-bit-OS/releases/download/v0.3.0/os_with_romdisk.img">offical-master-0.3.0</option> -->
+            </select>
+
+            <section id="romadvanced">
+                <a href="#">Advanced...</a>
+            </section>
         </section>
 
         <section id="romfile">
@@ -209,21 +215,7 @@
     </section>
 
     <script>
-      const KB = 1024;
-      /* 10MHz frequency */
-      const CPUFREQ = 10000000;
-      const TSTATES_US = 1/CPUFREQ * 1000000;
 
-      function us_to_tstates(us) {
-        return Math.floor(us / TSTATES_US);
-      }
-
-      var terminal = new Terminal();
-      terminal.open(document.getElementById('terminal'));
-    </script>
-    <script>
-      const left_panel_height = $("#debug").height();
-      $("#rightpanel").css('min-height', left_panel_height);
     </script>
     <!-- Emulation-related -->
     <script src="frontend/utils.js"></script>

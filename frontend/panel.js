@@ -33,8 +33,6 @@ $("#dumpcontent").on("mouseenter", ".asciichars div", function() {
     setClassToMemoryByte($(this), "activefield", true);
 });
 
-$("#romadvanced").click(function () { $("#romfile").toggle(500); });
-
 $(".membytes").on("mousedown", "div", function() {
     mousepressed = true;
     $(".membytes .selected").removeClass("selected");

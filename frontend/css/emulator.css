@@ -141,11 +141,24 @@ hr {
 }
 
 #romfile {
+    display: none;
     padding-left: 0.5em;
     padding-bottom: 0.5em;
     margin-top: 1em;
     position: static;
-    display: inline-block;
+}
+
+#romload {
+    padding: 0.5em;
+}
+
+#romadvanced {
+    margin-top: 0.5em;
+    font-weight: bold;
+}
+
+#read-button {
+    margin-top: 1em;
 }
 
 #breakpoints {
@@ -447,4 +460,30 @@ button {
     font-size:7pt;
     text-align:center;
     box-shadow: inset -1px -1px 1px 0px rgba(0,0,0,0.25);
+}
+
+#popup-message {
+    position: absolute;
+    display: none;
+    left: calc(50% - 17.5em);
+    top: 0.5em;
+    line-height: 2em;
+    border-radius: 10px;
+    text-align: center;
+    width: 35em;
+    margin-left: auto;
+    margin-right: auto;
+    color:#6d0000;
+    z-index: 2;
+}
+
+.poperror {
+    background:#ffecec;
+    border: 1px solid #fc695d;
+}
+
+#loading_img {
+    visibility: hidden;
+    vertical-align: middle;
+    width: 1.5em;
 }

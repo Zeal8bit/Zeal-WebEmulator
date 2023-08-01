@@ -4,15 +4,27 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-// Unknown init value
-var elapsed = 0;
-
 // Init window
+const left_panel_height = $("#debug").height();
+$("#rightpanel").css('min-height', left_panel_height);
+
 /* Check which scale to use for the video */
 var scale = 1;
 if ($(window).height() > 920 && $(window).width() > 1280) {
     // scale = 2;
 }
+
+const KB = 1024;
+/* 10MHz frequency */
+const CPUFREQ = 10000000;
+const TSTATES_US = 1/CPUFREQ * 1000000;
+
+function us_to_tstates(us) {
+  return Math.floor(us / TSTATES_US);
+}
+
+var terminal = new Terminal();
+terminal.open(document.getElementById('terminal'));
 
 // Init shortcut key
 document.addEventListener('keydown', function(event) {
@@ -43,53 +55,3 @@ const byte_per_line = 0x20;
 const devices = [ rom, ram, vchip, pio, keyboard, mmu ];
 
 const zpu = new Z80({ mem_read, mem_write, io_read, io_write });
-
-// Init zos index
-async function initindex() {
-    // Zos-Index-Mirror
-    try {
-        let response = await fetch('https://zeal8bit.com/roms/index.json');
-        var indexsrc = await response.json();
-            // load index in index.json into romchoise
-        let index = indexsrc;
-
-        for (let jsonindex = 0; jsonindex < index.index.length; jsonindex++){
-            let urls = index.index[jsonindex].urls;
-
-            // if (urls.length == 1) {
-            //     fastestUrl = urls[0];
-            // }
-            // else if (urls.length > 1) {
-            //     let promises = [];
-            //     for (let i = 0; i < urls.length; i++) {
-            //         let promise = testSpeed(urls[i]);
-            //         promises.push(promise);
-            //     }
-
-            //     try {
-            //         let fastest = await compareSpeeds(promises);
-            //         var fastestUrl = fastest.url;
-            //     } catch (error) {
-            //         console.error(error.message);
-            //     }
-            // }
-            // else {
-            //     window.alert("The image doesn't have a corresponding link")
-            // }
-            if (urls == undefined || urls == null) {
-                window.alert("The image doesn't have a corresponding link")
-            }
-            else {
-                var option = "<option value=" + urls + " version=" + index.index[jsonindex].version + " upload=" + index.index[jsonindex].upload + " hash=" + index.index[jsonindex].hash + ">" + index.index[jsonindex].name + "</option>";
-                $("#romchoice").append(option);
-            }
-        }
-    }
-    catch (error) {
-        console.error("Error while init zos-index:\n"+error.message);
-        $("#romload").hide();
-        console.warn("Feature: Preload romdisk has been disabled");
-    }
-}
-
-initindex();
