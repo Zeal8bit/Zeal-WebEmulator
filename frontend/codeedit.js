@@ -1,38 +1,30 @@
 var editor = CodeMirror.fromTextArea(document.getElementById("code"), {
     mode: "text/x-z80",
     mode: "text/x-csrc",
-    matchBrackets: true,	//括号匹配
-    lineNumbers: true,	//显示行号
-    theme: "darcula",	//设置主题
-    lineWrapping: true,	//代码折叠
+    matchBrackets: true,
+    lineNumbers: true,
+    theme: "darcula",
+    lineWrapping: true,
     foldGutter: true,
     gutters: ["CodeMirror-linenumbers", "CodeMirror-foldgutter"],
     styleActiveLine: true,
     autoRefresh:true,
-    extraKeys:{"Ctrl-Space":"autocomplete"}//ctrl-space唤起智能提示
+    extraKeys:{"Ctrl-Space":"autocomplete"}
 });
 
 editor.refresh();
 
-// 定义一个保存文件的函数
-function saveTextAsFile(progname) {
-    // 获取CodeMirror中的文本内容
+function saveCodeAsFile(progname) {
     var textToWrite = editor.getValue();
-    // 把文本内容转换成一个Blob对象
     var textFileAsBlob = new Blob([textToWrite], {
         type: "text/plain;charset=utf-8"
     });
-    // 创建一个<a>元素作为下载链接
     var downloadLink = $("<a></a>");
-    // 设置下载链接的属性
     downloadLink.attr("download", progname);
     downloadLink.text("Download File");
-    // 根据浏览器类型，设置下载链接的href属性
     if (window.webkitURL != null) {
-        // Chrome允许直接点击链接，不需要添加到DOM中
         downloadLink.attr("href", window.webkitURL.createObjectURL(textFileAsBlob));
     } else {
-        // Firefox需要把链接添加到DOM中才能点击
         downloadLink.attr("href", window.URL.createObjectURL(textFileAsBlob));
         downloadLink.on("click", function(event) {
             $(this).remove();
@@ -40,70 +32,111 @@ function saveTextAsFile(progname) {
         downloadLink.css("display", "none");
         $("body").append(downloadLink);
     }
-    // 触发下载链接的点击事件
     downloadLink[0].click();
 }
 
 function getprogname() {
     let progname = "myprogram.asm";
-    // 获取文本框中的值
     let input = $("#progname").val();
-    // 判断文本框中的值是否为空或未定义
     if ((input != "") && (input != undefined)) {
-        // 如果有值，就把它赋给progname变量
         progname = input;
     }
     return progname;
 }
 
 function save() {
-    // 获取编辑器中的文本内容
     var text = editor.getValue();
-    // 把文本内容保存到本地存储中，使用"code"作为键名
     localStorage.setItem("code", text);
 }
 
 function clear() {
-    // 把编辑器中的文本内容设置为空字符串
     editor.setValue("");
-    // 把本地存储中的文本内容也清空，使用"code"作为键名
     localStorage.removeItem("code");
 }
 
-function asmcode() {
+function asmcode(mode) {
+    /*
+        Compile modes:
+        - 1         Make SNA binary
+        - 2         Make TAP binary
+        - 3         Make BIN binary(ZOS use this type of binaries)
+        - 4         Return Array of BIN binary
+        - "debug"   Log compile result on the console
+    */
     let value = localStorage.getItem("code");
+    let namesplit = getprogname().split(".");
+    let filename = namesplit[0];
     if ((value != null) && (value != undefined)) {
-        compile(3);
+        let binary;
+        switch(mode) {
+            case 1:
+                binary = compile(mode);
+                mkdown(binary, filename+".sna");
+                break;
+            case 2:
+                binary = compile(mode);
+                mkdown(binary, filename+".tap");
+                break;
+            case 3:
+                binary = compile(mode);
+                mkdown(binary, filename+".bin");
+                break;
+            case 4:
+                binary = compile(3);
+                return binary;
+            case "debug":
+                binary = compile(mode);
+                break;
+            default:
+                binary = compile(mode);
+                return binary;
+        }
     }
     else {
-        window.alert("Please save your program before assemble");
+        showErrorPopup("Please save your program before assemble");
     }
 }
 
-// 使用jQuery选择器获取id为downasm的按钮，并绑定点击事件处理函数
+function loadcode() {
+    // Get binary Array
+    let bin = asmcode(4);
+    let binsize = bin.length;
+    if (binsize > 16384) {
+        showErrorPopup("Your binary is too big to load");
+    }
+    else {
+        // Simulate input load command into terminal
+        keyboard.key_pressed(0x4c);     // l
+        keyboard.key_pressed(0x4f);     // o
+        keyboard.key_pressed(0x41);     // a
+        keyboard.key_pressed(0x44);     // d
+        keyboard.key_pressed(32);       // (space)
+        for (var i = 0; i < binsize.toString().length; i++) {
+            keyboard.key_pressed(binsize.toString().charCodeAt(i));
+        }
+        keyboard.key_pressed(13);       // (enter)
+
+        setTimeout(function() {
+            uart.send_binary_array(bin);
+        }, 10);
+    }
+}
+
+
 $("#downasm").on("click", function() {
-    saveTextAsFile(getprogname());
+    saveCodeAsFile(getprogname());
 });
 
-// 使用jQuery选择器获取id为save和clear的按钮，并绑定点击事件处理函数
-$("#savecode").on("click", save);
+$("#saveCodeAsFile").on("click", save);
 $("#clearcode").on("click", clear);
-$("#asmcode").on("click", asmcode);
+$("#asmcode").on("click", function() {
+    asmcode(3);
+});
+
+$("#loadcode").on("click", loadcode);
 
 $(document).ready(function() {
-    // var workspace = localStorage.getItem("zeal-workspace");
-
-    // if (value == null) {
-    //     workspace = new Array();
-    //     workspace.push("")
-    //     localStorage.setItem("zeal-workspace", text);
-    // }
-    // else if (value == undefined) {
-
-    // }
-    // 获取本地存储中的文本内容，使用"code"作为键名
     var text = localStorage.getItem("code");
-    // 如果有值，就把文本内容设置到编辑器中
     if (text) {
         editor.setValue(text);
     }

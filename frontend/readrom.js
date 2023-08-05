@@ -66,15 +66,6 @@ $("#romadvanced a").click(() => {
     $("#romfile").toggle(500);
 });
 
-/**
- * Manage the popup message
- */
-
-/* Add a listener on the popup that will close it on click */
-$("#popup-message").on("click", function() {
-    $(this).fadeOut(500);
-});
-
 function switchToAdvancedMode(error) {
     showErrorPopup("Could not fetch remote data, switched to advanced mode");
 

@@ -18,18 +18,28 @@ DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
 FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-var compile = function(e) {
-    var t = localStorage.getItem("code")
-      , n = ASM.compile(t, Z80ASM);
-    if (n[0]) {
-        if (void 0 == n[0].s)
-            return void alert("Internal error - " + n[0]);
-        alert(n[0].msg + "\nLine: " + n[0].s.numline)
-    } else {
-        var a = n[1];
-        1 == e && mkdown(makeSNA(a[0]), "asm80.sna"),
-        2 == e && mkdown(makeTAP(a[0]), "asm80.tap"),
-        3 == e && mkdown(ASM.buff(a[0]), "asm80.bin"),
-        "debug" == e && console.log(a[0]);
+var compile = function(mode) {
+    var t = localStorage.getItem("code");
+    n = ASM.compile(t, Z80ASM);
+    switch (n[0]) {
+        case undefined:
+            showErrorPopup("Internal error - " + n[0]);
+            break;
+        case null:
+            var a = n[1];
+            switch (mode) {
+                case 1:
+                    return makeSNA(a[0]);
+                case 2:
+                    return makeTAP(a[0]);
+                case 3:
+                    return ASM.buff(a[0]);
+                case "debug":
+                    console.log(a[0]);
+                    break;
+            }
+            break;
+        default:
+            showErrorPopup(n[0].msg + "\nLine: " + n[0].s.numline);
     }
 }

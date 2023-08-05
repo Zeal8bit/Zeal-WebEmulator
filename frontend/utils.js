@@ -227,7 +227,17 @@ function hex16(high, lower, noprefix) {
     return `${noprefix ? "" : "0x"}${hex(value, true)}`;
 }
 
+/**
+ * Manage the popup message
+ */
+
+/* Add a listener on the popup that will close it on click */
+$("#popup-message").on("click", function() {
+    $(this).fadeOut(500);
+});
+
 function showErrorPopup(message) {
+    console.error(message);
     const popup = $("#popup-message");
 
     popup.addClass("poperror");

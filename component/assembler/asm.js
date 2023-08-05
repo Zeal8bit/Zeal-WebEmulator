@@ -703,7 +703,6 @@ function(e, t) {
             return t;
         try {
             var b = e.parseOpcode(t)
-            // console.log(e)
         } catch (e) {
             throw {
                 msg: e,
@@ -1202,7 +1201,6 @@ function(e, t) {
                                                                     if (".X16" !== h.opcode)
                                                                         if (".X8" !== h.opcode) {
                                                                             var y = e.parseOpcode(r[v], l);
-                                                                            // console.log(e);
                                                                             y && (o(),
                                                                             h = y),
                                                                             void 0 === h.bytes && (h.bytes = 0),
@@ -1775,21 +1773,27 @@ function(e, t) {
                     c += "\n";
             return c
         },
-        buff: function(e) {
-            // e: 输入数组
-            // t: 用于存储输入数组中每个对象的临时变量
-            // r: 用于存储在新数组中设置值的索引的临时变量
-            // n: 由函数创建的新Uint8Array
-            // s: 用于遍历输入数组中每个对象的计数器变量
-            // o: 输入数组的长度
-            for (var t, r, n = new Uint8Array(65536), s = 0, o = e.length; s < o; s++)
-                if (t = e[s], r = t.addr, t.lens)
-                    for (var i = 0; i < t.lens.length; i++)
-                        n[r++] = t.lens[i];
-            return n
-        },
-        fileGet: function(e) {
-            t = e
+        buff: function(inputArray) {
+            /*
+            - inputArray: 输入数组
+            - tempObject: 用于存储输入数组中每个对象的临时变量
+            - address: 用于存储在新数组中设置值的索引的临时变量
+            - newArray: 由函数创建的新Array
+            - counter: 用于遍历输入数组中每个对象的计数器变量
+            - length: 输入数组的长度
+            - innerCounter: 用于遍历tempObject.lens数组的计数器变量
+            */
+            let newArray = [];
+            for (let counter = 0, length = inputArray.length; counter < length; counter++) {
+                let tempObject = inputArray[counter];
+                let address = tempObject.addr;
+                if (tempObject.lens) {
+                    for (let innerCounter = 0; innerCounter < tempObject.lens.length; innerCounter++) {
+                        newArray[address++] = tempObject.lens[innerCounter]; // 设置数组元素
+                    }
+                }
+            }
+            return newArray;
         }
     }
 }),
@@ -2643,44 +2647,6 @@ var Parser = function(e) {
             var o = hextools.hexLine(r[s], t);
             o > n && (n = o)
         }
-        return n
-    },
-    hex2com: function(e) {
-        hextools.RAM = [];
-        for (var t = hextools.readHex(e, 0) + 1, r = "", n = 256; n < t; n++)
-            r += "%" + toHex2(hextools.RAM[n]);
-        return r
-    },
-    hex2bin: function(e, t, r) {
-        hextools.RAM = [],
-        hextools.readHex(e, 0);
-        for (var n = "", s = t; s < r + 1; s++)
-            n += "%" + toHex2(hextools.RAM[s]);
-        return n
-    },
-    hex2prg: function(e, t) {
-        if (t < 2064)
-            throw "ENT must be above $810";
-        hextools.RAM = [];
-        var r = hextools.readHex(e, 0) + 1
-          , n = ""
-          , s = t + "";
-        hextools.RAM[2047] = 1,
-        hextools.RAM[2048] = 8,
-        hextools.RAM[2049] = 12,
-        hextools.RAM[2050] = 8,
-        hextools.RAM[2051] = 10,
-        hextools.RAM[2052] = 0,
-        hextools.RAM[2053] = 158,
-        hextools.RAM[2054] = s.charCodeAt(0),
-        hextools.RAM[2055] = s.charCodeAt(1),
-        hextools.RAM[2056] = s.charCodeAt(2),
-        hextools.RAM[2057] = s.charCodeAt(3),
-        hextools.RAM[2058] = 0,
-        hextools.RAM[2059] = 0,
-        hextools.RAM[2060] = 0;
-        for (var o = 2047; o < r; o++)
-            n += "%" + toHex2(hextools.RAM[o]);
         return n
     }
 }

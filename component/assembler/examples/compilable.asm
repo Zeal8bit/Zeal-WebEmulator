@@ -1,5 +1,5 @@
 ; Copyright(c) 2023 Zeal 8-bit Computer <contact@zeal8bit.com>
-; A z80 assembly example
+; Easiest Z80 assembly example
 
 ld bc, 9
 ld hl, array

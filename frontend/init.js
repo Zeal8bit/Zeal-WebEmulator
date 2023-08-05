@@ -20,7 +20,7 @@ const CPUFREQ = 10000000;
 const TSTATES_US = 1/CPUFREQ * 1000000;
 
 function us_to_tstates(us) {
-  return Math.floor(us / TSTATES_US);
+    return Math.floor(us / TSTATES_US);
 }
 
 var terminal = new Terminal();
