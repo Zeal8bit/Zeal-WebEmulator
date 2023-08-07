@@ -70,25 +70,25 @@ function asmcode(mode) {
         let binary;
         switch(mode) {
             case 1:
-                binary = compile(mode);
+                binary = assembler.compile(mode);
                 mkdown(binary, filename+".sna");
                 break;
             case 2:
-                binary = compile(mode);
+                binary = assembler.compile(mode);
                 mkdown(binary, filename+".tap");
                 break;
             case 3:
-                binary = compile(mode);
+                binary = assembler.compile(mode);
                 mkdown(binary, filename+".bin");
                 break;
             case 4:
-                binary = compile(3);
+                binary = assembler.compile(3);
                 return binary;
             case "debug":
-                binary = compile(mode);
+                binary = assembler.compile(mode);
                 break;
             default:
-                binary = compile(mode);
+                binary = assembler.compile(mode);
                 return binary;
         }
     }

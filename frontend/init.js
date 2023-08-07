@@ -48,6 +48,7 @@ const ds1307 = new I2C_DS1307(this, i2c);
 /* We could pass an initial content to the EEPROM, but set it to null for the moment */
 const eeprom = new I2C_EEPROM(this, i2c, null);
 const disassembler = new Disassembler();
+const assembler = new Assembler();
 
 /* Memdump related */
 const byte_per_line = 0x20;
