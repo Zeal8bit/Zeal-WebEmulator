@@ -343,7 +343,7 @@ function VideoChip(Zeal, PIO, scale) {
     /* We don't need to add a listener on the PIO, as they are mainly for OUTPUT pins.
      * But let's keep in mind that this may change in the future */
     /* Start the V_Blank signal generation */
-    const vblank_interval = zeal.registerTstateInterval(() => {
+    const vblank_interval = zeal.tstatesutils.registerTstateInterval(() => {
         /* Clear VBLANK bit in the PIO state */
         pio.pio_set_b_pin(IO_VBLANK_PIN, 0);
     }, VBLANK_TSTATES_PERIOD);
@@ -351,7 +351,7 @@ function VideoChip(Zeal, PIO, scale) {
     /* Register the same interval but for disabling the signal
      * So the period is the same as the one above, but we need to start it
      * a bit later (after 63us) */
-    const vblank_interval_end = zeal.registerTstateInterval(() => {
+    const vblank_interval_end = zeal.tstatesutils.registerTstateInterval(() => {
         pio.pio_set_b_pin(IO_VBLANK_PIN, 1);
     }, VBLANK_TSTATES_PERIOD, VBLANK_TSTATES_PERIOD_END);
 

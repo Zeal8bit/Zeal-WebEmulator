@@ -189,7 +189,7 @@ function PIO(Zeal) {
             port.mode != MODE_OUTPUT &&
             (port.mode != MODE_BITCTRL || pio_check_bitctrl_interrupt(port, pin, value)))
         {
-            zeal.interrupt(port.int_vector);
+            zeal.tstatesutils.interrupt(port.int_vector);
         }
     }
 
