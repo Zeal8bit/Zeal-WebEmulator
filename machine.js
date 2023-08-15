@@ -107,11 +107,6 @@ function Zeal8bitComputer() {
             }
         },
 
-        interrupt: function(interrupt_vector) {
-            zpu.interrupt(false, interrupt_vector);
-            step_cpu();
-        },
-
         adjustTStatesWhenHalted: function(end) {
             const earliest = tstatesutils.getEarliestCallback();
             if (earliest == null || earliest.tstates > end) {
@@ -126,7 +121,13 @@ function Zeal8bitComputer() {
         }
     }
 
-    this.tstatesutils = tstatesutils;
+    this.getTstates = tstatesutils.getTstates;
+    this.addTstates = tstatesutils.addTstates;
+    this.getEarliestCallback = tstatesutils.getEarliestCallback;
+    this.registerTstateCallback = tstatesutils.registerTstateCallback;
+    this.registerTstateInterval = tstatesutils.registerTstateInterval;
+    this.removeTstateCallback = tstatesutils.removeTstateCallback;
+    this.adjustTStatesWhenHalted = tstatesutils.adjustTStatesWhenHalted;
 
     /* Check which scale to use for the video */
     var scale = 1;
@@ -158,9 +159,7 @@ function Zeal8bitComputer() {
     this.eeprom = eeprom;
     this.devices = devices;
     this.zpu = zpu;
-
-    var registers = zpu.getState();
-    this.registers = registers;
+    this.getCPUState = zpu.getState
 
     function mem_read(address) {
         var rd = 0;
@@ -314,10 +313,23 @@ function Zeal8bitComputer() {
         step_cpu();
     }
 
+    function interrupt(interrupt_vector) {
+            zpu.interrupt(false, interrupt_vector);
+            step_cpu();
+    }
+
     function destroy() {
         clearInterval(interval);
         interval = null;
         running = false;
+    }
+
+    function KeyboardKeyPressed(keycode) {
+        return keyboard.key_pressed(keycode);
+    }
+
+    function KeyboardKeyReleased(keycode) {
+        return keyboard.key_released(keycode);
     }
 
     this.mem_read = mem_read;
@@ -333,5 +345,8 @@ function Zeal8bitComputer() {
     this.stop = stop;
     this.restart = restart;
     this.reset = reset;
+    this.interrupt = interrupt;
     this.destroy = destroy;
+    this.KeyboardKeyPressed = KeyboardKeyPressed;
+    this.KeyboardKeyReleased = KeyboardKeyReleased;
 }

@@ -262,7 +262,7 @@ function Keyboard(Zeal, PIO) {
      *
      * Returns true if the key is valid, false else.
      */
-     function key_released(keycode) {
+    function key_released(keycode) {
         /* Get the PS/2 code for the key pressed */
         const list = get_ps2_code(keycode);
 
@@ -313,7 +313,7 @@ function Keyboard(Zeal, PIO) {
             transfer_active = false;
         } else {
             /* Schedule the next key in 1ms */
-            zeal.tstatesutils.registerTstateCallback(() => {
+            zeal.registerTstateCallback(() => {
                 transfer_active = false;
                 send_next_keypress();
             }, us_to_tstates(1000));
@@ -330,14 +330,14 @@ function Keyboard(Zeal, PIO) {
 
         for (var i = 0; i < scancodes.length; i++) {
             const index = i;
-            zeal.tstatesutils.registerTstateCallback(() => {
+            zeal.registerTstateCallback(() => {
                 /* Prepare the next scancode */
                 shift_register = scancodes[index];
                 /* Assert the keyboard signal */
                 pio.pio_set_b_pin(IO_KEYBOARD_PIN, 0);
             } , i * PS2_KEY_TIMING + delay);
 
-            zeal.tstatesutils.registerTstateCallback(() => {
+            zeal.registerTstateCallback(() => {
                 /* Reset the keyboard signal */
                 pio.pio_set_b_pin(IO_KEYBOARD_PIN, 1);
                 /* Disable the flag too */

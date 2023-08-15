@@ -57,9 +57,9 @@ function dumpRamContent(virtaddr, physaddr, lines) {
 }
 
 function setASMView() {
-
+    let regs = zealcom.getCPUState();
     /* Get the PC, which is a virtual address */
-    const pc = zealcom.registers != null ? (zealcom.registers.pc) : 0;
+    const pc = regs != null ? (regs.pc) : 0;
 
     /* Set the number of instructions we need to disassemble and show */
     const instructions = 20;
@@ -124,30 +124,30 @@ function updateAndShowRAM () {
 }
 
 function updateRegistersHTML() {
-    let reg = zealcom.registers;
-    $("#rega").text(hex8(reg.a));
-    $("#regb").text(hex8(reg.b));
-    $("#regc").text(hex8(reg.c));
-    $("#regd").text(hex8(reg.d));
-    $("#rege").text(hex8(reg.e));
-    $("#regh").text(hex8(reg.h));
-    $("#regl").text(hex8(reg.l));
-    $("#regix").text(hex(reg.ix));
-    $("#regiy").text(hex(reg.iy));
-    $("#regbc").text(hex16(reg.b, reg.c));
-    $("#regde").text(hex16(reg.d, reg.e));
-    $("#reghl").text(hex16(reg.h, reg.l));
-    $("#regpc").text(hex(reg.pc));
-    $("#regsp").text(hex(reg.sp));
+    let regs = zealcom.getCPUState();
+    $("#rega").text(hex8(regs.a));
+    $("#regb").text(hex8(regs.b));
+    $("#regc").text(hex8(regs.c));
+    $("#regd").text(hex8(regs.d));
+    $("#rege").text(hex8(regs.e));
+    $("#regh").text(hex8(regs.h));
+    $("#regl").text(hex8(regs.l));
+    $("#regix").text(hex(regs.ix));
+    $("#regiy").text(hex(regs.iy));
+    $("#regbc").text(hex16(regs.b, regs.c));
+    $("#regde").text(hex16(regs.d, regs.e));
+    $("#reghl").text(hex16(regs.h, regs.l));
+    $("#regpc").text(hex(regs.pc));
+    $("#regsp").text(hex(regs.sp));
     /* Special treatment for the flags */
-    var flags = (reg.flags.S == 1 ? "S" : "") +
-                (reg.flags.Z == 1 ? "Z" : "") +
-                (reg.flags.Y == 1 ? "Y" : "") +
-                (reg.flags.H == 1 ? "H" : "") +
-                (reg.flags.X == 1 ? "X" : "") +
-                (reg.flags.P == 1 ? "P" : "") +
-                (reg.flags.N == 1 ? "N" : "") +
-                (reg.flags.C == 1 ? "C" : "");
+    var flags = (regs.flags.S == 1 ? "S" : "") +
+                (regs.flags.Z == 1 ? "Z" : "") +
+                (regs.flags.Y == 1 ? "Y" : "") +
+                (regs.flags.H == 1 ? "H" : "") +
+                (regs.flags.X == 1 ? "X" : "") +
+                (regs.flags.P == 1 ? "P" : "") +
+                (regs.flags.N == 1 ? "N" : "") +
+                (regs.flags.C == 1 ? "C" : "");
 
     $("#flags").text(flags);
 
@@ -203,7 +203,7 @@ $("#read-button").on('click', function() {
 });
 
 $("#screen").on("keydown", function(e) {
-    const handled = zealcom.keyboard.key_pressed(e.keyCode);
+    const handled = zealcom.KeyboardKeyPressed(e.keyCode);
 
     if (handled) {
         e.preventDefault();
@@ -211,7 +211,7 @@ $("#screen").on("keydown", function(e) {
 });
 
 $("#screen").on("keyup", function(e) {
-    const handled = zealcom.keyboard.key_released(e.keyCode);
+    const handled = zealcom.KeyboardKeyReleased(e.keyCode);
 
     if (handled) {
         e.preventDefault();

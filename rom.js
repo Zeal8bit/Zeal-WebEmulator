@@ -121,7 +121,7 @@
             erasing = true;
             console.log("Erasing FLASH");
             /* Erasing a sector takes 25ms on real hardware, register a callback to actually reflect this */
-            zeal.tstatesutils.registerTstateCallback(() => {
+            zeal.registerTstateCallback(() => {
                 for (var i = 0 ; i< 4096; i++)
                     data[i + sector] = 0xff;
                 erasing = false;
@@ -156,7 +156,7 @@
             writing = true;
             console.log("Writing byte to FLASH");
             /* Writing a byte takes 20us on real hardware, register a callback to actually reflect this */
-            zeal.tstatesutils.registerTstateCallback(() => {
+            zeal.registerTstateCallback(() => {
                 data[address] = value;
                 writing = false;
                 writing_byte = 0;
