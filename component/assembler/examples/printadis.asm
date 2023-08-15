@@ -1,3 +1,7 @@
+; SPDX-FileCopyrightText: 2023 JasonMo <jasonmo2009@hotmail.com>
+; SPDX-License-Identifier: Apache-2.0
+
+; Print "Hello!" on the screen
 ld        de,$400f
 ld        bc,$0007
 ld        h,$00

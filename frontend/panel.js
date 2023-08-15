@@ -73,7 +73,9 @@ $("#uart-file-send").on("click", function() {
     let reader = new FileReader();
     reader.addEventListener('load', function(e) {
         let binary = e.target.result;
-        uart.send_binary_array(binary);
+        setTimeout(function() {
+            uart.send_binary_array(binary);
+        }, 10);
     });
     if (typeof file !== "undefined") {
         reader.readAsBinaryString(file);

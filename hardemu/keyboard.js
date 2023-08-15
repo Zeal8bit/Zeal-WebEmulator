@@ -241,7 +241,7 @@ function Keyboard(Zeal, PIO) {
      *
      * Returns true if the key is valid, false else.
      */
-     function key_pressed(keycode) {
+    function key_pressed(keycode) {
         /* Get the PS/2 code for the key pressed */
         const list = get_ps2_code(keycode);
 
@@ -262,7 +262,7 @@ function Keyboard(Zeal, PIO) {
      *
      * Returns true if the key is valid, false else.
      */
-     function key_released(keycode) {
+    function key_released(keycode) {
         /* Get the PS/2 code for the key pressed */
         const list = get_ps2_code(keycode);
 
@@ -294,6 +294,13 @@ function Keyboard(Zeal, PIO) {
         }
 
         return true;
+    }
+
+    function key_pressstr(str) {
+        for (let i = 0; i < str.length; i++) {
+            let ascii = str.charCodeAt(i);
+            key_pressed(ascii);
+        }
     }
 
     function send_next_keypress() {
@@ -357,6 +364,7 @@ function Keyboard(Zeal, PIO) {
     /* Public function */
     this.key_pressed = key_pressed;
     this.key_released = key_released;
+    this.key_pressstr = key_pressstr;
 
     this.is_valid_port = function(read, port) {
         /* Can only read from the keyboard */

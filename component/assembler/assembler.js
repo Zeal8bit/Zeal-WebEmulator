@@ -1,4 +1,4 @@
-/**
+/*
 All other work is Copyright (C) 2013 Martin Maly, https://www.maly.cz/, published under terms
 of MIT license (Not GPL!) as "source available software"
 
@@ -19,29 +19,54 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN 
  */
 
 function Assembler() {
+    /**
+        Compile modes:
+        - 0         Make BIN binary(ZOS use this type of binaries)
+        - 1         Make SNA binary
+        - 2         Make TAP binary
+        - 3         Return Array of BIN binary
+        - 4         Return Array of SNA binary
+        - 5         Return Array of TAP binary
+        - "debug"   Log compile result on the console
+    */
     const compile = function(mode) {
         let src = localStorage.getItem("code");
-        let asm80obj = this.compile_obj(src, Z80ASM);
-        switch (asm80obj[0]) {
-            case undefined:
-                showErrorPopup("Internal error - " + asm80obj[0]);
-                break;
-            case null:
-                var opcodes = asm80obj[1];
-                switch (mode) {
-                    case 1:
-                        return this.make_sna(opcodes[0]);
-                    case 2:
-                        return this.make_tap(opcodes[0]);
-                    case 3:
-                        return this.make_bin(opcodes[0]);
-                    case "debug":
-                        console.log(opcodes[0]);
-                        break;
-                }
-                break;
-            default:
-                showErrorPopup(asm80obj[0].msg + "\nLine: " + asm80obj[0].s.numline);
+        let filename = getprogname().split(".")[0];
+        let asm80obj = compile_obj(src, Z80ASM);
+        if (!src) {
+            showErrorPopup("Please save your program before assemble");
+        }
+        else {
+            switch (asm80obj[0]) {
+                case undefined:
+                    showErrorPopup("Internal error - " + asm80obj[0]);
+                    break;
+                case null:
+                    var opcodes = asm80obj[1];
+                    switch (mode) {
+                        case 0:
+                            mkdown(make_bin(opcodes[0]), filename+".bin");
+                            break;
+                        case 1:
+                            mkdown(make_sna(opcodes[0]), filename+".sna");
+                            break;
+                        case 2:
+                            mkdown(make_tap(opcodes[0]), filename+".tap");
+                            break;
+                        case 3:
+                            return make_bin(opcodes[0]);
+                        case 4:
+                            return make_sna(opcodes[0]);
+                        case 5:
+                            return make_tap(opcodes[0]);
+                        case "debug":
+                            console.log(opcodes);
+                            break;
+                    }
+                    break;
+                default:
+                    showErrorPopup(asm80obj[0].msg + "\nLine: " + asm80obj[0].s.numline);
+            }
         }
     };
 
