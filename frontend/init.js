@@ -49,6 +49,7 @@ const ds1307 = new I2C_DS1307(this, i2c);
 const eeprom = new I2C_EEPROM(this, i2c, null);
 const disassembler = new Disassembler();
 const assembler = new Assembler();
+const popout = new PopOut();
 
 /* Memdump related */
 const byte_per_line = 0x20;

@@ -34,12 +34,12 @@ function Assembler() {
         let filename = getprogname().split(".")[0];
         let asm80obj = compile_obj(src, Z80ASM);
         if (!src) {
-            showErrorPopup("Please save your program before assemble");
+            popout.error("Please save your program before assemble");
         }
         else {
             switch (asm80obj[0]) {
                 case undefined:
-                    showErrorPopup("Internal error - " + asm80obj[0]);
+                    popout.error("Internal error - " + asm80obj[0]);
                     break;
                 case null:
                     var opcodes = asm80obj[1];
@@ -65,7 +65,7 @@ function Assembler() {
                     }
                     break;
                 default:
-                    showErrorPopup(asm80obj[0].msg + "\nLine: " + asm80obj[0].s.numline);
+                    popout.error(asm80obj[0].msg + "\nLine: " + asm80obj[0].s.numline);
             }
         }
     };

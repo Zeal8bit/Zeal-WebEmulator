@@ -463,7 +463,7 @@ button {
 }
 
 #popup-message {
-    position: absolute;
+    position: sticky;
     display: none;
     left: calc(50% - 17.5em);
     top: 0.5em;
@@ -473,13 +473,25 @@ button {
     width: 35em;
     margin-left: auto;
     margin-right: auto;
-    color:#6d0000;
     z-index: 2;
 }
 
 .poperror {
+    color:#6d0000;
     background:#ffecec;
     border: 1px solid #fc695d;
+}
+
+.popwarn {
+    color: #e19032;
+    background: #eee8d5;
+    border: 1px solid #ffca38;
+}
+
+.poplog {
+    color: #074670;
+    background: #699de1;
+    border: 1px solid #0071bf;
 }
 
 #loading_img {

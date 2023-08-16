@@ -41,36 +41,11 @@ function clear() {
     localStorage.removeItem("code");
 }
 
-function _loadcode() {
-    // Get binary Array
-    let bin = assembler.compile(3);
-    let binsize = bin.length;
-    if (binsize > 16384) {
-        showErrorPopup("Your binary is too big to load");
-    }
-    else {
-        // Simulate input load command into terminal
-        keyboard.key_pressed(76);     // l
-        keyboard.key_pressed(79);     // o
-        keyboard.key_pressed(65);     // a
-        keyboard.key_pressed(68);     // d
-        keyboard.key_pressed(32);       // (space)
-        for (var i = 0; i < binsize.toString().length; i++) {
-            keyboard.key_pressed(binsize.toString().charCodeAt(i));     // The length of the program
-        }
-        keyboard.key_pressed(13);       // (enter)
-
-        setTimeout(function() {
-            uart.send_binary_array(bin);
-        }, 10);
-    }
-}
-
 function loadcode() {
     let bin = assembler.compile(3);
     let binsize = bin.length;
     if (binsize > 16384) {
-        showErrorPopup("Your binary is too big to load");
+        popout.error("Your binary is too big to load");
     }
     else {
         // Use \r (ascii 13) instead of \n (ascii 10)
