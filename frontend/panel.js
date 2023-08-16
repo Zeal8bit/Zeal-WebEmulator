@@ -74,7 +74,7 @@ $("#uart-file-send").on("click", function() {
     reader.addEventListener('load', function(e) {
         let binary = e.target.result;
         setTimeout(function() {
-            uart.send_binary_array(binary);
+            zealcom.uart.send_binary_array(binary);
         }, 10);
     });
     if (typeof file !== "undefined") {
@@ -88,29 +88,30 @@ $("#baudrate").on("change", function() {
 });
 
 function updateRegistersHTML() {
-    $("#rega").text(hex8(registers.a));
-    $("#regb").text(hex8(registers.b));
-    $("#regc").text(hex8(registers.c));
-    $("#regd").text(hex8(registers.d));
-    $("#rege").text(hex8(registers.e));
-    $("#regh").text(hex8(registers.h));
-    $("#regl").text(hex8(registers.l));
-    $("#regix").text(hex(registers.ix));
-    $("#regiy").text(hex(registers.iy));
-    $("#regbc").text(hex16(registers.b, registers.c));
-    $("#regde").text(hex16(registers.d, registers.e));
-    $("#reghl").text(hex16(registers.h, registers.l));
-    $("#regpc").text(hex(registers.pc));
-    $("#regsp").text(hex(registers.sp));
+    let regs = zealcom.getCPUState();
+    $("#rega").text(hex8(regs.a));
+    $("#regb").text(hex8(regs.b));
+    $("#regc").text(hex8(regs.c));
+    $("#regd").text(hex8(regs.d));
+    $("#rege").text(hex8(regs.e));
+    $("#regh").text(hex8(regs.h));
+    $("#regl").text(hex8(regs.l));
+    $("#regix").text(hex(regs.ix));
+    $("#regiy").text(hex(regs.iy));
+    $("#regbc").text(hex16(regs.b, regs.c));
+    $("#regde").text(hex16(regs.d, regs.e));
+    $("#reghl").text(hex16(regs.h, regs.l));
+    $("#regpc").text(hex(regs.pc));
+    $("#regsp").text(hex(regs.sp));
     /* Special treatment for the flags */
-    var flags = (registers.flags.S == 1 ? "S" : "") +
-                (registers.flags.Z == 1 ? "Z" : "") +
-                (registers.flags.Y == 1 ? "Y" : "") +
-                (registers.flags.H == 1 ? "H" : "") +
-                (registers.flags.X == 1 ? "X" : "") +
-                (registers.flags.P == 1 ? "P" : "") +
-                (registers.flags.N == 1 ? "N" : "") +
-                (registers.flags.C == 1 ? "C" : "");
+    var flags = (regs.flags.S == 1 ? "S" : "") +
+                (regs.flags.Z == 1 ? "Z" : "") +
+                (regs.flags.Y == 1 ? "Y" : "") +
+                (regs.flags.H == 1 ? "H" : "") +
+                (regs.flags.X == 1 ? "X" : "") +
+                (regs.flags.P == 1 ? "P" : "") +
+                (regs.flags.N == 1 ? "N" : "") +
+                (regs.flags.C == 1 ? "C" : "");
 
     $("#flags").text(flags);
 
@@ -127,7 +128,7 @@ function updateAndShowRAM () {
 
 function setRAMView(virtaddr, size) {
     // TODO: Add the addr to a watchlist that will be updates after a breakpoint is reached
-    const physaddr = mmu.get_ext_addr(virtaddr);
+    const physaddr = zealcom.mmu.get_ext_addr(virtaddr);
     const dumptxt = dumpRamContent(virtaddr, physaddr, size / byte_per_line);
     $("#dumpcontent").html(dumptxt);
 }
@@ -143,8 +144,9 @@ function setMMUView() {
 }
 
 function setASMView() {
+    let regs = zealcom.getCPUState();
     /* Get the PC, which is a virtual address */
-    const pc = registers != null ? (registers.pc) : 0;
+    const pc = regs != null ? (regs.pc) : 0;
     /* Set the number of instructions we need to disassemble and show */
     const instructions = 20;
     /* The average number of bytes per instruction is 2 or 3 */
@@ -155,7 +157,7 @@ function setASMView() {
     /* Add 4 bytes so that if the last instruction is a 4 byte instruction, we won't go out of
      * bounds when disassembling */
     for (var i = 0; i < bytes + 4; i++) {
-        memory.push(mem_read(pc + i));
+        memory.push(zealcom.mem_read(pc + i));
     }
 
     /* Disassemble this part of the memory */
@@ -195,7 +197,7 @@ function dumpRamContent(virtaddr, physaddr, lines) {
                   '<section class="membytes">';
         for (var j = 0; j < byte_per_line; j++) {
             const virt = virtaddr + i + j
-            var byte = mem_read(virt);
+            var byte = zealcom.mem_read(virt);
             if (isPrintable(byte)) {
                 ascii.push(String.fromCharCode(byte));
             } else {

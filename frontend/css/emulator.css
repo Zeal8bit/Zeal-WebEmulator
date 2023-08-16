@@ -494,6 +494,13 @@ button {
     border: 1px solid #0071bf;
 }
 
+.popconfirm {
+    color: #074670;
+    background: #3065ab;
+    border: 1px solid #295e84;
+    min-width: 4em;
+}
+
 #loading_img {
     visibility: hidden;
     vertical-align: middle;

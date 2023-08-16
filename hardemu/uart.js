@@ -55,7 +55,7 @@ function UART(Zeal, PIO) {
             return;
         }
 
-        const tstates = getTstates();
+        const tstates = zealcom.getTstates();
         /* Ignore the case where a transfer hasn't been started and the line is set to 1 */
         if (bit == 1 && tx_fifo.length == 0) {
             /* Nothing to do */
@@ -104,7 +104,7 @@ function UART(Zeal, PIO) {
 
         /* If we have to register a callback, do it now */
         if (callback) {
-            registerTstateCallback(start_shifting, bit_tstates - 1);
+            zeal.registerTstateCallback(start_shifting, bit_tstates - 1);
         }
     }
 

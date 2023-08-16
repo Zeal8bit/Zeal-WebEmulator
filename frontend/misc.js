@@ -26,7 +26,7 @@ $(".regaddr").click(function() {
 });
 
 $("#screen").on("keydown", function(e) {
-    const handled = keyboard.key_pressed(e.keyCode);
+    const handled = zealcom.KeyboardKeyPressed(e.keyCode);
 
     if (handled) {
         e.preventDefault();
@@ -34,7 +34,7 @@ $("#screen").on("keydown", function(e) {
 });
 
 $("#screen").on("keyup", function(e) {
-    const handled = keyboard.key_released(e.keyCode);
+    const handled = zealcom.KeyboardKeyReleased(e.keyCode);
 
     if (handled) {
         e.preventDefault();

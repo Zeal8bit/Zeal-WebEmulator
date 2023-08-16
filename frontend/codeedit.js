@@ -49,9 +49,9 @@ function loadcode() {
     }
     else {
         // Use \r (ascii 13) instead of \n (ascii 10)
-        keyboard.key_pressstr("LOAD " + binsize + "\r");
+        zealcom.keyboard.key_pressstr("LOAD " + binsize + "\r");
         setTimeout(function() {
-            uart.send_binary_array(bin);
+            zealcom.uart.send_binary_array(bin);
         }, 10);
     }
 }

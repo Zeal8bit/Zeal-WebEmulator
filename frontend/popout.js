@@ -56,8 +56,23 @@ function PopOut() {
         pop_log(data);
     }
 
+    /** Too ugly, don't use it now */
+    function pop_confirm(message) {
+        let html = `<div>${message}<button class="popconfirm">Ok</button><button class="popconfirm">Cancel</button></div>`
+        const popup = $("#popup-message");
+
+        popup.removeClass();
+        popup.addClass("poplog");
+        popup.html(html);
+        popup.fadeIn(1000);
+        setTimeout(() => {
+            popup.fadeOut(1000);
+        }, 3000);
+    }
+
     this.error = pop_error;
     this.warn = pop_warn;
     this.log = pop_log;
     this.info = pop_info;
+    this.confirm = pop_confirm;
 }

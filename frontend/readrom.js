@@ -4,6 +4,25 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+function load_bin(file){
+    let reader = new FileReader();
+    const isos = $("#os").prop("checked");
+    reader.addEventListener('load', function(e) {
+        let binary = e.target.result;
+        if (isos) {
+            zealcom.rom.loadFile(binary);
+            $("#binready").addClass("ready");
+        } else {
+            const addr = $("#address").val();
+            const result = parseInt(addr, 16);
+            zealcom.ram.loadFile(result, binary);
+        }
+    });
+    if (typeof file !== "undefined") {
+        reader.readAsBinaryString(file);
+    }
+}
+
 $("#read-button").on('click', function() {
     /* If a dump/map file was provided, try to load it */
     let fdump = $("#file-dump")[0].files[0];
@@ -18,30 +37,17 @@ $("#read-button").on('click', function() {
         });
         rdump.readAsText(fdump);
     }
+
     /* Read the binary executable */
     let file = $("#file-input")[0].files[0];
-    let reader = new FileReader();
-    const isos = $("#os").prop("checked");
-    reader.addEventListener('load', function(e) {
-        let binary = e.target.result;
-        if (isos) {
-            rom.loadFile(binary);
-            $("#binready").addClass("ready");
-        } else {
-            const addr = $("#address").val();
-            const result = parseInt(addr, 16);
-            ram.loadFile(result, binary);
-        }
-    });
-    if (typeof file !== "undefined") {
-        reader.readAsBinaryString(file);
-    }
+    load_bin(file);
+
     /* Read the EEPROM image */
     file = $("#eeprom-bin")[0].files[0];
     let eepromr = new FileReader();
     eepromr.addEventListener('load', function(e) {
         let binary = e.target.result;
-        eeprom.loadFile(binary);
+        zealcom.eeprom.loadFile(binary);
         $("#eepromready").addClass("ready");
     });
     if (typeof file !== "undefined") {
@@ -68,7 +74,7 @@ $("#romadvanced a").click(() => {
 
 function switchToAdvancedMode(error) {
     popout.error("Could not fetch remote data, switched to advanced mode");
-
+    console.error(error);
     /* Hide advanced link option and ROMs list */
     $("#romload").hide(250, function() {
         /* Show file uploaders */
@@ -104,18 +110,10 @@ if (!advancedMode) {
         .catch(switchToAdvancedMode);
 }
 
-
-function readBinaryFromURL(pburl) {
-    return fetch(pburl)
-        .then(response => response.blob())
-        .then(res => new Response(res).arrayBuffer())
-        .then(res => new Uint8Array(res));
-}
-
 /**
  * Add a listener to the romchoice list, load the ROM when selected
  */
-$("#romchoice").on("change", function() {
+$("#romchoice").on("change", async function() {
     /* Get the URL of the current choice */
     const url = $(this).val();
     /* Get the hash for the current binary */
@@ -127,12 +125,15 @@ $("#romchoice").on("change", function() {
 
     $("#loading_img").visible();
 
-    readBinaryFromURL(url)
-    .then(data => {
-        rom.loadFile(data);
+    try {
+        const data = await readBlobFromUrl(url);
+        let hashcomp = await filehash(data, hash);
+        if (hashcomp == true) {
+            load_bin(data);
+        }
         $("#loading_img").invisible();
-        cont();
-    })
-    .catch(switchToAdvancedMode);
-
+        zealcom.cont();
+    } catch (error) {
+        switchToAdvancedMode(error);
+    }
 });
