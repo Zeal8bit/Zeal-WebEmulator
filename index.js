@@ -51,12 +51,12 @@ function create_versionWindow() {
         show: false, // hide the window initially
         webPreferences: {
             nodeIntegration: true, // enable node modules in renderer
-            preload: path.join(__dirname, 'verpreload.js'),
+            preload: path.join(__dirname, 'subpage/version/verpreload.js'),
         }
     });
 
     // load the html file for the window
-    versionWindow.loadFile('version.html');
+    versionWindow.loadFile('subpage/version/version.html');
     versionWindow.setMenuBarVisibility(false);
     return versionWindow;
 }
