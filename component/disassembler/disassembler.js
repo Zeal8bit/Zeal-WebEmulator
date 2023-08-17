@@ -293,7 +293,7 @@ function Disassembler() {
     function addrFromOpcodeEntry(pc, entry)
     {
         console.assert(entry.label);
-        if (entry.address)
+        if (typeof entry.address !== 'undefined')
             return entry.address;
 
         console.assert(entry.offset);
