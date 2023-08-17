@@ -12,90 +12,12 @@
  * In theory, a Binary Heap (min heap) would be better. In practice,
  * We won't have a lot on entries in here. At most 4.
  */
-var tstates_callbacks = new Set();
-var t_state = 0;
-var breakpoints = [];
-var running = true;
-var registers = null;
 
-/* Check which scale to use for the video */
-var scale = 1;
-if ($(window).height() > 920 && $(window).width() > 1280) {
-    // scale = 2;
-}
-
-const mmu = new MMU();
-const rom = new ROM(this);
-const ram = new RAM();
-const pio = new PIO(this);
-/* Peripherals */
-const vchip = new VideoChip(this, pio, scale);
-const uart = new UART(this, pio);
-const i2c = new I2C(this, pio);
-const keyboard = new Keyboard(this, pio);
-const ds1307 = new I2C_DS1307(this, i2c);
-/* We could pass an initial content to the EEPROM, but set it to null for the moment */
-const eeprom = new I2C_EEPROM(this, i2c, null);
+var zealcom = new Zeal8bitComputer();
 const disassembler = new Disassembler();
 
 /* Memdump related */
 const byte_per_line = 0x20;
-
-const devices = [ rom, ram, vchip, pio, keyboard, mmu ];
-
-const zpu = new Z80({ mem_read, mem_write, io_read, io_write });
-
-function mem_read(address) {
-    var rd = 0;
-    var found = false;
-    const ext_addr = mmu.get_ext_addr(address);
-
-    devices.forEach(function (device) {
-        if (device.is_valid_address(true, ext_addr)) {
-            console.assert(found == false, "Two devices have valid address " + ext_addr);
-            rd = device.mem_read(ext_addr);
-            found = true;
-        }
-    });
-
-    if (!found) {
-        console.log("No device replied to memory read: " + ext_addr);
-    }
-
-    return rd;
-}
-
-function mem_write(address, value) {
-    const ext_addr = mmu.get_ext_addr(address);
-
-    devices.forEach(function (device) {
-        if (device.is_valid_address(false, ext_addr))
-            device.mem_write(ext_addr, value);
-    });
-}
-
-function io_read(port) {
-    var rd = 0;
-    var found = false;
-
-    devices.forEach(function (device) {
-        if (device.is_valid_port(true, port)) {
-            console.assert(found == false, "Two devices have valid ports " + port);
-            rd = device.io_read(port);
-            found = true;
-        }
-    });
-
-    return rd;
-}
-
-function io_write(port, value) {
-    port = port & 0xff;
-    devices.forEach(function (device) {
-        if (device.is_valid_port(false, port))
-            device.io_write(port, value);
-    });
-}
 
 function isPrintable(byteCode) {
     return byteCode >= 32 && byteCode <= 126;
@@ -113,7 +35,7 @@ function dumpRamContent(virtaddr, physaddr, lines) {
                   '<section class="membytes">';
         for (var j = 0; j < byte_per_line; j++) {
             const virt = virtaddr + i + j
-            var byte = mem_read(virt);
+            var byte = zealcom.mem_read(virt);
             if (isPrintable(byte)) {
                 ascii.push(String.fromCharCode(byte));
             } else {
@@ -135,9 +57,9 @@ function dumpRamContent(virtaddr, physaddr, lines) {
 }
 
 function setASMView() {
-
+    let regs = zealcom.getCPUState();
     /* Get the PC, which is a virtual address */
-    const pc = registers != null ? (registers.pc) : 0;
+    const pc = regs != null ? (regs.pc) : 0;
 
     /* Set the number of instructions we need to disassemble and show */
     const instructions = 20;
@@ -149,7 +71,7 @@ function setASMView() {
     /* Add 4 bytes so that if the last instruction is a 4 byte instruction, we won't go out of
      * bounds when disassembling */
     for (var i = 0; i < bytes + 4; i++) {
-        memory.push(mem_read(pc + i));
+        memory.push(zealcom.mem_read(pc + i));
     }
 
     /* Disassemble this part of the memory */
@@ -179,7 +101,7 @@ function setASMView() {
 
 function setRAMView(virtaddr, size) {
     // TODO: Add the addr to a watchlist that will be updates after a breakpoint is reached
-    const physaddr = mmu.get_ext_addr(virtaddr);
+    const physaddr = zealcom.mmu.get_ext_addr(virtaddr);
     const dumptxt = dumpRamContent(virtaddr, physaddr, size / byte_per_line);
     $("#dumpcontent").html(dumptxt);
 }
@@ -202,242 +124,35 @@ function updateAndShowRAM () {
 }
 
 function updateRegistersHTML() {
-    $("#rega").text(hex8(registers.a));
-    $("#regb").text(hex8(registers.b));
-    $("#regc").text(hex8(registers.c));
-    $("#regd").text(hex8(registers.d));
-    $("#rege").text(hex8(registers.e));
-    $("#regh").text(hex8(registers.h));
-    $("#regl").text(hex8(registers.l));
-    $("#regix").text(hex(registers.ix));
-    $("#regiy").text(hex(registers.iy));
-    $("#regbc").text(hex16(registers.b, registers.c));
-    $("#regde").text(hex16(registers.d, registers.e));
-    $("#reghl").text(hex16(registers.h, registers.l));
-    $("#regpc").text(hex(registers.pc));
-    $("#regsp").text(hex(registers.sp));
+    let regs = zealcom.getCPUState();
+    $("#rega").text(hex8(regs.a));
+    $("#regb").text(hex8(regs.b));
+    $("#regc").text(hex8(regs.c));
+    $("#regd").text(hex8(regs.d));
+    $("#rege").text(hex8(regs.e));
+    $("#regh").text(hex8(regs.h));
+    $("#regl").text(hex8(regs.l));
+    $("#regix").text(hex(regs.ix));
+    $("#regiy").text(hex(regs.iy));
+    $("#regbc").text(hex16(regs.b, regs.c));
+    $("#regde").text(hex16(regs.d, regs.e));
+    $("#reghl").text(hex16(regs.h, regs.l));
+    $("#regpc").text(hex(regs.pc));
+    $("#regsp").text(hex(regs.sp));
     /* Special treatment for the flags */
-    var flags = (registers.flags.S == 1 ? "S" : "") +
-                (registers.flags.Z == 1 ? "Z" : "") +
-                (registers.flags.Y == 1 ? "Y" : "") +
-                (registers.flags.H == 1 ? "H" : "") +
-                (registers.flags.X == 1 ? "X" : "") +
-                (registers.flags.P == 1 ? "P" : "") +
-                (registers.flags.N == 1 ? "N" : "") +
-                (registers.flags.C == 1 ? "C" : "");
+    var flags = (regs.flags.S == 1 ? "S" : "") +
+                (regs.flags.Z == 1 ? "Z" : "") +
+                (regs.flags.Y == 1 ? "Y" : "") +
+                (regs.flags.H == 1 ? "H" : "") +
+                (regs.flags.X == 1 ? "X" : "") +
+                (regs.flags.P == 1 ? "P" : "") +
+                (regs.flags.N == 1 ? "N" : "") +
+                (regs.flags.C == 1 ? "C" : "");
 
     $("#flags").text(flags);
 
     /* Toggle RAM */
     updateAndShowRAM();
-}
-
-var stop_cpu = false;
-var interval = null;
-
-
-var count = 0;
-var elapsed = 0;
-
-function adjustTStatesWhenHalted(end) {
-    const earliest = getEarliestCallback();
-    if (earliest == null || earliest.tstates > end) {
-        /* No callback or no near callback. Increment the T-states and exit */
-        t_state = end;
-        return;
-    }
-    /* Here, the number of T-state the callback is meant to be executed is in the range
-     * [t_state;end], so it is meant to happen during this iteration.
-     * Jump to that amount and execute instructions following it directly. */
-    t_state = earliest.tstates;
-}
-
-function step_cpu() {
-    running = true;
-
-    if (interval == null) {
-        /* Execute the CPU every 16ms */
-        interval = setInterval(() => {
-            /* In 16ms, the number of T-states the CPU could execute is Math.floor(16666.666 / TSTATES_US) */
-            const to_execute = us_to_tstates(16666.666);
-            const end = t_state + to_execute;
-
-            /* t_state is global and will be incremented by addTstates */
-            while (t_state <= end && running) {
-                addTstates(zpu.run_instruction());
-                registers = zpu.getState();
-                /* Check whether the current PC is part of the breakpoints list */
-                const filtered = breakpoints.find(elt => elt.address == registers.pc);
-                if (filtered != undefined && filtered.enabled) {
-                    running = false;
-                    updateRegistersHTML();
-                    if (filtered.callback) {
-                        filtered.callback(filtered);
-                    }
-                }
-
-                if (registers.halted && t_state <= end) {
-                    adjustTStatesWhenHalted(end);
-                }
-            }
-        }, 16.666);
-    }
-}
-
-function step () {
-    if (registers.halted || running) {
-        return;
-    }
-    var pc = registers.pc;
-    while (registers.pc == pc) {
-        /* TODO: check if jr/jp to self instruction */
-        addTstates(zpu.run_instruction());
-        registers = zpu.getState();
-    }
-    updateRegistersHTML();
-}
-
-function step_over () {
-    /* If the CPU is running, step is meaningless */
-    if (running) {
-        return;
-    }
-
-    /* Ideally, we would need the size of the instruction, to know where to put the breakpoint
-     * but as we don't have such thing yet, we can put 4 breakpoints, one after each byte.
-     * TODO: refactor once we have a working disassembler. */
-    var pc = registers.pc;
-    var former_breakpoints = [...breakpoints];
-    /* Define the callback that will be called when reaching one of the breakpoints */
-    const callback = (obj) => {
-        /* Restore the breakpoints list */
-        breakpoints = former_breakpoints;
-    };
-
-    for (var i = 1; i <= 4; i++) {
-        var brk = getBreakpoint(pc + i);
-        if (brk == null) {
-            breakpoints.push({ address: pc + i, enabled: true, callback });
-        } else {
-            /* Enable it */
-            brk.enabled = true;
-        }
-    }
-
-    step_cpu();
-}
-
-function cont() {
-    step_cpu();
-}
-
-function stop() {
-    /* Clear the interval that executes the CPU */
-    clearInterval(interval);
-    interval = null;
-    updateRegistersHTML();
-    running = false;
-}
-
-/**
- * T-states related functions
- */
-function getTstates() {
-    return t_state;
-}
-
-function addTstates(count) {
-    t_state += count;
-
-    /* Kind-of static variable within function scope */
-    addTstates.in_callback = addTstates.in_callback || false;
-
-    /* Check if any callback can be called, if we aren't in any */
-    if (!addTstates.in_callback) {
-        tstates_callbacks.forEach(entry => {
-            if (entry.tstates <= t_state) {
-                addTstates.in_callback = true;
-                entry.callback();
-                if (entry.period == 0) {
-                    tstates_callbacks.delete(entry);
-                } else {
-                    entry.tstates += entry.period;
-                }
-                addTstates.in_callback = false;
-            }
-        });
-    }
-}
-
-/**
- * Get the earliest callback out of the list.
- */
-function getEarliestCallback() {
-    var earliest = null;
-
-    tstates_callbacks.forEach((entry) => {
-        if (earliest == null || entry.tstates < earliest.tstates) {
-            earliest = entry;
-        }
-    });
-
-    return earliest;
-}
-
-/**
- * Register a callback that shall be called after the number of T-states
- * of the CPU given.
- * If the given number is less than 0, return an error.
- */
-function registerTstateCallback(callback, call_tstates) {
-    if (call_tstates < 0) {
-        return null;
-    }
-
-    var obj = null;
-
-    /* If the CPU is halted, not registering this event in the list
-     * will make us completely miss it when function getEarliestCallback()
-     * is called. Because of that, the CPU will miss this interrupt/event.
-     * Keeping call_tstates as 0 should work, but let's be safe and make it
-     * happen in the upcoming T-state.  */
-    if (call_tstates == 0) {
-        call_tstates = 1;
-    }
-
-    obj = { tstates: t_state + call_tstates, callback, period: 0 };
-    tstates_callbacks.add(obj);
-
-    return obj;
-}
-
-/* Register a callback to be called every call_tstates T-states.
- * The delay parameter will let us, defer the start of the first call,
- * without altering the period. This is handy for period signal that changes
- * values for a short period of time (pulses)
- */
-function registerTstateInterval(callback, call_tstates, delay) {
-    if (call_tstates < 0) {
-        return null;
-    }
-
-    /* If the delay parameter is not defined, set it to 0 */
-    delay = delay || 0;
-
-    const obj = { tstates: t_state + delay + call_tstates, callback, period: call_tstates };
-    tstates_callbacks.add(obj);
-    return obj;
-}
-
-function removeTstateCallback(callback) {
-    if (callback != null) {
-        tstates_callbacks.delete(callback);
-    }
-}
-
-function interrupt(interrupt_vector) {
-    zpu.interrupt(false, interrupt_vector);
-    step_cpu();
 }
 
 $("#read-button").on('click', function() {
@@ -462,12 +177,12 @@ $("#read-button").on('click', function() {
     reader.addEventListener('load', function(e) {
         let binary = e.target.result;
         if (isos) {
-            rom.loadFile(binary);
+            zealcom.rom.loadFile(binary);
             $("#binready").addClass("ready");
         } else {
             const addr = $("#address").val();
             const result = parseInt(addr, 16);
-            ram.loadFile(result, binary);
+            zealcom.ram.loadFile(result, binary);
         }
     });
     if (typeof file !== "undefined") {
@@ -479,7 +194,7 @@ $("#read-button").on('click', function() {
     let eepromr = new FileReader();
     eepromr.addEventListener('load', function(e) {
         let binary = e.target.result;
-        eeprom.loadFile(binary);
+        zealcom.eeprom.loadFile(binary);
         $("#eepromready").addClass("ready");
     });
     if (typeof file !== "undefined") {
@@ -487,9 +202,8 @@ $("#read-button").on('click', function() {
     }
 });
 
-
 $("#screen").on("keydown", function(e) {
-    const handled = keyboard.key_pressed(e.keyCode);
+    const handled = zealcom.KeyboardKeyPressed(e.keyCode);
 
     if (handled) {
         e.preventDefault();
@@ -497,7 +211,7 @@ $("#screen").on("keydown", function(e) {
 });
 
 $("#screen").on("keyup", function(e) {
-    const handled = keyboard.key_released(e.keyCode);
+    const handled = zealcom.KeyboardKeyReleased(e.keyCode);
 
     if (handled) {
         e.preventDefault();
@@ -531,6 +245,8 @@ $("#addbp").on("click", function (){
     /* Only add the breakpoint if not in the list */
     addBreakpoint(result);
 });
+
+var breakpoints = [];
 
 function addBreakpoint(addr) {
     if (!breakpoints.includes(addr) && addr <= 0xFFFF) {
@@ -574,11 +290,17 @@ $("#memdump").on("click", ".dumpline", function() {
     }
 });
 
+/**
+ * @brief The following events must NOT be linked to zealcom object methods
+ * because that object will change after a reset. As such, these method must be
+ * evaluated and called lazily only when needed.
+ */
+$("#step").on("click",     () => zealcom.step());
+$("#stop").on("click",     () => zealcom.stop());
+$("#stepover").on("click", () => zealcom.step_over());
+$("#continue").on("click", () => zealcom.cont());
+$("#restart").on("click",  () => zealcom.restart());
 
-$("#step").on("click", step);
-$("#stop").on("click", stop);
-$("#stepover").on("click", step_over);
-$("#continue").on("click", cont);
 $("#bps").on("click", "li", function() {
     /* Get the breakpoint address */
     const bkpaddr = $(this).data("addr");
@@ -633,7 +355,7 @@ $("#uart-file-send").on("click", function() {
     let reader = new FileReader();
     reader.addEventListener('load', function(e) {
         let binary = e.target.result;
-        uart.send_binary_array(binary);
+        zealcom.uart.send_binary_array(binary);
     });
     if (typeof file !== "undefined") {
         reader.readAsBinaryString(file);
@@ -641,11 +363,11 @@ $("#uart-file-send").on("click", function() {
 });
 
 document.addEventListener('keydown', function(event) {
-    const binding = {'F9': cont, 'F10': step, 'F11': step_over};
+    const binding = {'F9': zealcom.cont, 'F10': zealcom.step, 'F11': zealcom.step_over};
     if (binding[event.key]) {
         binding[event.key]();
     }
-  });
+});
 
 
 $(".regaddr").click(function() {

@@ -262,7 +262,7 @@ function Keyboard(Zeal, PIO) {
      *
      * Returns true if the key is valid, false else.
      */
-     function key_released(keycode) {
+    function key_released(keycode) {
         /* Get the PS/2 code for the key pressed */
         const list = get_ps2_code(keycode);
 
