@@ -174,7 +174,7 @@ yarn dist-win64
 * 打开拉取请求
 
 (*) 下面是一个正确的提交示例：
-(*) 译者注：提交，议题及拉取请求消息请用英文
+    译者注：提交，议题及拉取请求消息请用英文
 
 ```example
 Module: add/fix/remove a from b

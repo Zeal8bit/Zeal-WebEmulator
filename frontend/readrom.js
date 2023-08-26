@@ -133,7 +133,8 @@ $("#romchoice").on("change", async function() {
         }
         $("#loading_img").invisible();
         zealcom.cont();
-    } catch (error) {
+    }
+    catch (error) {
         switchToAdvancedMode(error);
     }
 });

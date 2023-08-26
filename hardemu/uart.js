@@ -55,13 +55,13 @@ function UART(Zeal, PIO) {
             return;
         }
 
-        const tstates = zealcom.getTstates();
+        const tstates = zeal.getTstates();
         /* Ignore the case where a transfer hasn't been started and the line is set to 1 */
         if (bit == 1 && tx_fifo.length == 0) {
             /* Nothing to do */
         } else if (bit == 0 && tx_fifo.length == 0) {
             /* Register a callback in 10 UART bits */
-            registerTstateCallback(transferComplete, Math.floor(9.1 * bit_tstates));
+            zeal.registerTstateCallback(transferComplete, Math.floor(9.1 * bit_tstates));
             tx_fifo.push({ tstates, bit });
         } else {
             tx_fifo.push({ tstates, bit });

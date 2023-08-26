@@ -40,6 +40,12 @@ $("#addbp").on("click", function (){
     addBreakpoint(result);
 });
 
+$("#bpaddr").on('keydown', function(event) {
+    if (event.key === "Enter") {
+        $("#addbp").click();
+    }
+});
+
 function addBreakpoint(addr) {
     if (!breakpoints.includes(addr) && addr <= 0xFFFF) {
         breakpoints.push({ address: addr, enabled: true });
@@ -48,12 +54,6 @@ function addBreakpoint(addr) {
         $(`.dumpline[data-addr='${addr}']`).addClass("brk");
     }
 }
-
-$("#bpaddr").on('keydown', function(event) {
-    if (event.key === "Enter") {
-        $("#addbp").click();
-    }
-});
 
 function toggleBreakpoint(brkaddr) {
     $(`#bps li[data-addr='${brkaddr}']`).toggleClass("disabled");
@@ -70,19 +70,4 @@ function getBreakpoint(addr) {
     /* Find the breakpoint object in the breakpoint list */
     const bkrobj = breakpoints.find(element => element.address == addr);
     return (bkrobj != undefined) ? bkrobj : null;
-}
-
-/**
- * Get the earliest callback out of the list.
- */
-function getEarliestCallback() {
-    var earliest = null;
-
-    tstates_callbacks.forEach((entry) => {
-        if (earliest == null || entry.tstates < earliest.tstates) {
-            earliest = entry;
-        }
-    });
-
-    return earliest;
 }

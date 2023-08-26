@@ -6,10 +6,6 @@
 
 var mousepressed = false;
 
-$("#disnow").on("click", function() {
-    setASMView();
-});
-
 $("#dumpnow").on("click", function() {
     const virtaddr = parseInt($("#dumpaddr").val(), 16);
     const size = parseInt($("#dumpsize").val());

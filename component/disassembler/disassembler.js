@@ -436,3 +436,19 @@ function Disassembler() {
     this.loadSymbols = loadSymbols;
     this.labelAddress = labelAddress;
 }
+
+if (typeof module === 'object' && typeof module.exports === 'object') {
+    // 当前环境是 NodeJS 规范环境
+    exports.Disassembler = Disassembler;
+    let opc_cb = require("./opcodes_cb");
+    let opc_ed = require("./opcodes_ed");
+    let opc_ixiy = require("./opcodes_ixiy");
+    let utils = require("../../frontend/utils");
+    var opcode_CB_x = opc_cb.opcode_CB_x;
+    var opcode_ED_x = opc_ed.opcode_ED_x;
+    var opcode_DD_x = opc_ixiy.opcode_DD_x;
+    var opcode_FD_x = opc_ixiy.opcode_FD_x;
+    hex = utils.hex;
+    hex8 = utils.hex8;
+    hex16 = utils.hex16;
+}

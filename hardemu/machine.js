@@ -301,11 +301,15 @@ function Zeal8bitComputer() {
     }
 
     function restart() {
+        running = false;
         zealcom = new Zeal8bitComputer();
         /* Reset all the file inputs */
         $("#romfile [type=file]").val("");
         /* Remove the ticks from the ready list */
         $(".status").removeClass("ready");
+        $("#romchoice").each(function(){
+            $(this).find("option").eq(0).prop("selected",true)
+        });
     }
 
     function reset() {
@@ -314,8 +318,8 @@ function Zeal8bitComputer() {
     }
 
     function interrupt(interrupt_vector) {
-            zpu.interrupt(false, interrupt_vector);
-            step_cpu();
+        zpu.interrupt(false, interrupt_vector);
+        step_cpu();
     }
 
     function destroy() {

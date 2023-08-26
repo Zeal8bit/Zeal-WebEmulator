@@ -45,8 +45,15 @@ function hex8(str, noprefix) {
     const value = hex(str, true);
     return `${noprefix ? "" : "0x"}${value.substring(2)}`;
 }
-  
+
 function hex16(high, lower, noprefix) {
     const value = (high << 8) | lower;
     return `${noprefix ? "" : "0x"}${hex(value, true)}`;
+}
+
+if (typeof module === 'object' && typeof module.exports === 'object') {
+    exports.disassembler_hex = disassembler_hex;
+    exports.hex = hex;
+    exports.hex8 = hex8;
+    exports.hex16 = hex16;
 }
