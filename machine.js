@@ -301,6 +301,8 @@ function Zeal8bitComputer() {
     }
 
     function restart() {
+        clearInterval(interval);
+        interval = null;
         running = false;
         zealcom = new Zeal8bitComputer();
         /* Reset all the file inputs */
