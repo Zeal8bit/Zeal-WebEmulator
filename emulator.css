@@ -259,6 +259,14 @@ hr {
     user-select: none;
 }
 
+.recterm-onfalse {
+    color: rgb(163, 49, 34);
+}
+
+.recterm-ontrue {
+    color: rgb(93, 199, 63);
+}
+
 #dumpfields {
     margin-bottom: 1em;
 }

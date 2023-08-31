@@ -342,6 +342,19 @@ $("#clearterm").on("click", function() {
     terminal.reset();
 });
 
+var recterm = false;
+var reced_array = [];
+
+$("#recterm").on("click", function() {
+    recterm =! recterm;
+    if (recterm == false) {
+        mkdown(reced_array, "uart_received.bin");
+        reced_array = [];
+    }
+    $("#recterm-on").removeClass();
+    $("#recterm-on").addClass("recterm-on"+recterm);
+});
+
 $("#baudrate").on("change", function() {
     const baudrate = $(this).val();
     uart.set_baudrate(baudrate);
