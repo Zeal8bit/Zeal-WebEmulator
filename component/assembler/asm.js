@@ -2588,7 +2588,7 @@ var Parser = function(e) {
         n += "%" + function(e) {
             return r(255 & e, 2)
         }(e[s]);
-    t || (t = "asm80.sna"),
+    t || (t = "Zeal-WebEmulator-File.txt"),
     download(t, n)
 }
   , tapdata = function(e, t) {

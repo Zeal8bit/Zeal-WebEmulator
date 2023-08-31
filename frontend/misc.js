@@ -12,10 +12,6 @@ $(".tab").on("click", function(){
     $(this).addClass("active");
 });
 
-$("#clearterm").on("click", function() {
-    terminal.reset();
-});
-
 $(".regaddr").click(function() {
     const virtaddr = parseInt($(this).text(), 16);
     if (virtaddr || virtaddr == 0) {
