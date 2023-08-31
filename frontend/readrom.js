@@ -86,7 +86,14 @@ function switchToAdvancedMode(error) {
  * Manage the pre-built ROMs list. Available ROMs will be fetched from a remote JSON file that contains
  * names and links to all of the available ROMs, the first one will always be the default.
  */
+
 const prebuilt_json_url = "https://zeal8bit.com/roms/index.json";
+
+/*
+    Only for debug, I don't hold all of the copyright of the
+    prebuild images in this index and I'm not sure they are safe     --Jason
+*/
+// const prebuilt_json_url = "https://jasonmo1.github.io/ZOS-Index-demo/index.json"
 
 /* Process the index JSON object that contains all the ROMs available */
 function processIndex(index) {
@@ -110,14 +117,28 @@ if (!advancedMode) {
         .catch(switchToAdvancedMode);
 }
 
+var rom_choisen = 0;
+var index_src;
 /**
  * Add a listener to the romchoice list, load the ROM when selected
  */
 $("#romchoice").on("change", async function() {
+    if (rom_choisen > 0) {
+        let cover = window.confirm("This will cover the current image, Confirm?");
+        if (cover == false) {
+            $("#romchoice").find("option").eq(index_src).prop("selected",true);
+            return;
+        }
+        else {
+            zealcom.restart(reset_rom_selected=false);
+        }
+    }
+    rom_choisen += 1;
+    index_src = $("#romchoice").get(0).selectedIndex;
     /* Get the URL of the current choice */
-    const url = $(this).val();
+    let url = $(this).val();
     /* Get the hash for the current binary */
-    const hash = $('#romchoice option:selected').data("hash");
+    let hash = $('#romchoice option:selected').data("hash");
 
     if (!url) {
         return;
@@ -126,7 +147,7 @@ $("#romchoice").on("change", async function() {
     $("#loading_img").visible();
 
     try {
-        const data = await readBlobFromUrl(url);
+        let data = await readBlobFromUrl(url);
         let hashcomp = await filehash(data, hash);
         if (hashcomp == true) {
             load_bin(data);
