@@ -10,12 +10,6 @@
 
 var breakpoints = [];
 
-$("#step").on("click",     () => zealcom.step());
-$("#stop").on("click",     () => zealcom.stop());
-$("#stepover").on("click", () => zealcom.step_over());
-$("#continue").on("click", () => zealcom.cont());
-$("#restart").on("click",  () => zealcom.restart());
-
 $("#bps").on("click", "li", function() {
     /* Get the breakpoint address */
     const bkpaddr = $(this).data("addr");

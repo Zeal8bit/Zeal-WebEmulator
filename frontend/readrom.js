@@ -97,14 +97,24 @@ const prebuilt_json_url = "https://zeal8bit.com/roms/index.json";
 
 /* Process the index JSON object that contains all the ROMs available */
 function processIndex(index) {
-    /* Generate an HTML option out of each entry */
-    const options = index.index.map(entry =>
-        `<option value="${entry.urls}" data-version="${entry.version}" data-hash="${entry.hash}">${entry.name}</option>`
-    );
+    const to_option = entry => `<option value="${entry.urls}" data-version="${entry.version}" data-hash="${entry.hash}">${entry.name}</option>`;
+    const to_separator = entry => `<option value="" disabled>--- ${entry[0].toUpperCase()+key.substr(1)} ---</option>`
+    var all_options = `<option value="">Choose an image...</option>`
 
-    const all_options =
-        `<option value="">Choose an image...</option>` +
-        options.join("");
+    /* Generate an HTML option out of each entry */
+    for (var key in index) {
+        if (typeof index[key] == "object") {
+            let this_option = to_separator(key);
+            if (typeof index[key][0] == "object") {
+                this_option += Object.values(index[key]).map(to_option).join("");
+            }
+            else {
+                this_option += to_option(index[key]);
+            }
+            all_options += this_option;
+            break;
+        }
+    }
 
     $("#romchoice").html(all_options);
 }

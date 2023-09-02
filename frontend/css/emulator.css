@@ -475,7 +475,7 @@ button {
 }
 
 #popup-message {
-    position: sticky;
+    position: fixed;
     display: none;
     left: calc(50% - 17.5em);
     top: 0.5em;

@@ -1,10 +1,17 @@
 /**
- * SPDX-FileCopyrightText: 2022 Zeal 8-bit Computer <contact@zeal8bit.com>
+ * SPDX-FileCopyrightText: 2022-2023 Zeal 8-bit Computer <contact@zeal8bit.com>
  *
  * SPDX-License-Identifier: Apache-2.0
  */
 
 var mousepressed = false;
+
+$("#step").on("click",     () => zealcom.step());
+$("#stop").on("click",     () => zealcom.stop());
+$("#stepover").on("click", () => zealcom.step_over());
+$("#continue").on("click", () => zealcom.cont());
+$("#reset").on("click",    () => zealcom.reset());
+$("#clean").on("click",    () => zealcom.restart());
 
 $("#dumpnow").on("click", function() {
     const virtaddr = parseInt($("#dumpaddr").val(), 16);
@@ -262,5 +269,3 @@ function setMemoryByteAddress(object) {
     const val = hex(str, true, 4);
     $("#current_memaddr").text(val);
 }
-
-

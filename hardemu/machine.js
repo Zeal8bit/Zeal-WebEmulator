@@ -302,6 +302,8 @@ function Zeal8bitComputer() {
 
     function restart(reset_rom_selected=true, resetinterval=true) {
         running = false;
+        vchip.clear();
+        terminal.clear();
         zealcom = new Zeal8bitComputer();
         if (reset_rom_selected == true) {
             /* Reset all the file inputs */
@@ -320,6 +322,8 @@ function Zeal8bitComputer() {
 
     function reset() {
         zpu.reset();
+        vchip.clear();
+        terminal.clear();
         step_cpu();
     }
 
