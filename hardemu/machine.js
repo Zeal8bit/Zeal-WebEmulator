@@ -302,6 +302,7 @@ function Zeal8bitComputer() {
 
     function restart(reset_rom_selected=true, resetinterval=true) {
         running = false;
+        rom_choisen = 0;
         vchip.clear();
         terminal.clear();
         zealcom = new Zeal8bitComputer();

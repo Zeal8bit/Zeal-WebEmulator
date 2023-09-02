@@ -19,6 +19,7 @@ function filehash(file1, SHA2) {
         const fileReader = new FileReader();
         fileReader.onloadend = (ev) => {
             const SHA256 = CryptoJS.SHA256(CryptoJS.enc.Latin1.parse(ev.target.result)).toString(CryptoJS.enc.Hex);
+            console.log("file_hash: "+SHA256+"\nindex_hash: "+SHA2);
             if (String(SHA256) == String(SHA2)) {
                 resolve(true);
             }

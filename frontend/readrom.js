@@ -87,13 +87,13 @@ function switchToAdvancedMode(error) {
  * names and links to all of the available ROMs, the first one will always be the default.
  */
 
-const prebuilt_json_url = "https://zeal8bit.com/roms/index.json";
+// const prebuilt_json_url = "https://zeal8bit.com/roms/index.json";
 
 /*
     Only for debug, I don't hold all of the copyright of the
     prebuild images in this index and I'm not sure they are safe     --Jason
 */
-// const prebuilt_json_url = "https://jasonmo1.github.io/ZOS-Index-demo/index.json"
+const prebuilt_json_url = "https://jasonmo1.github.io/ZOS-Index-demo/index.json"
 
 /* Process the index JSON object that contains all the ROMs available */
 function processIndex(index) {
