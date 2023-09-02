@@ -140,6 +140,10 @@ hr {
     padding-bottom: 1em;
 }
 
+#romchoice {
+    max-width: 15em;
+}
+
 #romfile {
     display: none;
     padding-left: 0.5em;
