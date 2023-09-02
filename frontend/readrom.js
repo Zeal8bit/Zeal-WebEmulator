@@ -112,7 +112,6 @@ function processIndex(index) {
                 this_option += to_option(index[key]);
             }
             all_options += this_option;
-            break;
         }
     }
 
