@@ -118,7 +118,7 @@ hr {
 }
 
 #screen {
-    margin: 2em auto;
+    margin: 3em auto;
     background-color: black;
 }
 
@@ -435,7 +435,7 @@ button {
 }
 
 #popup-message {
-    position: absolute;
+    position: fixed;
     display: none;
     left: calc(50% - 17.5em);
     top: 0.5em;
@@ -446,7 +446,7 @@ button {
     margin-left: auto;
     margin-right: auto;
     color:#6d0000;
-    z-index: 2;
+    z-index: 20;
 }
 
 .poperror {
@@ -458,4 +458,40 @@ button {
     visibility: hidden;
     vertical-align: middle;
     width: 1.5em;
+}
+
+
+footer {
+    color: var(--second-txt-color);
+    background: var(--second-bg-color);
+    position: sticky;
+    display: block;
+    bottom: 0;
+    width: 100%;
+    text-align: right;
+    z-index: 3;
+    box-sizing: border-box;
+    font-size: 14pt;
+}
+
+footer a {
+    color: var(--second-txt-color);
+}
+
+footer ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+footer li {
+    display: inline-block;
+    padding-left: 0.5em;
+    padding-right: 0.5em;
+    line-height: 1.5em;
+    animation-duration: 1s;
+}
+
+footer li a:hover {
+    color: var(--first-txt-color);
 }

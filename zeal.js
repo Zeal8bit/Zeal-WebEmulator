@@ -547,3 +547,26 @@ $("#romchoice").on("change", function() {
     .catch(switchToAdvancedMode);
 
 });
+
+
+function showMessagePopup(target)
+{
+    $("#blackbg").fadeIn(300);
+    target.fadeIn(500);
+}
+
+$("#blackbg").click(function() {
+    $("#blackbg").fadeOut(300);
+    $(".popup").fadeOut(300);
+});
+
+/**
+ * Add a listener on footer links
+ */
+$("footer a").on("click", function(){
+    const target = $(this).data("target");
+    const target_elt = $("#" + target);
+    if (target_elt) {
+        showMessagePopup(target_elt);
+    }
+});
