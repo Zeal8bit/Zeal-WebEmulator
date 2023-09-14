@@ -9,7 +9,14 @@
     "package": "electron-forge package",
     "make": "electron-forge make",
     "publish": "electron-forge publish",
-    "lint": "echo \"No linting configured\""
+    "lint": "echo \"No linting configured\"",
+    "pack": "electron-builder --dir",
+    "postinstall": "electron-builder install-app-deps",
+    "dist": "electron-builder",
+    "dist-win": "electron-builder --win --ia32",
+    "dist-win64": "electron-builder --win --x64",
+    "dist-mac": "electron-builder --mac",
+    "dist-linux": "electron-builder --linux"
   },
   "keywords": [],
   "author": {
@@ -29,5 +36,41 @@
     "@electron-forge/plugin-auto-unpack-natives": "^6.2.1",
     "electron": "25.2.0",
     "electron-squirrel-startup": "^1.0.0"
+  },
+  "build": {
+    "appId": "com.zealwebemulator",
+    "productName": "Zeal-WebEmulator",
+    "files": [
+      "**/*"
+    ],
+    "directories": {
+      "output": "out/electron-builder/app",
+      "app": "./"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "installerIcon": "./imgs/installer/zeal.ico",
+      "installerHeader": "./imgs/installer/header.bmp",
+      "uninstallerIcon": "./imgs/installer/zeal.ico",
+      "perMachine": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "license": "./imgs/installer/license.txt"
+    },
+    "win": {
+      "icon": "./imgs/installer/zeal.ico",
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ]
+    },
+    "linux": {
+      "icon": "./imgs/installer/zeal.png"
+    }
   }
 }

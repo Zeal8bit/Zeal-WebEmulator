@@ -272,3 +272,7 @@ function opcode_CB_x(snd) {
     const text = cb_opcodes[snd] || 'ILL';
     return { text, size: 2 };
 };
+
+if (typeof module === 'object' && typeof module.exports === 'object') {
+    exports.opcode_CB_x = opcode_CB_x;
+}

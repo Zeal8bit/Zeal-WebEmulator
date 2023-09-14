@@ -300,20 +300,25 @@ function Zeal8bitComputer() {
         running = false;
     }
 
-    function restart() {
-        clearInterval(interval);
-        interval = null;
+    function restart(reset_rom_selected=true, resetinterval=true) {
         running = false;
+        rom_choisen = 0;
         vchip.clear();
         terminal.clear();
         zealcom = new Zeal8bitComputer();
-        /* Reset all the file inputs */
-        $("#romfile [type=file]").val("");
-        /* Remove the ticks from the ready list */
-        $(".status").removeClass("ready");
-        $("#romchoice").each(function(){
-            $(this).find("option").eq(0).prop("selected",true)
-        });
+        if (reset_rom_selected == true) {
+            /* Reset all the file inputs */
+            $("#romfile [type=file]").val("");
+            /* Remove the ticks from the ready list */
+            $(".status").removeClass("ready");
+            $("#romchoice").each(function(){
+                $(this).find("option").eq(0).prop("selected",true)
+            });
+        }
+        if (resetinterval == true) {
+            clearInterval(interval);
+            interval = null;
+        }
     }
 
     function reset() {

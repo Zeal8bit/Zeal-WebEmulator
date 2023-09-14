@@ -3,7 +3,13 @@
  *
  * SPDX-License-Identifier: Apache-2.0
  */
- :root, :root.dark {
+
+@font-face {
+	font-family:'cascadiacode';
+	src: url('../fonts/CascadiaCode.ttf');
+}
+
+:root, :root.dark {
     --first-bg-color: #002b36;
     --second-bg-color: #093642;
     --third-bg-color: #0a4d5f;
@@ -132,6 +138,10 @@ hr {
     border-bottom-right-radius: 10px;
     border-bottom-left-radius: 10px;
     padding-bottom: 1em;
+}
+
+#romchoice {
+    max-width: 15em;
 }
 
 #romfile {
@@ -272,6 +282,32 @@ hr {
     user-select: none;
 }
 
+#codeedit {
+    position: relative;
+    z-index: 3;
+    border-top: 2px black solid;
+    font-family: monospace;
+    font-size: 11pt;
+    display: inline-block;
+    width: 100%;
+    height: 56vh;
+    background-color:var(--second-bg-color);
+    padding-top: 1em;
+    padding-left: 0.5em;
+    cursor: pointer;
+    overflow-y:scroll;
+    box-sizing: border-box;
+    user-select: none;
+}
+
+.recterm-onfalse {
+    color: rgb(163, 49, 34);
+}
+
+.recterm-ontrue {
+    color: rgb(93, 199, 63);
+}
+
 #dumpfields {
     margin-bottom: 1em;
 }
@@ -312,9 +348,13 @@ hr {
     font-weight: bold;
 }
 
-.membytes, .asciichars {
+.membytes, .asciichars, .memline {
     display: inline-block;
     padding-left:1.5em;
+}
+
+.memline, .dumpline {
+    font-family: 'cascadiacode';
 }
 
 .membytes div, .asciichars div {
@@ -450,8 +490,28 @@ button {
 }
 
 .poperror {
+    color:#6d0000;
     background:#ffecec;
     border: 1px solid #fc695d;
+}
+
+.popwarn {
+    color: #e19032;
+    background: #eee8d5;
+    border: 1px solid #ffca38;
+}
+
+.poplog {
+    color: #074670;
+    background: #699de1;
+    border: 1px solid #0071bf;
+}
+
+.popconfirm {
+    color: #074670;
+    background: #3065ab;
+    border: 1px solid #295e84;
+    min-width: 4em;
 }
 
 #loading_img {

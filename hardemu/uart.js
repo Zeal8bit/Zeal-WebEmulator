@@ -40,6 +40,9 @@ function UART(Zeal, PIO) {
             }
             value |= (line << i);
         }
+        if (recterm == true) {
+            reced_array.push(value);
+        }
         /* The terminal is a global variable */
         terminal.write([value]);
         /* Reset the FIFO in any case */
@@ -130,8 +133,12 @@ function UART(Zeal, PIO) {
     }
 
     function send_binary_array(binary) {
-        for (var i = 0; i < binary.length; i++) {
-            received.push(binary.charCodeAt(i));
+        if (typeof binary === "string") {
+            for (var i = 0; i < binary.length; i++)
+                received.push(binary.charCodeAt(i));
+        } else {
+            for (var i = 0; i < binary.length; i++)
+                received.push(binary[i]);
         }
 
         start_transfer();
