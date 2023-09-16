@@ -40,9 +40,6 @@ function UART(Zeal, PIO) {
             }
             value |= (line << i);
         }
-        if (recterm == true) {
-            reced_array.push(value);
-        }
         /* The terminal is a global variable */
         terminal.write([value]);
         /* Reset the FIFO in any case */

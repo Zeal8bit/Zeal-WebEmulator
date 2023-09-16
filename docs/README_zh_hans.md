@@ -1,33 +1,17 @@
-<!--
-    /**
-    * SPDX-FileCopyrightText: 2022 Zeal 8-bit Computer <contact@zeal8bit.com>
-    *
-    * SPDX-License-Identifier: Apache-2.0
-    */
-    Version: 0.0.1,
-    Author: Zeal 8-bit Computer
-    Translator: JasonMo, ZT-Pepite
-    Last modified: 2023/07/21 8:16,
-    Last commit: "Project: Reconstitution, delete useless files",
--->
-
 <h1 align="center">Zeal 8-bit Computer emulator</h1>
 <p align=center>
     <img src="../imgs/screenshot.png" alt="screenshot" />
     <a href="https://opensource.org/licenses/Apache-2.0">
         <img src="https://img.shields.io/badge/License-Apache_2.0-blue.svg" alt="Licence" />
     </a>
-    <a href="https://github.com/ZT-Pepite/Zeal-WebEmulator/edit/patch-2/docs/README_zh_hans.md">
-  <img alt="bilibili" src="https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fapi.swo.moe%2Fstats%2Fbilibili%2F1042658991&query=count&color=282c34&label=bilibili&labelColor=FE7398&logo=bilibili&logoColor=white&logoSvg=data%3Aimage%2Fsvg%2Bxml%3Bbase64%2CPHN2ZyB2aWV3Qm94PSIwIDAgNTIgNTIiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI%2BPHBhdGggZD0iTTEuMzczNTIgMTcuMzUzMjJIOC4xMzUzMjNMMTcuMzUzMjIgMTYuNzUzMjF6IE0yLjEzNTMyIDMuMDAwMDJMMi4xMzUzMjIgMy4wMDAwMnoiLz48L3N2Zz4%3D)"/>
-</a>
-
+    <a href="https://space.bilibili.com/1042658991?spm_id_from=333.337.0.0">
+        <img alt="bilibili" src="https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fapi.swo.moe%2Fstats%2Fbilibili%2F1042658991&query=count&color=282c34&label=bilibili&labelColor=FE7398&logo=bilibili&logoColor=white&logoSvg=data%3Aimage%2Fsvg%2Bxml%3Bbase64%2CPHN2ZyB2aWV3Qm94PSIwIDAgNTIgNTIiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI%2BPHBhdGggZD0iTTEuMzczNTIgMTcuMzUzMjJIOC4xMzUzMjNMMTcuMzUzMjIgMTYuNzUzMjF6IE0yLjEzNTMyIDMuMDAwMDJMMi4xMzUzMjIgMy4wMDAwMnoiLz48L3N2Zz4%3D)"/>
+    </a>
 </p>
 
 <p align="center">
     <a href="../README.md">English</a> | 简体中文
 </p>
-
-
 
 **👏中文介绍———Zeal 8位计算机软件模拟器创建和使用指南👏**
 - **[点击此处访问在线模拟器](https://zeal8bit.github.io/Zeal-WebEmulator/)**
@@ -183,7 +167,7 @@ yarn dist-win64
 (*) 下面是一个正确的提交示例：
     译者注：提交，议题及拉取请求消息请用英文
 
-```example
+```plain
 Module: add/fix/remove a from b
 
 Explanation on what/how/why
@@ -191,7 +175,7 @@ Explanation on what/how/why
 
 例如：
 
-```example
+```plain
 Video chip: implement 320x240 text-mode
 
 It is now possible to switch to 320x240 text-mode and display text.
@@ -207,6 +191,10 @@ It is now possible to switch to 320x240 text-mode and display text.
 
 ## 📪联系方式
 
-如有任何建议或要求，您可以通过 `contact@zeal8bit.com`与我联系
+<!--
+    别改这个看似错误的邮箱地址，这是故意的。
+    discussion: https://github.com/Zeal8bit/Zeal-WebEmulator/pull/11#discussion_r1326039822
+-->
+如有任何建议或要求，您可以通过 `contact [at] zeal8bit [dot] com`与我联系
 
 对于功能请求，还可以打开议题或拉取请求。

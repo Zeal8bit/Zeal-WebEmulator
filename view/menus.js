@@ -4,6 +4,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+/* Memdump related */
+const byte_per_line = 0x20;
+
 /**
  * Events for all menus and their content: breakpoints, CPU control, etc...
  */

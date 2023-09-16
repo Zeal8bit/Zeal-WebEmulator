@@ -296,7 +296,7 @@ function Keyboard(Zeal, PIO) {
         return true;
     }
 
-    function key_pressstr(str) {
+    function str_press(str) {
         for (let i = 0; i < str.length; i++) {
             let ascii = str.charCodeAt(i);
             key_pressed(ascii);
@@ -364,7 +364,7 @@ function Keyboard(Zeal, PIO) {
     /* Public function */
     this.key_pressed = key_pressed;
     this.key_released = key_released;
-    this.key_pressstr = key_pressstr;
+    this.str_press = str_press;
 
     this.is_valid_port = function(read, port) {
         /* Can only read from the keyboard */

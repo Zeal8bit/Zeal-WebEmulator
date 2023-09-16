@@ -98,7 +98,3 @@ function opcode_ED_x(snd, third, fourth) {
     /* Return 'ILL' opcode */
     return { text, size: 2 };
 }
-
-if (typeof module === 'object' && typeof module.exports === 'object') {
-    exports.opcode_ED_x = opcode_ED_x;
-}

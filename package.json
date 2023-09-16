@@ -16,7 +16,8 @@
     "dist-win": "electron-builder --win --ia32",
     "dist-win64": "electron-builder --win --x64",
     "dist-mac": "electron-builder --mac",
-    "dist-linux": "electron-builder --linux"
+    "dist-linux": "electron-builder --linux",
+    "dbg": "live-server ./ --port=1145"
   },
   "keywords": [],
   "author": {
@@ -25,7 +26,9 @@
   },
   "license": "Apache",
   "dependencies": {
-    "electron-squirrel-startup": "^1.0.0"
+    "electron-squirrel-startup": "^1.0.0",
+    "open": "^9.1.0",
+    "opn": "^6.0.0"
   },
   "devDependencies": {
     "@electron-forge/cli": "^6.2.1",
@@ -35,6 +38,7 @@
     "@electron-forge/maker-zip": "^6.2.1",
     "@electron-forge/plugin-auto-unpack-natives": "^6.2.1",
     "electron": "25.2.0",
+    "electron-builder": "^24.6.4",
     "electron-squirrel-startup": "^1.0.0"
   },
   "build": {

@@ -13,6 +13,23 @@ $("#continue").on("click", () => zealcom.cont());
 $("#reset").on("click",    () => zealcom.reset());
 $("#clean").on("click",    () => zealcom.restart());
 
+$(".tab").on("click", function(){
+    const index = $(this).index();
+    $(".tab").removeClass("active");
+    $(".bottompanel .panel").addClass("hidden");
+    $(".bottompanel .panel").eq(index).removeClass("hidden");
+    $(this).addClass("active");
+});
+
+$(".regaddr").click(function() {
+    const virtaddr = parseInt($(this).text(), 16);
+    if (virtaddr || virtaddr == 0) {
+        const size = 256;
+        setRAMView(virtaddr, size);
+        $("#memory-tab").click();
+    }
+});
+
 $("#dumpnow").on("click", function() {
     const virtaddr = parseInt($("#dumpaddr").val(), 16);
     const size = parseInt($("#dumpsize").val());

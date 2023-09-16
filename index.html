@@ -12,8 +12,8 @@
     <title>Zeal 8-bit Computer Emulator</title>
     <link rel="icon" href="imgs/zeal.png" sizes="16x16">
     <!-- Emulator's stylesheet -->
-    <link rel="stylesheet" type="text/css" href="frontend/css/emulator.css" media="screen" />
-    <link rel="stylesheet" type="text/css" href="frontend/css/interface.css" media="screen" />
+    <link rel="stylesheet" type="text/css" href="view/css/emulator.css" media="screen" />
+    <link rel="stylesheet" type="text/css" href="view/css/interface.css" media="screen" />
     <!-- jQuery -->
     <script src="component/jquery/jquery-3.6.0.min.js"></script>
     <script src="component/jquery/extend.js"></script>
@@ -23,10 +23,10 @@
     <!-- Hash value -->
     <script src="component/crypto/sha256.js"></script>
     <!-- Disassembler-related -->
+    <script src="component/disassembler/disassembler.js"></script>
     <script src="component/disassembler/opcodes_cb.js"></script>
     <script src="component/disassembler/opcodes_ed.js"></script>
     <script src="component/disassembler/opcodes_ixiy.js"></script>
-    <script src="component/disassembler/disassembler.js"></script>
   </head>
 
   <body>
@@ -53,6 +53,7 @@
         <ul>
         <li><a href="https://github.com/Zeal8bit">Zeal8bit</a>: owner, main developer and maintainer</li>
         <li><a href="https://github.com/JasonMo1">JasonMo</a>: contributor</li>
+        <li><a href="https://github.com/ZT-Pepite">ZT-Pepite</a>: contributor</li>
         </ul>
         <p>For more details about the contributors, <a href="https://github.com/Zeal8bit/Zeal-WebEmulator/graphs/contributors">follow this link</a>.</p>
     </section>
@@ -192,8 +193,6 @@
             <img src="imgs/loading.gif" id="loading_img" alt="loading..." />
             <select name="romchoice" id="romchoice">
                 <option value="">Loading...</option>
-                <!-- Actually, you can add default prebuild here. Here is an example: -->
-                <!-- <option value="https://github.com/Zeal8bit/Zeal-8-bit-OS/releases/download/v0.3.0/os_with_romdisk.img">offical-master-0.3.0</option> -->
             </select>
 
             <section id="romadvanced">
@@ -301,7 +300,6 @@
       </section>
       <section id="uartview" class="panel">
         <input type="button" id="clearterm" value="Clear" />
-        <input type="button" id="recterm" value="Record" />
         <label for="baudrate">Baudrate: </label>
         <select id="baudrate">
           <option value="57600">57600</option>
@@ -324,11 +322,7 @@
         </ul>
     </footer>
 
-    <script>
-
-    </script>
     <!-- Emulation-related -->
-    <script src="frontend/utils.js"></script>
     <script src="hardemu/characters.js"></script>
     <script src="hardemu/rom.js"></script>
     <script src="hardemu/pio.js"></script>
@@ -338,14 +332,16 @@
     <script src="hardemu/ram.js"></script>
     <script src="hardemu/mmu.js"></script>
     <script src="hardemu/Z80.js"></script>
-    <script src="frontend/popout.js"></script>
+    <script src="view/popout.js"></script>
     <script src="hardemu/screen.js"></script>
     <script src="hardemu/machine.js"></script>
-    <script src="frontend/init.js"></script>
-    <script src="frontend/breakpoint.js"></script>
-    <script src="frontend/menus.js"></script>
-    <script src="frontend/misc.js"></script>
-    <script src="frontend/panel.js"></script>
-    <script src="frontend/readrom.js"></script>
+    <!-- view scripts -->
+    <script src="view/utils.js"></script>
+    <script src="view/breakpoint.js"></script>
+    <script src="view/menus.js"></script>
+    <script src="view/misc.js"></script>
+    <script src="view/panel.js"></script>
+    <script src="view/readrom.js"></script>
+    <script src="view/init.js"></script>
   </body>
 </html>

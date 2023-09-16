@@ -7,6 +7,7 @@
 const intructions_iy_op = 0xFD;
 const intructions_ix_op = 0xDD;
 
+
 /* The following object doesn't include CB nor LD (r+n), r which are special cases */
 const dd_fd_intructions = {
     0x8E: {
@@ -139,6 +140,7 @@ const dd_fd_intructions = {
     },
 };
 
+
 function opcode_DD_FD_CB_x(third, fourth)
 {
     switch (fourth){
@@ -159,6 +161,7 @@ function opcode_DD_FD_CB_x(third, fourth)
             return 'ILL';
     };
 }
+
 
 /**
  * @brief Process the given opcodes, regardless of IX or IY since the instructions are the same.
@@ -194,6 +197,7 @@ function opcode_DD_FD_x(second, third, fourth) {
     return { text: 'ILL', size: '2' };
 }
 
+
 /**
  * @brief Get the string equivalent of the given opcode (which is preceded by 0xDD)
  *
@@ -206,6 +210,7 @@ function opcode_DD_x(second, third, fourth) {
     return { text: text.replace('r', 'IX'), size };
 }
 
+
 /**
  * @brief Get the string equivalent of the given opcode (which is preceded by 0xDD)
  *
@@ -216,11 +221,4 @@ function opcode_FD_x(second, third, fourth) {
     const { text, size } = opcode_DD_FD_x(second, third, fourth);
     /* Replace 'r' with IY */
     return { text: text.replace('r', 'IY'), size };
-}
-
-if (typeof module === 'object' && typeof module.exports === 'object') {
-    exports.opcode_DD_FD_CB_x = opcode_DD_FD_CB_x;
-    exports.opcode_DD_FD_x = opcode_DD_FD_x;
-    exports.opcode_DD_x = opcode_DD_x;
-    exports.opcode_FD_x = opcode_FD_x;
 }

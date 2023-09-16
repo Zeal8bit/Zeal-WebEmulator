@@ -33,10 +33,6 @@ function filehash(file1, SHA2) {
 }
 
 // About hex
-function disassembler_hex(n) {
-    return "$" + n.toString(16);
-}
-
 function hex(str = "", noprefix = false, digits = 4) {
     const leading = `${"0".repeat(digits)}${str.toString(16).toUpperCase()}`.substr(-digits);
     return noprefix ? leading : `0x${leading}`;
@@ -50,11 +46,4 @@ function hex8(str, noprefix) {
 function hex16(high, lower, noprefix) {
     const value = (high << 8) | lower;
     return `${noprefix ? "" : "0x"}${hex(value, true)}`;
-}
-
-if (typeof module === 'object' && typeof module.exports === 'object') {
-    exports.disassembler_hex = disassembler_hex;
-    exports.hex = hex;
-    exports.hex8 = hex8;
-    exports.hex16 = hex16;
 }

@@ -32,6 +32,3 @@ document.addEventListener('keydown', function(event) {
 var zealcom = new Zeal8bitComputer();
 const disassembler = new Disassembler();
 const popout = new PopOut();
-
-/* Memdump related */
-const byte_per_line = 0x20;
