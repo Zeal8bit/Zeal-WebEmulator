@@ -12,13 +12,12 @@ $("#popup-message").on("click", function() {
 /**
  * Manage the popup message
  */
-function PopOut() {
-    function pop_error(data) {
-        console.error(data);
+function Popup() {
+    function msg(data, instead, _class) {
+        console[instead](data);
         const popup = $("#popup-message");
-
         popup.removeClass();
-        popup.addClass("poperror");
+        popup.addClass(_class);
         popup.html(data);
         popup.fadeIn(1000);
         setTimeout(() => {
@@ -26,63 +25,20 @@ function PopOut() {
         }, 3000);
     }
 
-    function pop_warn(data) {
-        console.warn(data);
-        const popup = $("#popup-message");
-
-        popup.removeClass();
-        popup.addClass("popwarn");
-        popup.html(data);
-        popup.fadeIn(1000);
-        setTimeout(() => {
-            popup.fadeOut(1000);
-        }, 3000);
+    function doc(target) {
+        if (!target) {
+            error("Error while showing HTML");
+        }
+        target_elt = $("#" + target);
+        $("#blackbg").fadeIn(300);
+        target_elt.fadeIn(500);
     }
 
-    function pop_log(data) {
-        console.log(data);
-        const popup = $("#popup-message");
-
-        popup.removeClass();
-        popup.addClass("poplog");
-        popup.html(data);
-        popup.fadeIn(1000);
-        setTimeout(() => {
-            popup.fadeOut(1000);
-        }, 3000);
-    }
-
-    function pop_info(data) {
-        pop_log(data);
-    }
-
-    /** Too ugly, don't use it now */
-    function pop_confirm(message) {
-        let html = `<div>${message}<button class="popconfirm">Ok</button><button class="popconfirm">Cancel</button></div>`
-        const popup = $("#popup-message");
-
-        popup.removeClass();
-        popup.addClass("poplog");
-        popup.html(html);
-        popup.fadeIn(1000);
-        setTimeout(() => {
-            popup.fadeOut(1000);
-        }, 3000);
-    }
-
-    this.error = pop_error;
-    this.warn = pop_warn;
-    this.log = pop_log;
-    this.info = pop_info;
-    this.confirm = pop_confirm;
-}
-
-// TODO: Add these APIs to popout object
-
-function showMessagePopup(target)
-{
-    $("#blackbg").fadeIn(300);
-    target.fadeIn(500);
+    this.error = (data)   => msg(data, "error", "poperror");
+    this.warn  = (data)   => msg(data, "warn", "popwarn");
+    this.info  = (data)   => msg(data, "log", "poplog");
+    this.log   = (data)   => msg(data, "log", "poplog");
+    this.doc   = (target) => doc(target);
 }
 
 $("#blackbg").click(function() {
@@ -95,8 +51,5 @@ $("#blackbg").click(function() {
  */
 $("footer a").on("click", function(){
     const target = $(this).data("target");
-    const target_elt = $("#" + target);
-    if (target_elt) {
-        showMessagePopup(target_elt);
-    }
+    popout.doc(target);
 });

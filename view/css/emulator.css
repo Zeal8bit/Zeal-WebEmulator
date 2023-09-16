@@ -476,7 +476,6 @@ button {
     width: 35em;
     margin-left: auto;
     margin-right: auto;
-    color:#6d0000;
     z-index: 20;
 }
 
@@ -496,13 +495,6 @@ button {
     color: #074670;
     background: #699de1;
     border: 1px solid #0071bf;
-}
-
-.popconfirm {
-    color: #074670;
-    background: #3065ab;
-    border: 1px solid #295e84;
-    min-width: 4em;
 }
 
 #loading_img {
