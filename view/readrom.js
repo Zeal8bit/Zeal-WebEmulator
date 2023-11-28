@@ -125,13 +125,24 @@ if (!advancedMode) {
         .catch(switchToAdvancedMode);
 }
 
-var rom_choisen = 0;
+function resetRom() {
+    rom_chosen = false;
+    /* Reset all the file inputs */
+    $("#romfile [type=file]").val("");
+    /* Remove the ticks from the ready list */
+    $(".status").removeClass("ready");
+    $("#romchoice").each(function(){
+        $(this).find("option").eq(0).prop("selected",true)
+    });
+}
+
+var rom_chosen = false;
 var index_src;
 /**
  * Add a listener to the romchoice list, load the ROM when selected
  */
 $("#romchoice").on("change", async function() {
-    if (rom_choisen > 0) {
+    if (rom_chosen === true) {
         let cover = window.confirm("This will cover the current image, Confirm?");
         if (cover == false) {
             $("#romchoice").find("option").eq(index_src).prop("selected",true);
@@ -141,7 +152,7 @@ $("#romchoice").on("change", async function() {
             zealcom.restart(reset_rom_selected=false);
         }
     }
-    rom_choisen += 1;
+    rom_chosen = true;
     index_src = $("#romchoice").get(0).selectedIndex;
     /* Get the URL of the current choice */
     let url = $(this).val();

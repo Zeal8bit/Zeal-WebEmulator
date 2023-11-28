@@ -296,13 +296,6 @@ function Keyboard(Zeal, PIO) {
         return true;
     }
 
-    function str_press(str) {
-        for (let i = 0; i < str.length; i++) {
-            let ascii = str.charCodeAt(i);
-            key_pressed(ascii);
-        }
-    }
-
     function send_next_keypress() {
         /* If the fifo is empty or a transfer is on-going, do nothing */
         if (ps2_fifo.length == 0 || transfer_active) {
@@ -364,7 +357,6 @@ function Keyboard(Zeal, PIO) {
     /* Public function */
     this.key_pressed = key_pressed;
     this.key_released = key_released;
-    this.str_press = str_press;
 
     this.is_valid_port = function(read, port) {
         /* Can only read from the keyboard */

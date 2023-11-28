@@ -4,10 +4,6 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-/**
- * Before initializing the components/peripherals, create the callback set.
- * Indeed, one of them may need to register a callback on init. */
-
 var breakpoints = [];
 
 $("#bps").on("click", "li", function() {

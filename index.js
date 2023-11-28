@@ -97,11 +97,10 @@ var menuBar = [
 const createWindow = () => {
 
     mainWindow = create_mainWindow();
-    versionWindow = create_versionWindow();
 
-    // 构建菜单项
+    // Set up the menu bar
     const menu = Menu.buildFromTemplate(menuBar);
-    // 设置一个顶部菜单栏
+    // Set up the top menu
     Menu.setApplicationMenu(menu);
 };
 

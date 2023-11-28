@@ -4,8 +4,15 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-/* Memdump related */
-const byte_per_line = 0x20;
+$("#step").on("click",     () => zealcom.step());
+$("#stop").on("click",     () => zealcom.stop());
+$("#stepover").on("click", () => zealcom.step_over());
+$("#continue").on("click", () => zealcom.cont());
+$("#reset").on("click",    () => zealcom.reset());
+$("#clean").on("click",    () => {
+    zealcom.restart();
+    resetRom();
+});
 
 /**
  * Events for all menus and their content: breakpoints, CPU control, etc...

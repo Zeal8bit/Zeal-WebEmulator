@@ -33,7 +33,6 @@ The emulator has been tested on Opera, Google Chrome and Microsoft Edge.
 
 The emulator is slower than the real hardware, even though the real hardware is using a Z80 running at 10MHz. This is due to the overhead of Javascript itself and the web browser itself. But as I said above, the main feature this was made for is **debugging** programs and for this, there is no doubt it is efficient.
 
-
 Writing a native emulator in **C** (w/ SDL) would cover the requirement of a full-speed emulator. However, this needs some time investment. Feel free to contact me or contribute if such a project interest you.
 
 ## How to start using the emulator?
@@ -191,10 +190,6 @@ You are free to use it for personal and commercial use, the boilerplate present 
 
 ## Contact
 
-<!--
-    DO NOT MODIFY IT
-    discussion: https://github.com/Zeal8bit/Zeal-WebEmulator/pull/11#discussion_r1326039822
--->
 For any suggestion or request, you can contact me at `contact [at] zeal8bit [dot] com`
 
 For feature requests, you can also open an issue or a pull request.

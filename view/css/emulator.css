@@ -4,11 +4,6 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-@font-face {
-	font-family:'cascadiacode';
-	src: url('../fonts/CascadiaCode.ttf');
-}
-
 :root, :root.dark {
     --first-bg-color: #002b36;
     --second-bg-color: #093642;
@@ -282,24 +277,6 @@ hr {
     user-select: none;
 }
 
-#codeedit {
-    position: relative;
-    z-index: 3;
-    border-top: 2px black solid;
-    font-family: monospace;
-    font-size: 11pt;
-    display: inline-block;
-    width: 100%;
-    height: 56vh;
-    background-color:var(--second-bg-color);
-    padding-top: 1em;
-    padding-left: 0.5em;
-    cursor: pointer;
-    overflow-y:scroll;
-    box-sizing: border-box;
-    user-select: none;
-}
-
 #dumpfields {
     margin-bottom: 1em;
 }
@@ -342,10 +319,6 @@ hr {
 .membytes, .asciichars, .memline {
     display: inline-block;
     padding-left:1.5em;
-}
-
-.memline, .dumpline {
-    font-family: 'cascadiacode';
 }
 
 .membytes div, .asciichars div {

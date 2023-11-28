@@ -191,10 +191,6 @@ It is now possible to switch to 320x240 text-mode and display text.
 
 ## 📪联系方式
 
-<!--
-    别改这个看似错误的邮箱地址，这是故意的。
-    discussion: https://github.com/Zeal8bit/Zeal-WebEmulator/pull/11#discussion_r1326039822
--->
 如有任何建议或要求，您可以通过 `contact [at] zeal8bit [dot] com`与我联系
 
 对于功能请求，还可以打开议题或拉取请求。
