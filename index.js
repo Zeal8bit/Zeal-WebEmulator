@@ -7,8 +7,7 @@
 // This file is a part of electron version, it will init main window and chrome
 const opn = require('opn');
 const { app, BrowserWindow, Menu, ipcMain, ipcRenderer } = require('electron');
-const path = require('path');
-const fs = require('fs');
+const path = require('node:path');
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 if (require('electron-squirrel-startup')) {
@@ -97,7 +96,6 @@ var menuBar = [
 const createWindow = () => {
 
     mainWindow = create_mainWindow();
-
     // Set up the menu bar
     const menu = Menu.buildFromTemplate(menuBar);
     // Set up the top menu

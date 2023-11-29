@@ -30,14 +30,14 @@
     "opn": "^6.0.0"
   },
   "devDependencies": {
-    "@electron-forge/cli": "^6.2.1",
-    "@electron-forge/maker-deb": "^6.2.1",
-    "@electron-forge/maker-rpm": "^6.2.1",
-    "@electron-forge/maker-squirrel": "^6.2.1",
-    "@electron-forge/maker-zip": "^6.2.1",
-    "@electron-forge/plugin-auto-unpack-natives": "^6.2.1",
-    "electron": "^25.2.0",
-    "electron-builder": "^24.6.4",
+    "@electron-forge/cli": "^7.1.0",
+    "@electron-forge/maker-deb": "^7.1.0",
+    "@electron-forge/maker-rpm": "^7.1.0",
+    "@electron-forge/maker-squirrel": "^7.1.0",
+    "@electron-forge/maker-zip": "^7.1.0",
+    "@electron-forge/plugin-auto-unpack-natives": "^7.1.0",
+    "electron": "^27.1.2",
+    "electron-builder": "^24.9.1",
     "electron-squirrel-startup": "^1.0.0"
   },
   "build": {
@@ -59,7 +59,7 @@
       "perMachine": true,
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
-      "license": "./imgs/installer/license.txt"
+      "license": "./LICENSE"
     },
     "win": {
       "icon": "./imgs/installer/zeal.ico",
