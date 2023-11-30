@@ -4,6 +4,13 @@
     <a href="https://opensource.org/licenses/Apache-2.0">
         <img src="https://img.shields.io/badge/License-Apache_2.0-blue.svg" alt="Licence" />
     </a>
+    <a href="https://space.bilibili.com/1042658991?spm_id_from=333.337.0.0">
+        <img alt="bilibili" src="https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fapi.swo.moe%2Fstats%2Fbilibili%2F1042658991&query=count&color=282c34&label=bilibili&labelColor=FE7398&logo=bilibili&logoColor=white&logoSvg=data%3Aimage%2Fsvg%2Bxml%3Bbase64%2CPHN2ZyB2aWV3Qm94PSIwIDAgNTIgNTIiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI%2BPHBhdGggZD0iTTEuMzczNTIgMTcuMzUzMjJIOC4xMzUzMjNMMTcuMzUzMjIgMTYuNzUzMjF6IE0yLjEzNTMyIDMuMDAwMDJMMi4xMzUzMjIgMy4wMDAwMnoiLz48L3N2Zz4%3D)"/>
+    </a>
+</p>
+
+<p align="center">
+English | <a href="docs/README_zh_hans.md">简体中文</a>
 </p>
 
 This project is a software emulator for Zeal 8-bit Computer: a homebrew 8-bit computer based on a Z80 CPU.
@@ -20,12 +27,11 @@ The main goal is to integrate this emulator as part of [zeal8bit.com](https://ze
 
 On the other side, another goal of this project is also to let anybody test or write programs for Zeal 8-bit Computer on any platform (Linux/Windows/Mac OS X) without the need of a toolchain installed.
 
-The emulator has been tested on Opera and Google Chrome.
+The emulator has been tested on Opera, Google Chrome and Microsoft Edge.
 
 ## What about performance then?
 
 The emulator is slower than the real hardware, even though the real hardware is using a Z80 running at 10MHz. This is due to the overhead of Javascript itself and the web browser itself. But as I said above, the main feature this was made for is **debugging** programs and for this, there is no doubt it is efficient.
-
 
 Writing a native emulator in **C** (w/ SDL) would cover the requirement of a full-speed emulator. However, this needs some time investment. Feel free to contact me or contribute if such a project interest you.
 
@@ -39,35 +45,69 @@ Several choices are offered to you:
 
 ### Get started with electron?
 
-#### Importing
+#### Install dependencies
 
-First of all, you will need to clone this current repository, after that use a package manager to install electron forge. If you are using `yarn`, use the following commands:
+First of all, you will need to clone this current repository, after that use a package manager to install dependencies. If you are using `yarn`, use the following commands:
+
 ```bash
-$ cd /path/to/Zeal-WebEmulator
-$ yarn add --dev @electron-forge/cli
-$ yarn electron-forge import
+cd /path/to/Zeal-WebEmulator
+yarn install
 ```
 
 If you are using `npm`, the commands are as follows:
+
 ```bash
-$ cd /path/to/Zeal-WebEmulator
-$ npm install --save-dev @electron-forge/cli
-$ npm exec --package=@electron-forge/cli -c "electron-forge import"
+cd /path/to/Zeal-WebEmulator
+npm install
 ```
 
-If you encounter any issues, you can find more information on [the official electron forge website.](https://www.electronforge.io/import-existing-project)
+If you encounter any issues, you can find more information on [the official electron forge website](https://www.electronforge.io/import-existing-project).
 
 #### Running
 
-Once the project has been imported, it can be executed thanks to
+Once the dependencies are ready, it can be executed thanks to
+
+```bash
+yarn start
 ```
-$ yarn start
-```
+
 or
+
+```bash
+npm start
 ```
-$ npm start
-```
+
 commands.
+
+#### Compiling
+
+Supported arch:
+
+`win` `win64` `linux`
+
+npm:
+
+```bash
+npm run dist-<arch>
+```
+
+yarn:
+
+```bash
+yarn dist-<arch>
+```
+
+for example, if you want to build for windows-x64, run following commands:
+
+```bash
+npm run dist-win64
+```
+
+or:
+
+```bash
+yarn dist-win64
+```
 
 ## Supported Features
 
@@ -109,10 +149,8 @@ On the emulation side, the remaining tasks to do are:
 On the project/debugger side itself:
 
 * A better way to **parse breakpoint input**. A known bug is that providing a label starting with a hexadecimal letter would be interpreted as a PC value instead of a label. For example, inputting *date_routine* as a label to break in would result in the addition of a breakpoint at address 0xda instead of the address of label *date_routine* (because *date* starts with hex letters *da*)
-* **Refactoring**. Some parts of the code, mainly in `zeal.js` are a bit dirty in the sense that several different things are managed by this file: breakpoints, disassembly view, memory viewer, Zeal emulation, etc... It should be cleaned and split up between multiple files.
-* An **integrated code editor** with an assembler! In the (far?) future, integrating a code editor, ideally, *CodeMirror*, would be a very nice addition. It would let anyone write code, assemble it, inject it in the emulator and test it directly. No need to have a toolchain or an assembler installed. Everything would be available directly from the browser. It would also be possible to connect the debugger to the code editor to be able to debug the code written more easily.
 
-# Contributing
+## Contributing
 
 Anyone can contribute to this project, contributions are welcome!
 
@@ -128,7 +166,7 @@ To contribute:
 
 (*) A good commit message is as follows:
 
-```
+```plain
 Module: add/fix/remove a from b
 
 Explanation on what/how/why
@@ -136,22 +174,22 @@ Explanation on what/how/why
 
 For example:
 
-```
+```plain
 Video chip: implement 320x240 text-mode
 
 It is now possible to switch to 320x240 text-mode and display text.
 ```
 
-# License
+## License
 
-`Z80.js` file is distributed under the MIT license (originated from Molly Howell repository: https://github.com/DrGoldfire/Z80.js)
+`Z80.js` file is distributed under the MIT licence (originated from Molly Howell repository: [Z80.js](https://github.com/DrGoldfire/Z80.js))
 
 All the other files are distributed under the Apache 2.0 License. See `LICENSE` file for more information.
 
 You are free to use it for personal and commercial use, the boilerplate present in each file must not be removed.
 
-# Contact
+## Contact
 
-For any suggestion or request, you can contact me at contact [at] zeal8bit [dot] com
+For any suggestion or request, you can contact me at `contact [at] zeal8bit [dot] com`
 
 For feature requests, you can also open an issue or a pull request.

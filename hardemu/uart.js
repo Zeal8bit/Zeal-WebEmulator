@@ -130,8 +130,12 @@ function UART(Zeal, PIO) {
     }
 
     function send_binary_array(binary) {
-        for (var i = 0; i < binary.length; i++) {
-            received.push(binary.charCodeAt(i));
+        if (typeof binary === "string") {
+            for (var i = 0; i < binary.length; i++)
+                received.push(binary.charCodeAt(i));
+        } else {
+            for (var i = 0; i < binary.length; i++)
+                received.push(binary[i]);
         }
 
         start_transfer();

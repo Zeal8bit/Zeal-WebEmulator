@@ -9,7 +9,15 @@
     "package": "electron-forge package",
     "make": "electron-forge make",
     "publish": "electron-forge publish",
-    "lint": "echo \"No linting configured\""
+    "lint": "echo \"No linting configured\"",
+    "pack": "electron-builder --dir",
+    "postinstall": "electron-builder install-app-deps",
+    "dist": "electron-builder",
+    "dist-win": "electron-builder --win --ia32",
+    "dist-win64": "electron-builder --win --x64",
+    "dist-mac": "electron-builder --mac",
+    "dist-linux": "electron-builder --linux",
+    "dbg": "live-server ./ --port=1145"
   },
   "keywords": [],
   "author": {
@@ -18,16 +26,54 @@
   },
   "license": "Apache",
   "dependencies": {
-    "electron-squirrel-startup": "^1.0.0"
+    "electron-squirrel-startup": "^1.0.0",
+    "opn": "^6.0.0"
   },
   "devDependencies": {
-    "@electron-forge/cli": "^6.2.1",
-    "@electron-forge/maker-deb": "^6.2.1",
-    "@electron-forge/maker-rpm": "^6.2.1",
-    "@electron-forge/maker-squirrel": "^6.2.1",
-    "@electron-forge/maker-zip": "^6.2.1",
-    "@electron-forge/plugin-auto-unpack-natives": "^6.2.1",
-    "electron": "25.2.0",
+    "@electron-forge/cli": "^7.1.0",
+    "@electron-forge/maker-deb": "^7.1.0",
+    "@electron-forge/maker-rpm": "^7.1.0",
+    "@electron-forge/maker-squirrel": "^7.1.0",
+    "@electron-forge/maker-zip": "^7.1.0",
+    "@electron-forge/plugin-auto-unpack-natives": "^7.1.0",
+    "electron": "^27.1.2",
+    "electron-builder": "^24.9.1",
     "electron-squirrel-startup": "^1.0.0"
+  },
+  "build": {
+    "appId": "com.zealwebemulator",
+    "productName": "Zeal-WebEmulator",
+    "files": [
+      "**/*"
+    ],
+    "directories": {
+      "output": "out/electron-builder/app",
+      "app": "./"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "installerIcon": "./imgs/installer/zeal.ico",
+      "installerHeader": "./imgs/installer/header.bmp",
+      "uninstallerIcon": "./imgs/installer/zeal.ico",
+      "perMachine": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "license": "./LICENSE"
+    },
+    "win": {
+      "icon": "./imgs/installer/zeal.ico",
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ]
+    },
+    "linux": {
+      "icon": "./imgs/installer/zeal.png"
+    }
   }
 }

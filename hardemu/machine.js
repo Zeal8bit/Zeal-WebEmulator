@@ -231,7 +231,7 @@ function Zeal8bitComputer() {
                     const filtered = breakpoints.find(elt => elt.address == registers.pc);
                     if (filtered != undefined && filtered.enabled) {
                         running = false;
-                        updateRegistersHTML();
+                        setRegView();
                         if (filtered.callback) {
                             filtered.callback(filtered);
                         }
@@ -255,7 +255,7 @@ function Zeal8bitComputer() {
             tstatesutils.addTstates(zpu.run_instruction());
             registers = zpu.getState();
         }
-        updateRegistersHTML();
+        setRegView();
     }
 
     function step_over () {
@@ -296,24 +296,19 @@ function Zeal8bitComputer() {
         /* Clear the interval that executes the CPU */
         clearInterval(interval);
         interval = null;
-        updateRegistersHTML();
+        setRegView();
         running = false;
     }
 
-    function restart() {
-        clearInterval(interval);
-        interval = null;
+    function restart(resetinterval=true) {
         running = false;
         vchip.clear();
         terminal.clear();
         zealcom = new Zeal8bitComputer();
-        /* Reset all the file inputs */
-        $("#romfile [type=file]").val("");
-        /* Remove the ticks from the ready list */
-        $(".status").removeClass("ready");
-        $("#romchoice").each(function(){
-            $(this).find("option").eq(0).prop("selected",true)
-        });
+        if (resetinterval == true) {
+            clearInterval(interval);
+            interval = null;
+        }
     }
 
     function reset() {
