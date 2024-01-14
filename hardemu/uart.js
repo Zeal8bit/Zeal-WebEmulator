@@ -1,5 +1,5 @@
 /**
- * SPDX-FileCopyrightText: 2022 Zeal 8-bit Computer <contact@zeal8bit.com>
+ * SPDX-FileCopyrightText: 2024 Zeal 8-bit Computer <contact@zeal8bit.com>
  *
  * SPDX-License-Identifier: Apache-2.0
  */
@@ -56,6 +56,12 @@ function UART(Zeal, PIO) {
         }
 
         const tstates = zeal.getTstates();
+
+        /* Trace this change if the value changed */
+        if (transition) {
+            g_tracevcd.change(tstates, trace_tx_handle, bit);
+        }
+
         /* Ignore the case where a transfer hasn't been started and the line is set to 1 */
         if (bit == 1 && tx_fifo.length == 0) {
             /* Nothing to do */
@@ -148,6 +154,9 @@ function UART(Zeal, PIO) {
     pio.pio_listen_b_pin(IO_UART_RX_PIN, read_rx);
     /* Set RX pin to 1 (idle) */
     pio.pio_set_b_pin(IO_UART_RX_PIN, 1);
+
+    /* Add the TX pin to the VCD dumper */
+    trace_tx_handle = g_tracevcd.addWire("TX", 1);
 
     /* Set the baudrate */
     this.set_baudrate = set_baudrate;
