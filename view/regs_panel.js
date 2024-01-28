@@ -5,6 +5,7 @@
  */
 
 function setRegView() {
+    const tstates = zealcom.getTstates();
     let regs = zealcom.getCPUState();
     $("#rega").text(hex8(regs.a));
     $("#regb").text(hex8(regs.b));
@@ -20,6 +21,7 @@ function setRegView() {
     $("#reghl").text(hex16(regs.h, regs.l));
     $("#regpc").text(hex(regs.pc));
     $("#regsp").text(hex(regs.sp));
+    $("#tstates").text(tstates);
     /* Special treatment for the flags */
     var flags = (regs.flags.S == 1 ? "S" : "") +
                 (regs.flags.Z == 1 ? "Z" : "") +
