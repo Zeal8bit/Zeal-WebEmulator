@@ -17,7 +17,7 @@
     "dist-win64": "electron-builder --win --x64",
     "dist-mac": "electron-builder --mac",
     "dist-linux": "electron-builder --linux",
-    "dbg": "live-server ./ --port=1145"
+    "dev": "live-server ./ --port=1145"
   },
   "keywords": [],
   "author": {

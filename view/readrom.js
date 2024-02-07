@@ -4,55 +4,74 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-function load_bin(file){
+/**
+ * 
+ * @param {*} dev 
+ * @param {*} file 
+ * @param {*} reader_method 
+ * @param {*} callback 
+ * @param {*} external_params 
+ * You can use variable `load_returns` to get the return value of `dev.loadFile`.
+ */
+function loadToDevice(dev, file, reader_method, loadfile_external_params=[], callback){
     let reader = new FileReader();
-    const isos = $("#os").prop("checked");
     reader.addEventListener('load', function(e) {
         let binary = e.target.result;
-        if (isos) {
-            zealcom.rom.loadFile(binary);
-            $("#binready").addClass("ready");
-        } else {
-            const addr = $("#address").val();
-            const result = parseInt(addr, 16);
-            zealcom.ram.loadFile(result, binary);
-        }
+        let load_returns = dev.loadFile(binary, ...loadfile_external_params);
+        callback(load_returns);
     });
-    if (typeof file !== "undefined") {
-        reader.readAsBinaryString(file);
+    if (file) {
+        reader[reader_method](file);
     }
 }
 
-$("#read-button").on('click', function() {
+function loadRom(file_rom) {
+    /* Read the rom file */
+    if (file_rom) {
+        loadToDevice(zealcom.rom, file_rom, "readAsBinaryString", [], () => {
+            $("#romready").addClass("ready");
+        });    
+    }
+}
+
+function loadMap(file_map) {
     /* If a dump/map file was provided, try to load it */
-    let fdump = $("#file-dump")[0].files[0];
-    if (typeof fdump !== "undefined") {
-        let rdump = new FileReader();
-        rdump.addEventListener('load', (e) => {
-            const success = disassembler.loadSymbols(e.target.result);
+    if (file_map) {
+        loadToDevice(disassembler, file_map, "readAsText", [], (success) => {
             if (success) {
                 /* symbols are ready! */
                 $("#symready").addClass("ready");
             }
+            else {
+                popup.error("Error while loading map file");
+            }
         });
-        rdump.readAsText(fdump);
-    }
+    }    
+}
 
-    /* Read the binary executable */
-    let file = $("#file-input")[0].files[0];
-    load_bin(file);
-
+function loadEEPROM(file_eeprom) {
     /* Read the EEPROM image */
-    file = $("#eeprom-bin")[0].files[0];
-    let eepromr = new FileReader();
-    eepromr.addEventListener('load', function(e) {
-        let binary = e.target.result;
-        zealcom.compactflash.loadFile(binary);
-        $("#eepromready").addClass("ready");
-    });
-    if (typeof file !== "undefined") {
-        eepromr.readAsBinaryString(file);
+    if (file_eeprom) {
+        loadToDevice(zealcom.eeprom, file_eeprom, "readAsBinaryString", [], () => {
+            $("#eepromready").addClass("ready");
+        });
     }
+}
+
+function loadCf(file_cf) {
+    /** Read the Compact Flash image */
+    if (file_cf) {
+        loadToDevice(zealcom.compactflash, file_cf, "readAsBinaryString", [], () => {
+            $("#cfready").addClass("ready");
+        });
+    }
+}
+
+$("#read-button").on('click', function() {
+    loadRom($("#file-rom")[0].files[0]);
+    loadMap($("#file-map")[0].files[0]);
+    loadEEPROM($("#file-eeprom")[0].files[0]);
+    loadCf($("#file-cf")[0].files[0]);
 });
 
 /**
@@ -64,7 +83,7 @@ const urlGetParam = new URLSearchParams(window.location.search);
 var advancedMode = urlGetParam.get("advanced") === "true";
 
 if (advancedMode) {
-    $("#romload").hide();
+    // $("#romload").hide();
     $("#romfile").show();
 }
 
@@ -76,10 +95,12 @@ function switchToAdvancedMode(error) {
     popout.error("Could not fetch remote data, switched to advanced mode");
     console.error(error);
     /* Hide advanced link option and ROMs list */
-    $("#romload").hide(250, function() {
-        /* Show file uploaders */
-        $("#romfile").show(250);
-    });
+    // $("#romload").hide(250, function() {
+
+    /* Show file uploaders */
+    $("#romfile").show(250);
+
+    // });
 }
 
 /**
@@ -169,7 +190,7 @@ $("#romchoice").on("change", async function() {
         let data = await readBlobFromUrl(url);
         let hashcomp = await filehash(data, hash);
         if (hashcomp == true) {
-            load_bin(data);
+            loadRom(data);
         }
         $("#loading_img").invisible();
         zealcom.cont();

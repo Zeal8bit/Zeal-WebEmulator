@@ -433,6 +433,6 @@ function Disassembler() {
 
 
     this.disassemble = disassembleMemory;
-    this.loadSymbols = loadSymbols;
+    this.loadFile = loadSymbols;
     this.labelAddress = labelAddress;
 }

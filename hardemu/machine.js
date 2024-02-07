@@ -142,11 +142,11 @@ function Zeal8bitComputer() {
     const i2c = new I2C(this, pio);
     const keyboard = new Keyboard(this, pio);
     const ds1307 = new I2C_DS1307(this, i2c);
-    /* Extensions */
-    this.compactflash = new CompactFlash(this);
     /* We could pass an initial content to the EEPROM, but set it to null for the moment */
     const eeprom = new I2C_EEPROM(this, i2c, null);
-    const devices = [ rom, ram, vchip, pio, keyboard, mmu, this.compactflash ];
+    /* Extensions */
+    const compactflash = new CompactFlash(this);
+    const devices = [ rom, ram, vchip, pio, keyboard, mmu, compactflash ];
     const zpu = new Z80({ mem_read, mem_write, io_read, io_write });
 
     this.mmu = mmu;
@@ -159,6 +159,7 @@ function Zeal8bitComputer() {
     this.keyboard = keyboard;
     this.ds1307 = ds1307;
     this.eeprom = eeprom;
+    this.compactflash = compactflash;
     this.devices = devices;
     this.zpu = zpu;
     this.getCPUState = zpu.getState
