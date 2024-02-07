@@ -47,7 +47,7 @@ $("#read-button").on('click', function() {
     let eepromr = new FileReader();
     eepromr.addEventListener('load', function(e) {
         let binary = e.target.result;
-        zealcom.eeprom.loadFile(binary);
+        zealcom.compactflash.loadFile(binary);
         $("#eepromready").addClass("ready");
     });
     if (typeof file !== "undefined") {
