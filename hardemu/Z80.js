@@ -23,6 +23,10 @@
 ///  or at http://opensource.org/licenses/MIT
 ///////////////////////////////////////////////////////////////////////////////
 
+// Modifications by Zeal8bit:
+//    - Added isHalted function
+//    - Added getPC function
+
 "use strict";
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -42,7 +46,7 @@ function Z80(coreParameter)
    if (!core || (typeof core.mem_read !== "function") || (typeof core.mem_write !== "function") ||
                 (typeof core.io_read !== "function")  || (typeof core.io_write !== "function"))
       throw("Z80: Core object is missing required functions.");
-   
+
    if (this === window)
       throw("Z80: This function is a constructor; call it using operator new.");
 
@@ -83,7 +87,7 @@ function Z80(coreParameter)
    let imode = 0;
    let iff1 = 0;
    let iff2 = 0;
-   
+
    // These are all specific to this implementation, not Z80 features.
    // Keep track of whether we've had a HALT instruction called.
    let halted = false;
@@ -94,7 +98,15 @@ function Z80(coreParameter)
    // This tracks the number of cycles spent in a single instruction run,
    //  including processing any prefixes and handling interrupts.
    let cycle_counter = 0;
-   
+
+    function isHalted() {
+        return halted;
+    }
+
+    function getPC() {
+        return pc;
+    }
+
    function getState() {
       return {
          b: b,
@@ -116,8 +128,8 @@ function Z80(coreParameter)
          i   : i,
          r   : r,
          sp  : sp,
-         pc  : pc,      
-         flags: { 
+         pc  : pc,
+         flags: {
             S: flags.S,
             Z: flags.Z,
             Y: flags.Y,
@@ -126,8 +138,8 @@ function Z80(coreParameter)
             P: flags.P,
             N: flags.N,
             C: flags.C
-         },         
-         flags_prime: { 
+         },
+         flags_prime: {
             S: flags_prime.S,
             Z: flags_prime.Z,
             Y: flags_prime.Y,
@@ -136,7 +148,7 @@ function Z80(coreParameter)
             P: flags_prime.P,
             N: flags_prime.N,
             C: flags_prime.C
-         },         
+         },
          imode         : imode,
          iff1          : iff1,
          iff2          : iff2,
@@ -144,7 +156,7 @@ function Z80(coreParameter)
          do_delayed_di : do_delayed_di,
          do_delayed_ei : do_delayed_ei,
          cycle_counter : cycle_counter
-      };   
+      };
    }
 
    function setState(state) {
@@ -167,7 +179,7 @@ function Z80(coreParameter)
       i   = state.i;
       r   = state.r;
       sp  = state.sp;
-      pc  = state.pc;      
+      pc  = state.pc;
       flags.S = state.flags.S;
       flags.Z = state.flags.Z;
       flags.Y = state.flags.Y;
@@ -175,7 +187,7 @@ function Z80(coreParameter)
       flags.X = state.flags.X;
       flags.P = state.flags.P;
       flags.N = state.flags.N;
-      flags.C = state.flags.C;         
+      flags.C = state.flags.C;
       flags_prime.S = state.flags_prime.S;
       flags_prime.Z = state.flags_prime.Z;
       flags_prime.Y = state.flags_prime.Y;
@@ -183,7 +195,7 @@ function Z80(coreParameter)
       flags_prime.X = state.flags_prime.X;
       flags_prime.P = state.flags_prime.P;
       flags_prime.N = state.flags_prime.N;
-      flags_prime.C = state.flags_prime.C;               
+      flags_prime.C = state.flags_prime.C;
       imode = state.imode;
       iff1 = state.iff1;
       iff2 = state.iff2;
@@ -253,12 +265,12 @@ let run_instruction = function()
       // The high bit of R is not affected by this increment,
       //  it can only be changed using the LD R, A instruction.
       r = (r & 0x80) | (((r & 0x7f) + 1) & 0x7f);
-      
+
       // Read the byte at the PC and run the instruction it encodes.
       var opcode = core.mem_read(pc);
       decode_instruction(opcode);
       pc = (pc + 1) & 0xffff;
-      
+
       // Actually do the delayed interrupt disable/enable if we have one.
       if (doing_delayed_di)
       {
@@ -270,7 +282,7 @@ let run_instruction = function()
          iff1 = 1;
          iff2 = 1;
       }
-      
+
       // And finally clear out the cycle counter for the next instruction
       //  before returning it to the emulator core.
       var retval = cycle_counter;
@@ -315,11 +327,11 @@ let interrupt = function(non_maskable, data)
       // The high bit of R is not affected by this increment,
       //  it can only be changed using the LD R, A instruction.
       r = (r & 0x80) | (((r & 0x7f) + 1) & 0x7f);
-   
+
       halted = false;
       iff1 = 0;
       iff2 = 0;
-   
+
       if (imode === 0)
       {
          // In the 8080-compatible interrupt mode,
@@ -347,9 +359,9 @@ let interrupt = function(non_maskable, data)
          //  but it doesn't appear that this is actually the case on the hardware,
          //  so we don't attempt to enforce that here.
          var vector_address = ((i << 8) | data);
-         pc = core.mem_read(vector_address) | 
+         pc = core.mem_read(vector_address) |
                    (core.mem_read((vector_address + 1) & 0xffff) << 8);
-         
+
          cycle_counter += 19;
       }
    }
@@ -388,7 +400,7 @@ let decode_instruction = function(opcode)
       // This entire range is all 8-bit register loads.
       // Get the operand and assign it to the correct destination.
       var operand = get_operand(opcode);
-         
+
       if (((opcode & 0x38) >>> 3) === 0)
          b = operand;
       else if (((opcode & 0x38) >>> 3) === 1)
@@ -414,7 +426,7 @@ let decode_instruction = function(opcode)
       var operand = get_operand(opcode),
           op_array = [do_add, do_adc, do_sub, do_sbc,
                       do_and, do_xor, do_or, do_cp];
-      
+
       op_array[(opcode & 0x38) >>> 3]( operand);
    }
    else
@@ -424,7 +436,7 @@ let decode_instruction = function(opcode)
       var func = instructions[opcode];
       func();
    }
-   
+
    // Update the cycle counter with however many cycles
    //  the base instruction took.
    // If this was a prefixed instruction, then
@@ -531,20 +543,20 @@ let get_parity = function(value)
    //  but why calculate what you can pre-calculate?
    var parity_bits = [
       1, 0, 0, 1, 0, 1, 1, 0, 0, 1, 1, 0, 1, 0, 0, 1,
-      0, 1, 1, 0, 1, 0, 0, 1, 1, 0, 0, 1, 0, 1, 1, 0, 
-      0, 1, 1, 0, 1, 0, 0, 1, 1, 0, 0, 1, 0, 1, 1, 0, 
-      1, 0, 0, 1, 0, 1, 1, 0, 0, 1, 1, 0, 1, 0, 0, 1, 
-      0, 1, 1, 0, 1, 0, 0, 1, 1, 0, 0, 1, 0, 1, 1, 0, 
-      1, 0, 0, 1, 0, 1, 1, 0, 0, 1, 1, 0, 1, 0, 0, 1, 
-      1, 0, 0, 1, 0, 1, 1, 0, 0, 1, 1, 0, 1, 0, 0, 1, 
-      0, 1, 1, 0, 1, 0, 0, 1, 1, 0, 0, 1, 0, 1, 1, 0, 
-      0, 1, 1, 0, 1, 0, 0, 1, 1, 0, 0, 1, 0, 1, 1, 0, 
-      1, 0, 0, 1, 0, 1, 1, 0, 0, 1, 1, 0, 1, 0, 0, 1, 
-      1, 0, 0, 1, 0, 1, 1, 0, 0, 1, 1, 0, 1, 0, 0, 1, 
-      0, 1, 1, 0, 1, 0, 0, 1, 1, 0, 0, 1, 0, 1, 1, 0, 
-      1, 0, 0, 1, 0, 1, 1, 0, 0, 1, 1, 0, 1, 0, 0, 1, 
-      0, 1, 1, 0, 1, 0, 0, 1, 1, 0, 0, 1, 0, 1, 1, 0, 
-      0, 1, 1, 0, 1, 0, 0, 1, 1, 0, 0, 1, 0, 1, 1, 0, 
+      0, 1, 1, 0, 1, 0, 0, 1, 1, 0, 0, 1, 0, 1, 1, 0,
+      0, 1, 1, 0, 1, 0, 0, 1, 1, 0, 0, 1, 0, 1, 1, 0,
+      1, 0, 0, 1, 0, 1, 1, 0, 0, 1, 1, 0, 1, 0, 0, 1,
+      0, 1, 1, 0, 1, 0, 0, 1, 1, 0, 0, 1, 0, 1, 1, 0,
+      1, 0, 0, 1, 0, 1, 1, 0, 0, 1, 1, 0, 1, 0, 0, 1,
+      1, 0, 0, 1, 0, 1, 1, 0, 0, 1, 1, 0, 1, 0, 0, 1,
+      0, 1, 1, 0, 1, 0, 0, 1, 1, 0, 0, 1, 0, 1, 1, 0,
+      0, 1, 1, 0, 1, 0, 0, 1, 1, 0, 0, 1, 0, 1, 1, 0,
+      1, 0, 0, 1, 0, 1, 1, 0, 0, 1, 1, 0, 1, 0, 0, 1,
+      1, 0, 0, 1, 0, 1, 1, 0, 0, 1, 1, 0, 1, 0, 0, 1,
+      0, 1, 1, 0, 1, 0, 0, 1, 1, 0, 0, 1, 0, 1, 1, 0,
+      1, 0, 0, 1, 0, 1, 1, 0, 0, 1, 1, 0, 1, 0, 0, 1,
+      0, 1, 1, 0, 1, 0, 0, 1, 1, 0, 0, 1, 0, 1, 1, 0,
+      0, 1, 1, 0, 1, 0, 0, 1, 1, 0, 0, 1, 0, 1, 1, 0,
       1, 0, 0, 1, 0, 1, 1, 0, 0, 1, 1, 0, 1, 0, 0, 1
    ];
    return parity_bits[value];
@@ -659,7 +671,7 @@ let do_add = function(operand)
    //  so that we can more easily figure out whether we had
    //  an overflow or a carry and set the flags accordingly.
    var result = a + operand;
-   
+
    // The great majority of the work for the arithmetic instructions
    //  turns out to be setting the flags rather than the actual operation.
    flags.S = (result & 0x80) ? 1 : 0;
@@ -670,7 +682,7 @@ let do_add = function(operand)
    flags.P = ((a & 0x80) === (operand & 0x80)) && ((a & 0x80) !== (result & 0x80)) ? 1 : 0;
    flags.N = 0;
    flags.C = (result & 0x100) ? 1 : 0;
-   
+
    a = result & 0xff;
    update_xy_flags(a);
 };
@@ -678,14 +690,14 @@ let do_add = function(operand)
 let do_adc = function(operand)
 {
    var result = a + operand + flags.C;
-   
+
    flags.S = (result & 0x80) ? 1 : 0;
    flags.Z = !(result & 0xff) ? 1 : 0;
    flags.H = (((operand & 0x0f) + (a & 0x0f) + flags.C) & 0x10) ? 1 : 0;
    flags.P = ((a & 0x80) === (operand & 0x80)) && ((a & 0x80) !== (result & 0x80)) ? 1 : 0;
    flags.N = 0;
    flags.C = (result & 0x100) ? 1 : 0;
-   
+
    a = result & 0xff;
    update_xy_flags(a);
 };
@@ -693,14 +705,14 @@ let do_adc = function(operand)
 let do_sub = function(operand)
 {
    var result = a - operand;
-   
+
    flags.S = (result & 0x80) ? 1 : 0;
    flags.Z = !(result & 0xff) ? 1 : 0;
    flags.H = (((a & 0x0f) - (operand & 0x0f)) & 0x10) ? 1 : 0;
    flags.P = ((a & 0x80) !== (operand & 0x80)) && ((a & 0x80) !== (result & 0x80)) ? 1 : 0;
    flags.N = 1;
    flags.C = (result & 0x100) ? 1 : 0;
-   
+
    a = result & 0xff;
    update_xy_flags(a);
 };
@@ -708,14 +720,14 @@ let do_sub = function(operand)
 let do_sbc = function(operand)
 {
    var result = a - operand - flags.C;
-   
+
    flags.S = (result & 0x80) ? 1 : 0;
    flags.Z = !(result & 0xff) ? 1 : 0;
    flags.H = (((a & 0x0f) - (operand & 0x0f) - flags.C) & 0x10) ? 1 : 0;
    flags.P = ((a & 0x80) !== (operand & 0x80)) && ((a & 0x80) !== (result & 0x80)) ? 1 : 0;
    flags.N = 1;
    flags.C = (result & 0x100) ? 1 : 0;
-   
+
    a = result & 0xff;
    update_xy_flags(a);
 };
@@ -772,33 +784,33 @@ let do_xor = function(operand)
 let do_inc = function(operand)
 {
    var result = operand + 1;
-   
+
    flags.S = (result & 0x80) ? 1 : 0;
    flags.Z = !(result & 0xff) ? 1 : 0;
    flags.H = ((operand & 0x0f) === 0x0f) ? 1 : 0;
    // It's a good deal easier to detect overflow for an increment/decrement.
    flags.P = (operand === 0x7f) ? 1 : 0;
    flags.N = 0;
-   
+
    result &= 0xff;
    update_xy_flags(result);
-   
+
    return result;
 };
 
 let do_dec = function(operand)
 {
    var result = operand - 1;
-   
+
    flags.S = (result & 0x80) ? 1 : 0;
    flags.Z = !(result & 0xff) ? 1 : 0;
    flags.H = ((operand & 0x0f) === 0x00) ? 1 : 0;
    flags.P = (operand === 0x80) ? 1 : 0;
    flags.N = 1;
-   
+
    result &= 0xff;
    update_xy_flags(result);
-   
+
    return result;
 };
 
@@ -807,11 +819,11 @@ let do_hl_add = function(operand)
    // The HL arithmetic instructions are the same as the A ones,
    //  just with twice as many bits happening.
    var hl = l | (h << 8), result = hl + operand;
-   
+
    flags.N = 0;
    flags.C = (result & 0x10000) ? 1 : 0;
    flags.H = (((hl & 0x0fff) + (operand & 0x0fff)) & 0x1000) ? 1 : 0;
-   
+
    l = result & 0xff;
    h = (result & 0xff00) >>> 8;
 
@@ -822,17 +834,17 @@ let do_hl_adc = function(operand)
 {
    operand += flags.C;
    var hl = l | (h << 8), result = hl + operand;
-   
+
    flags.S = (result & 0x8000) ? 1 : 0;
    flags.Z = !(result & 0xffff) ? 1 : 0;
    flags.H = (((hl & 0x0fff) + (operand & 0x0fff)) & 0x1000) ? 1 : 0;
    flags.P = ((hl & 0x8000) === (operand & 0x8000)) && ((result & 0x8000) !== (hl & 0x8000)) ? 1 : 0;
    flags.N = 0;
    flags.C = (result & 0x10000) ? 1 : 0;
-   
+
    l = result & 0xff;
    h = (result >>> 8) & 0xff;
-   
+
    update_xy_flags(h);
 };
 
@@ -840,31 +852,31 @@ let do_hl_sbc = function(operand)
 {
    operand += flags.C;
    var hl = l | (h << 8), result = hl - operand;
-   
+
    flags.S = (result & 0x8000) ? 1 : 0;
    flags.Z = !(result & 0xffff) ? 1 : 0;
    flags.H = (((hl & 0x0fff) - (operand & 0x0fff)) & 0x1000) ? 1 : 0;
    flags.P = ((hl & 0x8000) !== (operand & 0x8000)) && ((result & 0x8000) !== (hl & 0x8000)) ? 1 : 0;
    flags.N = 1;
    flags.C = (result & 0x10000) ? 1 : 0;
-   
+
    l = result & 0xff;
    h = (result >>> 8) & 0xff;
-   
+
    update_xy_flags(h);
 };
 
 let do_in = function(port)
 {
    var result = core.io_read(port);
-   
+
    flags.S = (result & 0x80) ? 1 : 0;
    flags.Z = result ? 0 : 1;
    flags.H = 0;
    flags.P = get_parity(result) ? 1 : 0;
    flags.N = 0;
    update_xy_flags(result);
-   
+
    return result;
 };
 
@@ -875,10 +887,10 @@ let do_neg = function()
    {
       // This is a signed operation, so convert A to a signed value.
       a = get_signed_offset_byte(a);
-      
+
       a = (-a) & 0xff;
    }
-   
+
    flags.S = (a & 0x80) ? 1 : 0;
    flags.Z = !a ? 1 : 0;
    flags.H = (((-a) & 0x0f) > 0) ? 1 : 0;
@@ -893,7 +905,7 @@ let do_ldi = function()
    // Copy the value that we're supposed to copy.
    var read_value = core.mem_read(l | (h << 8));
    core.mem_write(e | (d << 8), read_value);
-   
+
    // Increment DE and HL, and decrement BC.
    var result = (e | (d << 8)) + 1;
    e = result & 0xff;
@@ -904,7 +916,7 @@ let do_ldi = function()
    result = (c | (b << 8)) - 1;
    c = result & 0xff;
    b = (result & 0xff00) >>> 8;
-   
+
    flags.H = 0;
    flags.P = (c || b) ? 1 : 0;
    flags.N = 0;
@@ -920,23 +932,23 @@ let do_cpi = function()
    flags.C = temp_carry;
    flags.Y = ((a - read_value - flags.H) & 0x02) >>> 1;
    flags.X = ((a - read_value - flags.H) & 0x08) >>> 3;
-   
+
    var result = (l | (h << 8)) + 1;
    l = result & 0xff;
    h = (result & 0xff00) >>> 8;
    result = (c | (b << 8)) - 1;
    c = result & 0xff;
    b = (result & 0xff00) >>> 8;
-   
+
    flags.P = result ? 1 : 0;
 };
 
 let do_ini = function()
 {
    b = do_dec(b);
-   
+
    core.mem_write(l | (h << 8), core.io_read((b << 8) | c));
-   
+
    var result = (l | (h << 8)) + 1;
    l = result & 0xff;
    h = (result & 0xff00) >>> 8;
@@ -947,11 +959,11 @@ let do_ini = function()
 let do_outi = function()
 {
    core.io_write((b << 8) | c, core.mem_read(l | (h << 8)));
-   
+
    var result = (l | (h << 8)) + 1;
    l = result & 0xff;
    h = (result & 0xff00) >>> 8;
-   
+
    b = do_dec(b);
    flags.N = 1;
 };
@@ -960,10 +972,10 @@ let do_ldd = function()
 {
    flags.N = 0;
    flags.H = 0;
-   
+
    var read_value = core.mem_read(l | (h << 8));
    core.mem_write(e | (d << 8), read_value);
-   
+
    var result = (e | (d << 8)) - 1;
    e = result & 0xff;
    d = (result & 0xff00) >>> 8;
@@ -973,7 +985,7 @@ let do_ldd = function()
    result = (c | (b << 8)) - 1;
    c = result & 0xff;
    b = (result & 0xff00) >>> 8;
-   
+
    flags.P = (c || b) ? 1 : 0;
    flags.Y = ((a + read_value) & 0x02) >>> 1;
    flags.X = ((a + read_value) & 0x08) >>> 3;
@@ -987,38 +999,38 @@ let do_cpd = function()
    flags.C = temp_carry;
    flags.Y = ((a - read_value - flags.H) & 0x02) >>> 1;
    flags.X = ((a - read_value - flags.H) & 0x08) >>> 3;
-   
+
    var result = (l | (h << 8)) - 1;
    l = result & 0xff;
    h = (result & 0xff00) >>> 8;
    result = (c | (b << 8)) - 1;
    c = result & 0xff;
    b = (result & 0xff00) >>> 8;
-   
+
    flags.P = result ? 1 : 0;
 };
 
 let do_ind = function()
 {
    b = do_dec(b);
-   
+
    core.mem_write(l | (h << 8), core.io_read((b << 8) | c));
-   
+
    var result = (l | (h << 8)) - 1;
    l = result & 0xff;
    h = (result & 0xff00) >>> 8;
-   
+
    flags.N = 1;
 };
 
 let do_outd = function()
 {
    core.io_write((b << 8) | c, core.mem_read(l | (h << 8)));
-   
+
    var result = (l | (h << 8)) - 1;
    l = result & 0xff;
    h = (result & 0xff00) >>> 8;
-   
+
    b = do_dec(b);
    flags.N = 1;
 };
@@ -1027,15 +1039,15 @@ let do_rlc = function(operand)
 {
    flags.N = 0;
    flags.H = 0;
-   
+
    flags.C = (operand & 0x80) >>> 7;
    operand = ((operand << 1) | flags.C) & 0xff;
-   
+
    flags.Z = !operand ? 1 : 0;
    flags.P = get_parity(operand);
    flags.S = (operand & 0x80) ? 1 : 0;
    update_xy_flags(operand);
-   
+
    return operand;
 };
 
@@ -1043,15 +1055,15 @@ let do_rrc = function(operand)
 {
    flags.N = 0;
    flags.H = 0;
-   
+
    flags.C = operand & 1;
    operand = ((operand >>> 1) & 0x7f) | (flags.C << 7);
-   
+
    flags.Z = !(operand & 0xff) ? 1 : 0;
    flags.P = get_parity(operand);
    flags.S = (operand & 0x80) ? 1 : 0;
    update_xy_flags(operand);
-   
+
    return operand & 0xff;
 };
 
@@ -1059,11 +1071,11 @@ let do_rl = function(operand)
 {
    flags.N = 0;
    flags.H = 0;
-   
+
    var temp = flags.C;
    flags.C = (operand & 0x80) >>> 7;
    operand = ((operand << 1) | temp) & 0xff;
-   
+
    flags.Z = !operand ? 1 : 0;
    flags.P = get_parity(operand);
    flags.S = (operand & 0x80) ? 1 : 0;
@@ -1076,11 +1088,11 @@ let do_rr = function(operand)
 {
    flags.N = 0;
    flags.H = 0;
-   
+
    var temp = flags.C;
    flags.C = operand & 1;
    operand = ((operand >>> 1) & 0x7f) | (temp << 7);
-   
+
    flags.Z = !operand ? 1 : 0;
    flags.P = get_parity(operand);
    flags.S = (operand & 0x80) ? 1 : 0;
@@ -1093,15 +1105,15 @@ let do_sla = function(operand)
 {
    flags.N = 0;
    flags.H = 0;
-   
+
    flags.C = (operand & 0x80) >>> 7;
    operand = (operand << 1) & 0xff;
-   
+
    flags.Z = !operand ? 1 : 0;
    flags.P = get_parity(operand);
    flags.S = (operand & 0x80) ? 1 : 0;
    update_xy_flags(operand);
-   
+
    return operand;
 };
 
@@ -1109,15 +1121,15 @@ let do_sra = function(operand)
 {
    flags.N = 0;
    flags.H = 0;
-   
+
    flags.C = operand & 1;
    operand = ((operand >>> 1) & 0x7f) | (operand & 0x80);
-   
+
    flags.Z = !operand ? 1 : 0;
    flags.P = get_parity(operand);
    flags.S = (operand & 0x80) ? 1 : 0;
    update_xy_flags(operand);
-   
+
    return operand;
 };
 
@@ -1125,15 +1137,15 @@ let do_sll = function(operand)
 {
    flags.N = 0;
    flags.H = 0;
-   
+
    flags.C = (operand & 0x80) >>> 7;
    operand = ((operand << 1) & 0xff) | 1;
-   
+
    flags.Z = !operand ? 1 : 0;
    flags.P = get_parity(operand);
    flags.S = (operand & 0x80) ? 1 : 0;
    update_xy_flags(operand);
-   
+
    return operand;
 };
 
@@ -1141,28 +1153,28 @@ let do_srl = function(operand)
 {
    flags.N = 0;
    flags.H = 0;
-   
+
    flags.C = operand & 1;
    operand = (operand >>> 1) & 0x7f;
-   
+
    flags.Z = !operand ? 1 : 0;
    flags.P = get_parity(operand);
    flags.S = 0;
    update_xy_flags(operand);
-   
+
    return operand;
 };
 
 let do_ix_add = function(operand)
 {
    flags.N = 0;
-   
+
    var result = ix + operand;
-   
+
    flags.C = (result & 0x10000) ? 1 : 0;
    flags.H = (((ix & 0xfff) + (operand & 0xfff)) & 0x1000) ? 1 : 0;
    update_xy_flags((result & 0xff00) >>> 8);
-   
+
    ix = result;
 };
 
@@ -1233,7 +1245,7 @@ instructions[0x08] = function()
    var temp = a;
    a = a_prime;
    a_prime = temp;
-   
+
    temp = get_flags_register();
    set_flags_register(get_flags_prime());
    set_flags_prime(temp);
@@ -1402,7 +1414,7 @@ instructions[0x22] = function()
    var address = core.mem_read(pc);
    pc = (pc + 1) & 0xffff;
    address |= core.mem_read(pc) << 8;
-   
+
    core.mem_write(address, l);
    core.mem_write((address + 1) & 0xffff, h);
 };
@@ -1448,7 +1460,7 @@ instructions[0x27] = function()
       if (flags.C || (a > 0x99))
          temp -= 0x60;
    }
-   
+
    flags.S = (temp & 0x80) ? 1 : 0;
    flags.Z = !(temp & 0xff) ? 1 : 0;
    flags.H = ((a & 0x10) ^ (temp & 0x10)) ? 1 : 0;
@@ -1458,9 +1470,9 @@ instructions[0x27] = function()
    // Don't ask me, I don't know.
    // Note also that we check for a BCD carry, instead of the usual.
    flags.C = (flags.C || (a > 0x99)) ? 1 : 0;
-   
+
    a = temp & 0xff;
-   
+
    update_xy_flags(a);
 };
 // 0x28 : JR Z, n
@@ -1480,7 +1492,7 @@ instructions[0x2a] = function()
    var address = core.mem_read(pc);
    pc = (pc + 1) & 0xffff;
    address |= core.mem_read(pc) << 8;
-   
+
    l = core.mem_read(address);
    h = core.mem_read((address + 1) & 0xffff);
 };
@@ -1524,7 +1536,7 @@ instructions[0x30] = function()
 // 0x31 : LD SP, nn
 instructions[0x31] = function()
 {
-   sp =  core.mem_read((pc + 1) & 0xffff) | 
+   sp =  core.mem_read((pc + 1) & 0xffff) |
             (core.mem_read((pc + 2) & 0xffff) << 8);
    pc = (pc + 2) & 0xffff;
 };
@@ -1535,7 +1547,7 @@ instructions[0x32] = function()
    var address = core.mem_read(pc);
    pc = (pc + 1) & 0xffff;
    address |= core.mem_read(pc) << 8;
-   
+
    core.mem_write(address, a);
 };
 // 0x33 : INC SP
@@ -1586,7 +1598,7 @@ instructions[0x3a] = function()
    var address = core.mem_read(pc);
    pc = (pc + 1) & 0xffff;
    address |= core.mem_read(pc) << 8;
-   
+
    a = core.mem_read(address);
 };
 // 0x3b : DEC SP
@@ -1693,13 +1705,13 @@ instructions[0xcb] = function()
    var opcode = core.mem_read(pc),
        bit_number = (opcode & 0x38) >>> 3,
        reg_code = opcode & 0x07;
-   
+
    if (opcode < 0x40)
    {
       // Shift/rotate instructions
       var op_array = [do_rlc, do_rrc, do_rl, do_rr,
                       do_sla, do_sra, do_sll, do_srl];
-      
+
       if (reg_code === 0)
          b = op_array[bit_number]( b);
       else if (reg_code === 1)
@@ -1737,7 +1749,7 @@ instructions[0xcb] = function()
          flags.Z = !((core.mem_read(l | (h << 8))) & (1 << bit_number)) ? 1 : 0;
       else if (reg_code === 7)
          flags.Z = !(a & (1 << bit_number)) ? 1 : 0;
-         
+
       flags.N = 0;
       flags.H = 1;
       flags.P = flags.Z;
@@ -1793,7 +1805,7 @@ instructions[0xcb] = function()
       else if (reg_code === 7)
          a |= (1 << bit_number);
    }
-   
+
    cycle_counter += cycle_counts_cb[opcode];
 };
 // 0xcc : CALL Z, nn
@@ -1919,7 +1931,7 @@ instructions[0xdd] = function()
    pc = (pc + 1) & 0xffff;
    var opcode = core.mem_read(pc),
        func = dd_instructions[opcode];
-       
+
    if (func)
    {
       //func = func.bind(this);
@@ -1930,7 +1942,7 @@ instructions[0xdd] = function()
    {
       // Apparently if a DD opcode doesn't exist,
       //  it gets treated as an unprefixed opcode.
-      // What we'll do to handle that is just back up the 
+      // What we'll do to handle that is just back up the
       //  program counter, so that this byte gets decoded
       //  as a normal instruction.
       pc = (pc - 1) & 0xffff;
@@ -2040,7 +2052,7 @@ instructions[0xed] = function()
    pc = (pc + 1) & 0xffff;
    var opcode = core.mem_read(pc),
        func = ed_instructions[opcode];
-       
+
    if (func)
    {
       //func = func.bind(this);
@@ -2142,11 +2154,11 @@ instructions[0xfd] = function()
    // The high bit of R is not affected by this increment,
    //  it can only be changed using the LD R, A instruction.
    r = (r & 0x80) | (((r & 0x7f) + 1) & 0x7f);
-   
+
    pc = (pc + 1) & 0xffff;
    var opcode = core.mem_read(pc),
        func = dd_instructions[opcode];
-       
+
    if (func)
    {
       // Rather than copy and paste all the IX instructions into IY instructions,
@@ -2158,14 +2170,14 @@ instructions[0xfd] = function()
       func();
       iy = ix;
       ix = temp;
-      
+
       cycle_counter += cycle_counts_dd[opcode];
    }
    else
    {
       // Apparently if an FD opcode doesn't exist,
       //  it gets treated as an unprefixed opcode.
-      // What we'll do to handle that is just back up the 
+      // What we'll do to handle that is just back up the
       //  program counter, so that this byte gets decoded
       //  as a normal instruction.
       pc = (pc - 1) & 0xffff;
@@ -2214,7 +2226,7 @@ ed_instructions[0x43] = function()
    var address = core.mem_read(pc);
    pc = (pc + 1) & 0xffff;
    address |= core.mem_read(pc) << 8;
-   
+
    core.mem_write(address, c);
    core.mem_write((address + 1) & 0xffff, b);
 };
@@ -2261,7 +2273,7 @@ ed_instructions[0x4b] = function()
    var address = core.mem_read(pc);
    pc = (pc + 1) & 0xffff;
    address |= core.mem_read(pc) << 8;
-   
+
    c = core.mem_read(address);
    b = core.mem_read((address + 1) & 0xffff);
 };
@@ -2307,7 +2319,7 @@ ed_instructions[0x53] = function()
    var address = core.mem_read(pc);
    pc = (pc + 1) & 0xffff;
    address |= core.mem_read(pc) << 8;
-   
+
    core.mem_write(address, e);
    core.mem_write((address + 1) & 0xffff, d);
 };
@@ -2360,7 +2372,7 @@ ed_instructions[0x5b] = function()
    var address = core.mem_read(pc);
    pc = (pc + 1) & 0xffff;
    address |= core.mem_read(pc) << 8;
-   
+
    e = core.mem_read(address);
    d = core.mem_read((address + 1) & 0xffff);
 };
@@ -2413,7 +2425,7 @@ ed_instructions[0x63] = function()
    var address = core.mem_read(pc);
    pc = (pc + 1) & 0xffff;
    address |= core.mem_read(pc) << 8;
-   
+
    core.mem_write(address, l);
    core.mem_write((address + 1) & 0xffff, h);
 };
@@ -2441,7 +2453,7 @@ ed_instructions[0x67] = function()
    hl_value = ((hl_value & 0xf0) >>> 4) | (temp2 << 4);
    a = (a & 0xf0) | temp1;
    core.mem_write(l | (h << 8), hl_value);
-   
+
    flags.S = (a & 0x80) ? 1 : 0;
    flags.Z = a ? 0 : 1;
    flags.H = 0;
@@ -2471,7 +2483,7 @@ ed_instructions[0x6b] = function()
    var address = core.mem_read(pc);
    pc = (pc + 1) & 0xffff;
    address |= core.mem_read(pc) << 8;
-   
+
    l = core.mem_read(address);
    h = core.mem_read((address + 1) & 0xffff);
 };
@@ -2499,7 +2511,7 @@ ed_instructions[0x6f] = function()
    hl_value = ((hl_value & 0x0f) << 4) | temp2;
    a = (a & 0xf0) | (temp1 >>> 4);
    core.mem_write(l | (h << 8), hl_value);
-   
+
    flags.S = (a & 0x80) ? 1 : 0;
    flags.Z = a ? 0 : 1;
    flags.H = 0;
@@ -2529,7 +2541,7 @@ ed_instructions[0x73] = function()
    var address = core.mem_read(pc);
    pc = (pc + 1) & 0xffff;
    address |= core.mem_read(pc) << 8;
-   
+
    core.mem_write(address, sp & 0xff);
    core.mem_write((address + 1) & 0xffff, (sp >>> 8) & 0xff);
 };
@@ -2571,7 +2583,7 @@ ed_instructions[0x7b] = function()
    var address = core.mem_read(pc);
    pc = (pc + 1) & 0xffff;
    address |= core.mem_read(pc) << 8;
-   
+
    sp = core.mem_read(address);
    sp |= core.mem_read((address + 1) & 0xffff) << 8;
 };
@@ -2745,7 +2757,7 @@ dd_instructions[0x22] = function()
    var address = core.mem_read(pc);
    pc = (pc + 1) & 0xffff;
    address |= (core.mem_read(pc) << 8);
-   
+
    core.mem_write(address, ix & 0xff);
    core.mem_write((address + 1) & 0xffff, (ix >>> 8) & 0xff);
 };
@@ -2782,7 +2794,7 @@ dd_instructions[0x2a] = function()
    var address = core.mem_read(pc);
    pc = (pc + 1) & 0xffff;
    address |= (core.mem_read(pc) << 8);
-   
+
    ix = core.mem_read(address);
    ix |= (core.mem_read((address + 1) & 0xffff) << 8);
 };
@@ -2829,7 +2841,7 @@ dd_instructions[0x36] = function()
    pc = (pc + 1) & 0xffff;
    var offset = get_signed_offset_byte(core.mem_read(pc));
    pc = (pc + 1) & 0xffff;
-   core.mem_write((ix + offset) & 0xffff, core.mem_read(pc));   
+   core.mem_write((ix + offset) & 0xffff, core.mem_read(pc));
 };
 // 0x39 : ADD IX, SP
 dd_instructions[0x39] = function()
@@ -3197,7 +3209,7 @@ dd_instructions[0xcb] = function()
    var offset = get_signed_offset_byte(core.mem_read(pc));
    pc = (pc + 1) & 0xffff;
    var opcode = core.mem_read(pc), value;
-   
+
    // As with the "normal" CB prefix, we implement the DDCB prefix
    //  by decoding the opcode directly, rather than using a table.
    if (opcode < 0x40)
@@ -3205,18 +3217,18 @@ dd_instructions[0xcb] = function()
       // Shift and rotate instructions.
       var ddcb_functions = [do_rlc, do_rrc, do_rl, do_rr,
                             do_sla, do_sra, do_sll, do_srl];
-      
+
       // Most of the opcodes in this range are not valid,
       //  so we map this opcode onto one of the ones that is.
       var func = ddcb_functions[(opcode & 0x38) >>> 3],
       value = func( core.mem_read((ix + offset) & 0xffff));
-      
+
       core.mem_write((ix + offset) & 0xffff, value);
    }
    else
    {
       var bit_number = (opcode & 0x38) >>> 3;
-      
+
       if (opcode < 0x80)
       {
          // BIT
@@ -3239,7 +3251,7 @@ dd_instructions[0xcb] = function()
          core.mem_write((ix + offset) & 0xffff, value);
       }
    }
-   
+
    // This implements the undocumented shift, RES, and SET opcodes,
    //  which write their result to memory and also to an 8080 register.
    if (value !== undefined)
@@ -3260,7 +3272,7 @@ dd_instructions[0xcb] = function()
       else if ((opcode & 0x07) === 7)
          a = value;
    }
-   
+
    cycle_counter += cycle_counts_cb[opcode] + 8;
 };
 // 0xe1 : POP IX
@@ -3378,7 +3390,10 @@ let cycle_counts_dd = [
 
    // There's tons of stuff in this object,
    //  but only these three functions are the public API.
-   return {      
+   return {
+      /* getState is way too slow so give some accessors for critical registers/state */
+      isHalted,
+      getPC,
       getState,
       setState,
       reset,
