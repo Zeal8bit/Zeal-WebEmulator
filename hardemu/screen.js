@@ -1,337 +1,1140 @@
 /**
- * SPDX-FileCopyrightText: 2022 Zeal 8-bit Computer <contact@zeal8bit.com>
+ * SPDX-FileCopyrightText: 2022-2024 Zeal 8-bit Computer <contact@zeal8bit.com>
  *
  * SPDX-License-Identifier: Apache-2.0
  */
 
- let TEXT_MODE = 0;
-let SMALL_TEXT_MODE = 1;
-let SMALL_SPRITE_MODE = 2;
-let BIG_SPRITE_MODE = 3;
-let DEFAULT_MODE = SMALL_TEXT_MODE;
-let MAX_TILES = 5000; /* TEXT_MODE, in 800x600 */
-let SPRITE_RAM_SIZE = 32 * 1024; /* Sprite RAM is 32KB wide */
+function ColorPalette() {
+    /* Default color palette: VGA 256-color */
+    const palette565 = [0x0000, 0x0015, 0x1540, 0x0555, 0xA800, 0xA815, 0xAAA0, 0xAD55, 0x52AA, 0x52BF, 0x57EA, 0x57FF, 0xFAAA, 0xFABF, 0xFFEA, 0xFFFF,
+                        0x0000, 0x1082, 0x2104, 0x31A6, 0x4228, 0x52AA, 0x632C, 0x73AE, 0x8C51, 0x9CD3, 0xAD55, 0xBDD7, 0xCE59, 0xDEFB, 0xEF7D, 0xFFFF,
+                        0x003F, 0x403F, 0x801F, 0xB81F, 0xF81F, 0xF817, 0xF810, 0xF808, 0xF801, 0xFA00, 0xFC00, 0xFDE0, 0xFFE0, 0xBFE0, 0x87E0, 0x47E0,
+                        0x27E0, 0x27E8, 0x1FF0, 0x17F7, 0x07FF, 0x05FF, 0x041F, 0x021F, 0x841F, 0x9C1F, 0xBC1F, 0xDC1F, 0xFC1F, 0xFC1B, 0xFC17, 0xFC13,
+                        0xFC10, 0xFCF0, 0xFDF0, 0xFEF0, 0xFFF0, 0xDFF0, 0xBFF0, 0x9FF0, 0x87F0, 0x87F3, 0x87F7, 0x87FB, 0x87FF, 0x86FF, 0x85FF, 0x84FF,
+                        0xBDDF, 0xCDDF, 0xDDDF, 0xEDDF, 0xFDDF, 0xFDDD, 0xFDDB, 0xFDD9, 0xFDD7, 0xFE57, 0xFEF7, 0xFF77, 0xFFF7, 0xEFF7, 0xDFF7, 0xCFF7,
+                        0xBFF7, 0xBFF9, 0xBFFB, 0xBFFD, 0xBFFF, 0xBF7F, 0xBEFF, 0xBE5F, 0x000E, 0x180E, 0x380E, 0x500E, 0x700E, 0x700A, 0x7007, 0x7003,
+                        0x7000, 0x70E0, 0x71C0, 0x72A0, 0x7380, 0x5380, 0x3B80, 0x1B80, 0x0B80, 0x0B83, 0x0387, 0x038A, 0x038E, 0x02AE, 0x01CE, 0x00EE,
+                        0x39CE, 0x41CE, 0x51CE, 0x61CE, 0x71CE, 0x71CC, 0x71CA, 0x71C8, 0x71C7, 0x7227, 0x72A7, 0x7307, 0x7387, 0x6387, 0x5387, 0x4387,
+                        0x3B87, 0x3B88, 0x3B8A, 0x3B8C, 0x3B8E, 0x3B0E, 0x3AAE, 0x3A2E, 0x528E, 0x5A8E, 0x628E, 0x6A8E, 0x728E, 0x728D, 0x728C, 0x728B,
+                        0x728A, 0x72CA, 0x730A, 0x734A, 0x738A, 0x6B8A, 0x638A, 0x5B8A, 0x538A, 0x538B, 0x538C, 0x538D, 0x538E, 0x534E, 0x530E, 0x52CE,
+                        0x0008, 0x1008, 0x2008, 0x3008, 0x4008, 0x4006, 0x4004, 0x4002, 0x4000, 0x4080, 0x4100, 0x4180, 0x4200, 0x3200, 0x2200, 0x1200,
+                        0x0200, 0x0202, 0x0204, 0x0206, 0x0208, 0x0188, 0x0108, 0x0088, 0x2108, 0x2908, 0x3108, 0x3908, 0x4108, 0x4107, 0x4106, 0x4105,
+                        0x4104, 0x4144, 0x4184, 0x41C4, 0x4204, 0x3A04, 0x3204, 0x2A04, 0x2204, 0x2205, 0x2206, 0x2207, 0x2208, 0x21C8, 0x2188, 0x2148,
+                        0x2968, 0x3168, 0x3168, 0x3968, 0x4168, 0x4167, 0x4166, 0x4166, 0x4165, 0x4185, 0x41A5, 0x41E5, 0x4205, 0x3A05, 0x3205, 0x3205,
+                        0x2A05, 0x2A06, 0x2A06, 0x2A07, 0x2A08, 0x29E8, 0x29A8, 0x2988, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0xEB9E];
 
-/* In big sprite mode, the max number of sprite in 40 * 30*/
-let MAX_BIG_SPRITE_COUNT = 1200;
+    /* Same palette as before but the colors are already converted to RGB888 for speed reasons */
+    const palette888 = [0x000000, 0x0000a8, 0x10a800, 0x00a8a8, 0xa80000, 0xa800a8, 0xa85400, 0xa8a8a8, 0x505450, 0x5054f8, 0x50fc50, 0x50fcf8, 0xf85450, 0xf854f8, 0xf8fc50, 0xf8fcf8,
+                        0x000000, 0x101010, 0x202020, 0x303430, 0x404440, 0x505450, 0x606460, 0x707470, 0x888888, 0x989898, 0xa8a8a8, 0xb8b8b8, 0xc8c8c8, 0xd8dcd8, 0xe8ece8, 0xf8fcf8,
+                        0x0004f8, 0x4004f8, 0x8000f8, 0xb800f8, 0xf800f8, 0xf800b8, 0xf80080, 0xf80040, 0xf80008, 0xf84000, 0xf88000, 0xf8bc00, 0xf8fc00, 0xb8fc00, 0x80fc00, 0x40fc00,
+                        0x20fc00, 0x20fc40, 0x18fc80, 0x10fcb8, 0x00fcf8, 0x00bcf8, 0x0080f8, 0x0040f8, 0x8080f8, 0x9880f8, 0xb880f8, 0xd880f8, 0xf880f8, 0xf880d8, 0xf880b8, 0xf88098,
+                        0xf88080, 0xf89c80, 0xf8bc80, 0xf8dc80, 0xf8fc80, 0xd8fc80, 0xb8fc80, 0x98fc80, 0x80fc80, 0x80fc98, 0x80fcb8, 0x80fcd8, 0x80fcf8, 0x80dcf8, 0x80bcf8, 0x809cf8,
+                        0xb8b8f8, 0xc8b8f8, 0xd8b8f8, 0xe8b8f8, 0xf8b8f8, 0xf8b8e8, 0xf8b8d8, 0xf8b8c8, 0xf8b8b8, 0xf8c8b8, 0xf8dcb8, 0xf8ecb8, 0xf8fcb8, 0xe8fcb8, 0xd8fcb8, 0xc8fcb8,
+                        0xb8fcb8, 0xb8fcc8, 0xb8fcd8, 0xb8fce8, 0xb8fcf8, 0xb8ecf8, 0xb8dcf8, 0xb8c8f8, 0x000070, 0x180070, 0x380070, 0x500070, 0x700070, 0x700050, 0x700038, 0x700018,
+                        0x700000, 0x701c00, 0x703800, 0x705400, 0x707000, 0x507000, 0x387000, 0x187000, 0x087000, 0x087018, 0x007038, 0x007050, 0x007070, 0x005470, 0x003870, 0x001c70,
+                        0x383870, 0x403870, 0x503870, 0x603870, 0x703870, 0x703860, 0x703850, 0x703840, 0x703838, 0x704438, 0x705438, 0x706038, 0x707038, 0x607038, 0x507038, 0x407038,
+                        0x387038, 0x387040, 0x387050, 0x387060, 0x387070, 0x386070, 0x385470, 0x384470, 0x505070, 0x585070, 0x605070, 0x685070, 0x705070, 0x705068, 0x705060, 0x705058,
+                        0x705050, 0x705850, 0x706050, 0x706850, 0x707050, 0x687050, 0x607050, 0x587050, 0x507050, 0x507058, 0x507060, 0x507068, 0x507070, 0x506870, 0x506070, 0x505870,
+                        0x000040, 0x100040, 0x200040, 0x300040, 0x400040, 0x400030, 0x400020, 0x400010, 0x400000, 0x401000, 0x402000, 0x403000, 0x404000, 0x304000, 0x204000, 0x104000,
+                        0x004000, 0x004010, 0x004020, 0x004030, 0x004040, 0x003040, 0x002040, 0x001040, 0x202040, 0x282040, 0x302040, 0x382040, 0x402040, 0x402038, 0x402030, 0x402028,
+                        0x402020, 0x402820, 0x403020, 0x403820, 0x404020, 0x384020, 0x304020, 0x284020, 0x204020, 0x204028, 0x204030, 0x204038, 0x204040, 0x203840, 0x203040, 0x202840,
+                        0x282c40, 0x302c40, 0x302c40, 0x382c40, 0x402c40, 0x402c38, 0x402c30, 0x402c30, 0x402c28, 0x403028, 0x403428, 0x403c28, 0x404028, 0x384028, 0x304028, 0x304028,
+                        0x284028, 0x284030, 0x284030, 0x284038, 0x284040, 0x283c40, 0x283440, 0x283040, 0x000000, 0x000000, 0x000000, 0x000000, 0x000000, 0x000000, 0x000000, 0xe870f0];
 
-function resolutionOfMode(mode) {
-    if (mode == TEXT_MODE)
-        return {width: 800, height: 600};
-    return {width: 640, height: 480};
+    var color_changed = {};
+
+    function toRGB888(color565) {
+        const red = ((color565 >> 11) & 0x1F) * 8;
+        const green = ((color565 >> 5) & 0x3F) * 4;
+        const blue = (color565 & 0x1F) * 8;
+        return (red << 16) | (green << 8) | blue;
+    }
+
+    /* Get color at index, 16-bit value */
+    this.getColorRGB565 = function (color_index) {
+        return palette565[color_index];
+    }
+
+    /**
+     * @brief Return the RGB888 color from the given index.
+     *
+     * @return Array of 3 values: r, g, b
+     */
+    this.getColorRGB888 = function (color_index) {
+        const color = palette888[color_index];
+        return [(color >> 16) & 0xff, (color >> 8) & 0xff, (color >> 0) & 0xff];
+    }
+
+
+    /**
+     * @brief Function called when a write (byte) occurs on the memory address where the palette
+     *        is mapped.
+     *
+     * @param address Address relative to this component.
+     * @param data    Byte to write at the given offset.
+     */
+    this.mem_write = function(address, data) {
+        /* It looks weird to keep data stored in hex string, but since this module is used a lot by the canvas renderer,
+         * it makes more sense to keep them in this form */
+        console.assert(address < palette565.length * 2);
+        const index = Math.floor(address / 2);
+        var color = palette565[index];
+
+        if ((address & 1) == 1) {
+            /* Writing to the MSB, save the LSB */
+            color = ((data & 0xff) << 8) | (color & 0xff);
+        } else {
+            color = ((color & 0xff) << 8) | (data & 0xff);
+        }
+        palette565[index] = color;
+        palette888[index] = toRGB888(color);
+        color_changed[index] = true;
+    };
+
+    this.hasUpdates = function () {
+        return Object.keys(color_changed).length > 0;
+    }
+
+    this.colorUpdated = function (color) {
+        return color_changed[color];
+    }
+
+    this.flushUpdates = function () {
+        color_changed = {};
+    }
+}
+
+
+function Tileset(Palette, Tilemap) {
+
+    /* The tilemap is necessary to get the palette used by a tile */
+    const tilemap = Tilemap;
+    const palette = Palette;
+    var   mode8bit = true;
+    /* List the tile that got updated, either because of a pixel change or because a color changed */
+    var tiles_updates = {};
+
+    /* Optimize the tileset by representing it as an array of 256 images */
+    const TILE_HEIGHT = 16;
+    const TILE_WIDTH  = 16;
+    const TILE_SIZE   = TILE_HEIGHT * TILE_WIDTH;
+
+    /* Raw content of the tileset */
+    const tiles_raw = new Array(256 * TILE_SIZE);
+
+    /* ImageData table for each tile */
+    const tiles = new Array(512);
+    for (var i = 0; i < tiles.length; i++) {
+        tiles[i] = new ImageData(TILE_WIDTH, TILE_HEIGHT);
+    }
+
+    /**
+     * @brief Function called when a write (byte) occurs on the memory address where the tileset is mapped.
+     *
+     * @param address Address relative to this component.
+     * @param data    Byte to write at the given offset.
+     */
+    function tileWritten(address, data) {
+        tiles_raw[address] = data;
+        const tileidx = Math.floor(address / TILE_SIZE);
+        if (mode8bit) {
+            const img = tiles[tileidx];
+            /* Each pixel takes 4 bytes in RGB888 */
+            const pixel = (address % TILE_SIZE) * 4;
+            const rgb = palette.getColorRGB888(data);
+            img.data[pixel + 0] = rgb[0];
+            img.data[pixel + 1] = rgb[1];
+            img.data[pixel + 2] = rgb[2];
+            img.data[pixel + 3] = 255;
+            /* Mark the tile as updated */
+            tiles_updates[tileidx] = true;
+        } else {
+            /* In 4-bit mode, modifying one byte will modify two pixels  */
+            /* Tiles are twice smaller in 4-bit mode */
+            const img = tiles[2 * tileidx];
+            const pixel = (address % Math.floor(TILE_SIZE / 2)) * 8;
+            /* Hight nibble is the first pixel */
+            const palidx = (tilemap.getPaletteNumber(tileidx) << 4);
+            var rgb = palette.getColorRGB888(palidx | (data >> 4));
+            img.data[pixel + 0] = rgb[0];
+            img.data[pixel + 1] = rgb[1];
+            img.data[pixel + 2] = rgb[2];
+            img.data[pixel + 3] = 255;
+            /* Low nibble is the second pixel */
+            rgb = palette.getColorRGB888(palidx | (data & 0xf));
+            img.data[pixel + 4] = rgb[0];
+            img.data[pixel + 5] = rgb[1];
+            img.data[pixel + 6] = rgb[2];
+            img.data[pixel + 7] = 255;
+            /* Mark the tile as updated */
+            tiles_updates[2 * tileidx] = true;
+        }
+    }
+    this.mem_write = tileWritten;
+
+    /**
+     * @brief Set the color mode, can be 8-bit or 4-bit.
+     */
+    this.setColorMode8Bit = function(mode8) {
+        if (mode8bit != mode8) {
+            /* TODO: Mark all the imaged as updated? */
+        }
+        mode8bit = mode8;
+    }
+
+
+    /**
+     * @brief Get a given tile as an array of pixels
+     *
+     * @param index Index of the tile to retrieve, 0-255 in 8-bit mode, 0-511 in 4-bit mode
+     * @param transparency Boolean set to true if transparency is needed
+     */
+    this.getTileRGB888 = function(index, transparency, palette_4bit) {
+        tiles_updates[index] = false;
+        var img = tiles[index];
+
+        const data = img.data;
+        const opacity = transparency ? 0 : 255;
+
+        if (mode8bit) {
+            for (var i = 0; i < TILE_SIZE; i++) {
+                if (tiles_raw[index * TILE_SIZE + i] == 0) {
+                    /* If opacity is already correct, no need to redo it again */
+                    if (data[i * 4 + 3] == opacity) break;
+                    data[i * 4 + 3] = opacity;
+                }
+            }
+        } else {
+            const tile_bytes = TILE_SIZE / 2;
+            const from = index * tile_bytes;
+            const new_palette = palette_4bit << 4;
+
+            /* In 4-bit mode, we have to modify the colors too */
+            for (var i = 0; i < tile_bytes; i++) {
+                const pixels = tiles_raw[from + i];
+                const left = pixels >> 4;
+                const right = pixels & 0xf;
+
+                /* Left pixel */
+                let rgb = palette.getColorRGB888(new_palette | left);
+                data[i * 8 + 0] = rgb[0];
+                data[i * 8 + 1] = rgb[1];
+                data[i * 8 + 2] = rgb[2];
+                data[i * 8 + 3] = (left == 0 && transparency) ? opacity: 255;
+                /* Right pixel */
+                rgb = palette.getColorRGB888(new_palette | right);
+                data[i * 8 + 4] = rgb[0];
+                data[i * 8 + 5] = rgb[1];
+                data[i * 8 + 6] = rgb[2];
+                data[i * 8 + 7] = (right == 0 && transparency) ? opacity: 255;
+            }
+        }
+
+        return img;
+    }
+
+
+    this.getTileCanvas = function (index, transparency, palette, transform) {
+        /* Create the canvas and the 2D context to return */
+        const canvas  = document.createElement('canvas');
+        canvas.width  = TILE_WIDTH;
+        canvas.height = TILE_HEIGHT;
+        const context = canvas.getContext('2d');
+
+        const img = tiles[index];
+
+        if (!img.backup) {
+            img.backup = [];
+        }
+
+        for (var i = 0; i < img.data.length; i++)
+            img.backup[i] = img.data[i];
+
+        this.getTileRGB888(index, transparency, palette);
+        if (transform) {
+            for (var i = 0; i < transform.length; i++) {
+                transform[i](img.data);
+            }
+        }
+
+        context.putImageData(img, 0, 0);
+
+        for (var i = 0; i < img.data.length; i++)
+            img.data[i] = img.backup[i];
+
+        return { canvas, context };
+    }
+
+
+    /**
+     * @brief Check the color palette changes and update the tile consequently
+     */
+    function checkColorsUpdate () {
+        if (!palette.hasUpdates()) {
+            return;
+        }
+
+        /* Number of pixels/colors in total, in all the tiles */
+        const length = tiles_raw.length;
+        const hasChanged = palette.colorUpdated;
+        for (var i = 0; i < length; i++) {
+            const color = tiles_raw[i];
+            if (hasChanged(color)) {
+                /* Simulate a write from the Z80 */
+                tileWritten(i, color);
+            }
+        }
+
+        /* Flush all the color changes */
+        palette.flushUpdates();
+    }
+
+
+    /**
+     * @brief Function to call to check if any tile changed (or saw a color change) since the last update flush
+     */
+    this.hasUpdates = function () {
+        checkColorsUpdate();
+        return Object.keys(tiles_updates).length > 0;
+    }
+
+    this.tileUpdated = function (tile) {
+        return tiles_updates[tile];
+    }
+
+    this.flushUpdates = function () {
+        tiles_updates = {};
+    }
+}
+
+
+
+function Sprites(Tileset)
+{
+    const tileset = Tileset;
+    var   mode8bit = true;
+
+    const TILE_HEIGHT = 16;
+    const TILE_WIDTH  = 16;
+    const TILE_SIZE   = TILE_HEIGHT * TILE_WIDTH;
+
+    const ATTR_SIZE = 8;
+    const ATTR_COUNT = 128;
+
+    const ATTR_Y_REG = 0;
+    const ATTR_X_REG = 1;
+    const ATTR_FLAG_REG = 2;
+    const attributes = new Array(ATTR_COUNT);
+    const attributes_raw = new Array(ATTR_COUNT * ATTR_SIZE);
+    for (var i = 0; i < attributes.length; i++) {
+        attributes[i] = {
+            x: 0,
+            y: 0,
+            tile: 0,
+            flip_x: 0,
+            flip_y: 0,
+            palette: 0
+        };
+    }
+
+    /**
+     * @brief Function called when a write (byte) occurs on the memory address where the sprites are mapped.
+     *
+     * @param address Address relative to this component.
+     * @param data Byte to write at the given offset.
+     */
+    this.mem_write = function (address, data) {
+        attributes_raw[address] = data;
+        const attr_index = Math.floor(address / ATTR_SIZE);
+        const attribute = attributes[attr_index];
+        const register = Math.floor((address % ATTR_SIZE) / 2);
+        const msb = (address & 1);
+        if (register == ATTR_Y_REG) {
+            if (msb) attribute.y = (data << 8) | (attribute.y & 0xff);
+            else attribute.y = (attribute.y & 0xff00) | (data & 0xff);
+        } else if (register == ATTR_X_REG) {
+            if (msb) attribute.x = (data << 8) | (attribute.x & 0xff);
+            else attribute.x = (attribute.x & 0xff00) | (data & 0xff);
+        } else if (register == ATTR_FLAG_REG) {
+            if (msb) {
+                attribute.tile_msb = (data >> 0) & 1; // 4-bit mode
+                attribute.flip_y   = (data >> 2) & 1;
+                attribute.flip_x   = (data >> 3) & 1;
+                attribute.palette  = (data >> 4) & 0xf;
+            } else {
+                attribute.tile = data;
+            }
+        }
+    }
+
+    /**
+     * @brief Set the color mode, can be 8-bit or 4-bit.
+     */
+    this.setColorMode8Bit = function(mode8) {
+        mode8bit = mode8;
+    }
+
+
+    /**
+     * @brief Get a given sprite as an array of pixels
+     *
+     * @param index Index of the tile to retrieve, 0-255 in 8-bit mode, 0-511 in 4-bit mode
+     */
+    this.drawSprites = function(canvas) {
+        const ctx = canvas.getContext("2d");
+
+        for (var i = 0; i < attributes.length; i++) {
+            const sprite = attributes[i];
+            /* If the sprite is not shown, go to the next one */
+            if (sprite.x == 0 || sprite.y == 0 || sprite.x >= canvas.width + 16 || sprite.y >= canvas.height + 16)
+                continue;
+
+            const width = 16;
+            const height = 16;
+            const x = sprite.x - width;
+            const y = sprite.y - height;
+            const swapPixel = (img, x, y, x2, y2) => {
+                for (var p = 0; p < 4; p++) {
+                    const idx0 = (y  * width + x)  * 4;
+                    const idx1 = (y2 * width + x2) * 4;
+                    const tmp = img[idx0 + p];
+                    img[idx0 + p] = img[idx1 + p];
+                    img[idx1 + p] = tmp;
+                }
+            }
+            const flipX = function (img) {
+                /* For each pixel line, flip all the pixels */
+                for (var i = 0; i < height; i++) {
+                    for (var j = 0; j < width / 2; j++) {
+                        swapPixel(img, j, i, width - 1 - j, i);
+                    }
+                }
+            }
+            const flipY = function (img) {
+                /* Flip all the pixels for each column */
+                for (var j = 0; j < width; j++) {
+                    for (var i = 0; i < height / 2; i++) {
+                        swapPixel(img, j, i, j, height - 1 - i);
+                    }
+                }
+
+            }
+
+            const transform = [];
+            if (sprite.flip_x) transform.push(flipX);
+            if (sprite.flip_y) transform.push(flipY);
+
+            const spr = tileset.getTileCanvas(sprite.tile, true, sprite.palette, transform);
+            ctx.drawImage(spr.canvas, x, y);
+        }
+    }
 }
 
 function VideoChip(Zeal, PIO, scale) {
     const zeal = Zeal;
     const pio = PIO;
-    var video_mode = DEFAULT_MODE;
-    var text_color_index = 0xf;
-    var background_color_index = 0x0;
-    /* 0 - Black, 1 - dark blue, 2 - dark green, 3 - dark cyan,
-     * 4 - dark red, 5 - dark purple, 6 - brown, 7 - light grey,
-     * 8 - dark grey, 9 - blue, 10 - green, 11 - cyan,
-     * 12 - red, 13 - purple, 14 - yellow, 15 - white */
-    const palette16 = [ "#000000", "#0000aa", "#00aa00", "#00aaaa",
-                        "#aa0000", "#aa00aa", "#aa5500", "#aaaaaa",
-                        "#555555", "#5555ff", "#55ff55", "#55ffff",
-                        "#ff5555", "#ff55ff", "#ffff55", "#ffffff" ];
-    const palette256 = ["#000000", "#0000a8", "#10a800", "#00a8a8", "#a80000", "#a800a8", "#a85400", "#a8a8a8", "#505450", "#5054f8", "#50fc50", "#50fcf8", "#f85450", "#f854f8", "#f8fc50", "#f8fcf8",
-                        "#000000", "#101010", "#202020", "#303430", "#404440", "#505450", "#606460", "#707470", "#888888", "#989898", "#a8a8a8", "#b8b8b8", "#c8c8c8", "#d8dcd8", "#e8ece8", "#f8fcf8",
-                        "#0004f8", "#4004f8", "#8000f8", "#b800f8", "#f800f8", "#f800b8", "#f80080", "#f80040", "#f80008", "#f84000", "#f88000", "#f8bc00", "#f8fc00", "#b8fc00", "#80fc00", "#40fc00",
-                        "#20fc00", "#20fc40", "#18fc80", "#10fcb8", "#00fcf8", "#00bcf8", "#0080f8", "#0040f8", "#8080f8", "#9880f8", "#b880f8", "#d880f8", "#f880f8", "#f880d8", "#f880b8", "#f88098",
-                        "#f88080", "#f89c80", "#f8bc80", "#f8dc80", "#f8fc80", "#d8fc80", "#b8fc80", "#98fc80", "#80fc80", "#80fc98", "#80fcb8", "#80fcd8", "#80fcf8", "#80dcf8", "#80bcf8", "#809cf8",
-                        "#b8b8f8", "#c8b8f8", "#d8b8f8", "#e8b8f8", "#f8b8f8", "#f8b8e8", "#f8b8d8", "#f8b8c8", "#f8b8b8", "#f8c8b8", "#f8dcb8", "#f8ecb8", "#f8fcb8", "#e8fcb8", "#d8fcb8", "#c8fcb8",
-                        "#b8fcb8", "#b8fcc8", "#b8fcd8", "#b8fce8", "#b8fcf8", "#b8ecf8", "#b8dcf8", "#b8c8f8", "#000070", "#180070", "#380070", "#500070", "#700070", "#700050", "#700038", "#700018",
-                        "#700000", "#701c00", "#703800", "#705400", "#707000", "#507000", "#387000", "#187000", "#087000", "#087018", "#007038", "#007050", "#007070", "#005470", "#003870", "#001c70",
-                        "#383870", "#403870", "#503870", "#603870", "#703870", "#703860", "#703850", "#703840", "#703838", "#704438", "#705438", "#706038", "#707038", "#607038", "#507038", "#407038",
-                        "#387038", "#387040", "#387050", "#387060", "#387070", "#386070", "#385470", "#384470", "#505070", "#585070", "#605070", "#685070", "#705070", "#705068", "#705060", "#705058",
-                        "#705050", "#705850", "#706050", "#706850", "#707050", "#687050", "#607050", "#587050", "#507050", "#507058", "#507060", "#507068", "#507070", "#506870", "#506070", "#505870",
-                        "#000040", "#100040", "#200040", "#300040", "#400040", "#400030", "#400020", "#400010", "#400000", "#401000", "#402000", "#403000", "#404000", "#304000", "#204000", "#104000",
-                        "#004000", "#004010", "#004020", "#004030", "#004040", "#003040", "#002040", "#001040", "#202040", "#282040", "#302040", "#382040", "#402040", "#402038", "#402030", "#402028",
-                        "#402020", "#402820", "#403020", "#403820", "#404020", "#384020", "#304020", "#284020", "#204020", "#204028", "#204030", "#204038", "#204040", "#203840", "#203040", "#202840",
-                        "#282c40", "#302c40", "#302c40", "#382c40", "#402c40", "#402c38", "#402c30", "#402c30", "#402c28", "#403028", "#403428", "#403c28", "#404028", "#384028", "#304028", "#304028",
-                        "#284028", "#284030", "#284030", "#284038", "#284040", "#283c40", "#283440", "#283040", "#000000", "#000000", "#000000", "#000000", "#000000", "#000000", "#000000", "#e870f0"];
 
-    var x_cursor = 0;
-    var y_cursor = 0;
-    var ratio = 1;
-    if (scale) {
-        ratio = scale;
+    /* Constants for all the modes */
+    const MODE_TEXT_640     = 0;
+    const MODE_TEXT_320     = 1;
+    const MODE_GFX_640_8BIT = 4;
+    const MODE_GFX_320_8BIT = 5;
+    const MODE_GFX_640_4BIT = 6;
+    const MODE_GFX_320_4BIT = 7;
+
+    const TEXT_CHAR_HEIGHT = 12;
+    const TEXT_CHAR_WIDTH  = 8;
+    /* In graphics mode, all the tiles are squared */
+    const TILE_HEIGHT      = 16;
+    const TILE_WIDTH       = 16;
+
+    /* Maximum amount of tiles on screen */
+    const TILE_MAX_COUNT   = 3200;    // 640x480 text mode
+
+    const MAX_ITEMS_PER_LINE = 80;
+    const MAX_ITEMS_PER_COL = 40;
+
+    /* Default mode used on reset and initialization */
+    const DEFAULT_MODE  = MODE_TEXT_640;
+    const DEFAULT_BG_COLOR = 0x0;
+    const DEFAULT_FG_COLOR = 0xf;
+
+    /* 256-color palette, it can be modified at runtime */
+    const palette = new ColorPalette();
+
+    /* Font table, it can also be modified at runtime */
+    const font = new FontTable();
+
+    /* We have two layers of data for the tilemap */
+    const tilemap = {
+        layer0 : {
+            mem_write : (addr, data) => layerWritten(0, addr, data),
+            data: new Array(TILE_MAX_COUNT)
+        },
+        layer1 : {
+            mem_write : (addr, data) => layerWritten(1, addr, data),
+            data : new Array(TILE_MAX_COUNT),
+        }
+    };
+
+
+    this.getPaletteNumber = function (tileidx) {
+        /* High nibble represents the palette index */
+        return tilemap.layer0.data[tileidx] >> 4;
     }
-    /* In case the ratio is a float value, we have to draw a bit more
-     * pixel that whatt is required to avoid artifacts. */
-    var errorrate = Number.isInteger(ratio) ? 0 : 2 * (ratio - Math.floor(ratio));
-    var charheight = 12;
-    var resolution_width = 0;
-    var resolution_height = 0;
-    var final_height = 0;
-    var final_width = 0;
-    var char_per_line = 0;
-    var char_per_col  = 0;
-    var char_total = 0;
-    var scroll = 0;
 
-    var mapped_vram = false;
-    var mapped_sprite = false;
+    const tileset = new Tileset(palette, this);
+    const sprites = new Sprites(tileset);
 
-    var framebuffer = new Array(16*1024);
-    var spriteram = new Array(SPRITE_RAM_SIZE);
-    const { canvas, ctx } = initialize();
+    /* Video mode configuration */
+    const video_cfg = {
+        mode: 0,
+        is_text: false,
+        is_8bit: true,
+        /* Resolution, in pixels, associated to the current configuration */
+        width: 0,
+        height: 0,
+        /* The maximum resolution supported in the following */
+        max_width: 640,
+        max_height: 480,
+        base_scale: 1,
+        /* The following scale should be configurable */
+        view_scale: 1,
+        /* Object can be a text character or a tile */
+        obj_per_line: 0,
+        obj_per_col: 0,
+        obj_total: 0,
+        obj_width: 0,
+        obj_height: 0,
+        vblank: 0
+    };
+
+    /* Text mode configuration */
+    const text_cfg = {
+        /* Index for the current color, both foreground and background */
+        fg_color: DEFAULT_FG_COLOR,
+        bg_color: DEFAULT_BG_COLOR,
+        scroll_x: 0,
+        scroll_y: 0,
+        cursor : {
+            x: 0,
+            y: 0,
+            /* Number of frames the cursor is shown/hidden */
+            blink: 255,
+            blink_state: 0,
+            blink_shown: false,
+            char: 0,
+            /* The cursor has inverted colors */
+            fg_color: DEFAULT_BG_COLOR,
+            bg_color: DEFAULT_FG_COLOR,
+            /* Backup used when savign/restoring the cursor */
+            dump_x: 0,
+            dump_y: 0
+        },
+        flags: {
+            auto_scroll_x: 0,
+            auto_scroll_y: 0,
+            eat_newline:   0,
+            scroll_y_occurred : 0,
+        }
+    };
+
+    /* Graphics mode configuration */
+    const gfx_cfg = {
+        scroll_x: 0,
+        scroll_y: 0,
+    };
+
+    const { canvas, ctx, canvas_layer1, ctx_layer1 } = initialize();
 
     function initialize() {
-        var canvas = document.querySelector("#screen");
-        updateModeData(canvas);
+        /* Create both the canvas and off-screen canvas */
+        const canvas = document.querySelector("#screen");
+        canvas.offscreenCanvas = document.createElement("canvas");
 
-        var ctx = canvas.getContext("2d");
-        ctx.fillStyle = palette16[background_color_index];
+        const canvas_layer1 = document.createElement("canvas");
+
+        updateModeData(canvas, canvas_layer1, DEFAULT_MODE);
+
+        /* Off-screen canvas will always have the same size, it will ease scrolling
+         * while rendering */
+        canvas.offscreenCanvas.width  = 640;
+        canvas.offscreenCanvas.height = 480;
+        const ctx = canvas.offscreenCanvas.getContext("2d", {
+            alpha: false,
+            desynchronized: true,
+            willReadFrequently: true,
+        });
+        ctx.fillStyle = "#000000";
         ctx.fillRect(0, 0, canvas.width, canvas.height);
+        const ctx_layer1 = canvas_layer1.getContext("2d", {
+            alpha: true,
+            desynchronized: true,
+            willReadFrequently: true,
+        });
+        ctx_layer1.clearRect(0, 0, canvas_layer1.width, canvas_layer1.height);
 
-        for (var i = 0; i < framebuffer.length; i++)
-            framebuffer[i] = 0;
-        for (var i = 0; i < spriteram.length; i++)
-            spriteram[i] = "#000000";
+        /* Reset the layers */
+        const length = tilemap.layer0.length;
 
-        return { canvas, ctx };
+        for (var i = 0; i < length; i++) {
+            tilemap.layer0.data[i] = 0;
+            tilemap.layer1.data[i] = 0;
+        }
+
+        return { canvas, ctx, canvas_layer1, ctx_layer1 };
     }
 
-    function updateModeData(canvas) {
-        const {width, height } = resolutionOfMode(video_mode);
-        resolution_width = width;
-        resolution_height = height;
-        final_width = resolution_width * ratio;
-        final_height = resolution_height * ratio;
-        canvas.width = final_width;
-        canvas.height = final_height;
-        /* Update other fields */
-        char_per_line = resolution_width / 8;
-        char_per_col  = resolution_height / charheight;
-        char_total = char_per_line * char_per_col;
+    /**
+     * @brief Change the current video mode
+     */
+    function updateModeData(canvas, canvas_layer1, new_mode) {
+        /* Ignore the higher bits of the nmode */
+        new_mode = new_mode & 7;
+        video_cfg.mode    = new_mode;
+        video_cfg.is_text = new_mode <= MODE_TEXT_320;
+        video_cfg.is_8bit = new_mode <  MODE_GFX_640_4BIT;
+
+        /* At the moment it is enough to check the lowest bit to determine the resolution */
+        if ((new_mode & 1) == 1) {
+            video_cfg.width  = 320;
+            video_cfg.height = 240;
+            video_cfg.base_scale = 2;
+        } else {
+            video_cfg.width  = 640;
+            video_cfg.height = 480;
+            video_cfg.base_scale = 1;
+        }
+        const scale = video_cfg.base_scale * video_cfg.view_scale;
+        canvas.style.transform = `scale(${scale})`;
+        canvas_layer1.style.transform = `scale(${scale})`;
+
+        /* Check the width of the object */
+        const obj_width  = video_cfg.is_text ? TEXT_CHAR_WIDTH  : TILE_WIDTH;
+        const obj_height = video_cfg.is_text ? TEXT_CHAR_HEIGHT : TILE_HEIGHT;
+
+        video_cfg.obj_per_line = video_cfg.width / obj_width;
+        video_cfg.obj_per_col  = video_cfg.height / obj_height;
+        video_cfg.obj_total    = video_cfg.obj_per_line * video_cfg.obj_per_col;
+        video_cfg.obj_width    = obj_width;
+        video_cfg.obj_height   = obj_height;
+
+        /* Update the visible canvas */
+        canvas.width = video_cfg.width;
+        canvas.height = video_cfg.height;
+        canvas_layer1.width = video_cfg.width;
+        canvas_layer1.height = video_cfg.height;
+
+        /* TODO: update the screen with the already existing tiles? */
+        if (!video_cfg.is_text) {
+            tileset.setColorMode8Bit(video_cfg.is_8bit);
+            sprites.setColorMode8Bit(video_cfg.is_8bit);
+
+            // FIXME: canvas is simply cleared to show that the mode changed
+            const context = canvas.offscreenCanvas.getContext("2d");
+            context.fillStyle = "black";
+            context.fillRect(0, 0, canvas.offscreenCanvas.width, canvas.offscreenCanvas.height);
+            canvas_layer1.style.opacity = 1.0;
+        } else {
+            /* No layer 1 in text mode */
+            canvas_layer1.style.opacity = 0.0;
+        }
     }
 
-    function drawCharacter(ctx, ascii, x, y) {
-        const orx = x;
-        const bitmaps = characters[ascii];
-        for (var i = 0; i < bitmaps.length; i++) {
-            const line = bitmaps[i];
-            if (line == 0) {
-                ctx.fillStyle = palette16[background_color_index];
-                ctx.fillRect(x, y, charwidth * ratio + errorrate, ratio + errorrate);
+    /**
+     * @brief Draw a character fron the font table, on screen. This function shall be called
+     *        in text mode only.
+     *
+     * @param ctx 2D graphic context
+     * @param ascii Index of the character, in the font table (0-255), to print
+     * @param x Position X, in character count, to start printing the character from
+     * @param y Position Y, in character count, to start printing the character from
+     * @param bg_color Background color index, that will be retrive from the palette
+     * @param fg_color Foreground color index, that will be retrive from the palette
+     */
+    function drawCharacter(ctx, ascii, x, y, bg_color, fg_color) {
+        const bgstyle = palette.getColorRGB888(bg_color);
+        const fgstyle = palette.getColorRGB888(fg_color);
+
+        /* Create an image out of the bitmaps */
+        const charimg = font.getCharacterImg(ascii, bgstyle, fgstyle);
+        ctx.putImageData(charimg, x * TEXT_CHAR_WIDTH, y * TEXT_CHAR_HEIGHT);
+    }
+
+
+    /**
+     * @brief Invoked when a character is written from the I/O space. This function prints a
+     *        character at the cursor position and the increments the latter. If scrolling is
+     *        enabled, the screen will scroll.
+     */
+    function printAndIncrement(value) {
+        const fg_color = text_cfg.fg_color;
+        const bg_color = text_cfg.bg_color;
+        const color    = (bg_color << 4) | fg_color;
+
+        /* Check if the cursor is pending (because of "eat-newline" feature) */
+        if (text_cfg.flags.wait_for_next_char) {
+            text_cfg.flags.wait_for_next_char = false;
+            cursorNextLine();
+        }
+
+        /* Make sure the current cursor are not out of bounds */
+        const cursor_x = (text_cfg.cursor.x + text_cfg.scroll_x) % video_cfg.obj_per_line;
+        const cursor_y = (text_cfg.cursor.y + text_cfg.scroll_y) % video_cfg.obj_per_col;
+
+        // No matter which resolution we are in, the maximum number of tiles is the same
+        const index = cursor_y * MAX_ITEMS_PER_LINE + cursor_x;
+        tilemap.layer0.data[index] = value;
+        tilemap.layer1.data[index] = color;
+
+        // Draw the new character on the canvas
+        drawCharacter(ctx, value, cursor_x, cursor_y, bg_color, fg_color);
+
+        // Increment the cursor position
+        text_cfg.cursor.x++;
+        if (text_cfg.cursor.x == video_cfg.obj_per_line) {
+            /* Check if we have to scroll in X */
+            if (text_cfg.flags.auto_scroll_x) {
+                text_cfg.cursor.x--;
+                text_cfg.scroll_x = (text_cfg.scroll_x + 1) % MAX_ITEMS_PER_LINE;
+            } else if (text_cfg.flags.eat_newline) {
+                /* Check if we have to "eat newline", in other word, do we need to wait for a new character
+                 * before resetting X and updating Y. */
+                text_cfg.flags.wait_for_next_char = true;
             } else {
-                for (var bits = 0; bits < charwidth; bits++) {
-                    const bit = (line >> (7 - bits)) & 1;
-                    ctx.fillStyle = (bit == 1) ? palette16[text_color_index] :
-                                                 palette16[background_color_index];
-                    ctx.fillRect(x, y, ratio + errorrate, ratio + errorrate);
-                    x += ratio;
-                }
-                x = orx;
+                cursorNextLine();
             }
-
-            y += ratio;
         }
     }
 
-    function scroll_screen () {
-        var firstline = ctx.getImageData(0, 0, final_width, charheight * ratio);
-        var restlines = ctx.getImageData(0, charheight * ratio, final_width, final_height - charheight * ratio);
-        ctx.putImageData(restlines, 0, 0);
-        ctx.putImageData(firstline, 0, final_height - charheight * ratio);
-    }
+    /**
+     * @brief Function to call at each frame rendering when in text mode. It will print the cursor.
+     */
+    function printCursor(ctx) {
+        const cursor = text_cfg.cursor;
 
-    function putChar(code) {
-        //drawCharacter(ctx, text.charCodeAt(i), i * charwidth * ratio, 0);
-        drawCharacter(ctx, code,
-                      x_cursor * charwidth * ratio,
-                      y_cursor * charheight * ratio);
-        x_cursor++;
-        if (x_cursor == 100) {
-            x_cursor = 0;
-            y_cursor++;
+        if (!video_cfg.is_text || cursor.blink == 0) {
+            return;
         }
 
-        if (y_cursor == 50) {
-            y_cursor = 0;
-            x_cursor = 0;
+        if (++cursor.blink_state >= cursor.blink) {
+            cursor.blink_state = 0;
+            cursor.blink_shown = !cursor.blink_shown;
+        }
+
+        if (cursor.blink == 255 || cursor.blink_shown) {
+            drawCharacter(ctx, cursor.char, cursor.x, cursor.y, cursor.bg_color, cursor.fg_color);
         }
     }
 
-    function putCharNoInc(code) {
-        //drawCharacter(ctx, text.charCodeAt(i), i * charwidth * ratio, 0);
-        drawCharacter(ctx, code,
-                      x_cursor * charwidth * ratio,
-                      y_cursor * charheight * ratio);
+    /**
+     * @brief Function to call when the cursor X must be reset and cursor Y incremented
+     */
+    function cursorNextLine() {
+        text_cfg.cursor.x = 0;
+        text_cfg.cursor.y++;
+
+        if (text_cfg.cursor.y == video_cfg.obj_per_col) {
+            if (text_cfg.flags.auto_scroll_y) {
+                text_cfg.scroll_y = (text_cfg.scroll_y + 1) % MAX_ITEMS_PER_COL;
+                text_cfg.cursor.y--;
+                text_cfg.flags.scroll_y_occurred = 1;
+            } else {
+                text_cfg.cursor.y = 0;
+            }
+        }
     }
 
-    function drawChar(code, cursor) {
-        cursor = ((cursor - scroll * char_per_line) + char_total) % char_total;
-        const y = Math.floor(cursor / char_per_line);
-        const x = cursor % char_per_line;
-        drawCharacter(ctx, code,
-                      x * charwidth * ratio,
-                      y * charheight * ratio);
+
+    /**
+     * @brief Invoked when a write occurs on the layer 0 or 1.
+     *
+     * @param address Address relative to the layer
+     * @param value Value to put in the layer
+     */
+    function layerWritten(layer_num, address, value) {
+        if (layer_num == 0)
+            tilemap.layer0.data[address] = value;
+        else
+            tilemap.layer1.data[address] = value;
+
+        const y = Math.floor(address / MAX_ITEMS_PER_LINE);
+        const x = address % MAX_ITEMS_PER_LINE;
+
+        if (video_cfg.is_text) {
+            /* Text mode, update the character */
+            const ascii = tilemap.layer0.data[address];
+            const color = tilemap.layer1.data[address];
+            const bg_color = color >> 4;
+            const fg_color = color & 0xf;
+            drawCharacter(ctx, ascii, x, y, bg_color, fg_color);
+        } else {
+            /* Graphics mode, a tile has just been choosen, retrieve it from the tileset and show it */
+            /* TODO: what if the tilemap is set first and the tileset is updated later? The changes will
+            /* not be visible until the tilemap is updated again... */
+            var transparency = false;
+            var context = ctx;
+            if (video_cfg.is_8bit) {
+                if (layer_num == 1) {
+                    transparency = true;
+                    context = ctx_layer1;
+                    ctx_layer1.clearRect(x * TILE_WIDTH, y * TILE_HEIGHT, TILE_WIDTH, TILE_HEIGHT);
+                }
+                var tileidx = value;
+            } else {
+                /* 4-bit mode, update the tile */
+                var tileidx = ((tilemap.layer1.data[address] & 1) << 8) | (tilemap.layer0.data[address]);
+            }
+            const img = tileset.getTileRGB888(tileidx, transparency);
+            context.putImageData(img, x * TILE_WIDTH, y * TILE_HEIGHT);
+        }
     }
 
-    function writeChar(code, cursor) {
-        framebuffer[cursor] = code;
-        drawChar(code, cursor);
+
+    /**
+     * @brief Check if any tile has been updated while the tilemap was already set and written.
+     *        If that's the case, the offscree canvas shall be updated with the new tile.
+     */
+    function checkAndUpdateTiles() {
+        if (!tileset.hasUpdates()) {
+            return;
+        }
+
+        // FIXME: Implement layer1 too
+        const layer0 = tilemap.layer0.data;
+        const layer0_length = layer0.length;
+        for (var i = 0; i < layer0_length; i++) {
+            if (tileset.tileUpdated(layer0[i])) {
+                /* Simulate a write to the layer to force the update */
+                layerWritten(0, i, layer0[i]);
+            }
+        }
+
+        tileset.flushUpdates();
     }
 
-    function reWriteChar(address) {
-        drawChar(framebuffer[address], address);
+    /* -------------------------------------------------------------------------- */
+    /*                              Text I/O Related                              */
+    /* -------------------------------------------------------------------------- */
+
+    const PRINT_CHAR    = 0;
+    const CURSOR_Y      = 1;
+    const CURSOR_X      = 2;
+    const SCROLL_Y      = 3;
+    const SCROLL_X      = 4;
+    const CURRENT_COLOR = 5;
+    const CURSOR_TIMER  = 6;
+    const CURSOR_CHAR   = 7;
+    const CURSOR_COLOR  = 8;
+    const CTRL_REG      = 9;
+        const CTRL_REG_SAVE_CURSOR    = 1 << 7;
+        const CTRL_REG_RESTORE_CURSOR = 1 << 6;
+        const CTRL_REG_NEWLINE        = 1 << 0;
+
+    /**
+     * @brief I/O text component sees a write, address is relative to this space
+     */
+    function textConfigWrite(address, value) {
+        switch(address) {
+            case PRINT_CHAR:
+                if (video_cfg.is_text) {
+                    text_cfg.flags.scroll_y_occurred = 0;
+                    printAndIncrement(value);
+                } else {
+                    console.error("Use of PRINT_CHAR register is GFX mode is invalid!");
+                }
+                break;
+
+            case CURSOR_Y:
+                if (value < video_cfg.obj_per_col) {
+                    text_cfg.cursor.y = value;
+                }
+                break;
+
+            case CURSOR_X:
+                if (value < video_cfg.obj_per_line) {
+                    text_cfg.cursor.x = value;
+                    text_cfg.flags.wait_for_next_char = false;
+                }
+                break;
+
+            case SCROLL_Y:
+                text_cfg.scroll_y = value;
+                break;
+
+            case SCROLL_X:
+                text_cfg.scroll_x = value;
+                break;
+
+            case CURRENT_COLOR:
+                text_cfg.bg_color = (value >> 4) & 0xf;
+                text_cfg.fg_color = (value >> 0) & 0xf;
+                break;
+
+            case CURSOR_TIMER:
+                text_cfg.cursor.blink = value;
+                break;
+
+            case CURSOR_CHAR:
+                text_cfg.cursor.char = value;
+                break;
+
+            case CURSOR_COLOR:
+                text_cfg.cursor.bg_color = (value >> 4) & 0xf;
+                text_cfg.cursor.fg_color = (value >> 0) & 0xf;
+                break;
+
+            case CTRL_REG:
+                text_cfg.flags.auto_scroll_x = (value >> 5) & 1;
+                text_cfg.flags.auto_scroll_y = (value >> 4) & 1;
+                text_cfg.flags.eat_newline   = (value >> 3) & 1;
+                if ((value & CTRL_REG_SAVE_CURSOR) != 0 &&
+                    (value & CTRL_REG_RESTORE_CURSOR) != 0) {
+                    /* Exchange the cursor and the backup */
+                    const tmp_x = text_cfg.cursor.dump_x;
+                    const tmp_y = text_cfg.cursor.dump_y;
+                    text_cfg.cursor.dump_x = text_cfg.cursor.x;
+                    text_cfg.cursor.dump_y = text_cfg.cursor.y;
+                    text_cfg.cursor.x = tmp_x;
+                    text_cfg.cursor.y = tmp_y;
+                } else if ((value & CTRL_REG_SAVE_CURSOR) != 0) {
+                    text_cfg.cursor.dump_x = text_cfg.cursor.x;
+                    text_cfg.cursor.dump_y = text_cfg.cursor.y;
+                } else if ((value & CTRL_REG_RESTORE_CURSOR) != 0) {
+                    text_cfg.cursor.x = text_cfg.cursor.dump_x;
+                    text_cfg.cursor.y = text_cfg.cursor.dump_y;
+                }
+
+                if ((value & CTRL_REG_NEWLINE) != 0) {
+                    text_cfg.flags.scroll_y_occurred = 0;
+                    text_cfg.flags.wait_for_next_char = false;
+                    cursorNextLine();
+                }
+
+                break;
+
+            default:;
+        }
     }
 
-    const mem_wo_from = 0x00_0000;
-    const mem_wo_to   = 0x00_8000;
-    /* VRAM size: 128KB */
-    const mem_size    = 0x02_0000;
-    const mem_rw_from = 0x10_0000;
-    const mem_rw_to   = mem_rw_from + mem_size;
 
-    function is_address_rw(address) {
-        return address >= mem_rw_from && address < mem_rw_to;
+    function textConfigRead(address) {
+        switch(address) {
+            case CURSOR_Y:
+                return text_cfg.cursor.y;
+            case CURSOR_X:
+                return text_cfg.cursor.x;
+            case SCROLL_Y:
+                return text_cfg.scroll_y;
+            case SCROLL_X:
+                return text_cfg.scroll_x;
+            case CURRENT_COLOR:
+                return (text_cfg.bg_color << 4) | (text_cfg.fg_color & 0xf);
+            case CURSOR_TIMER:
+                return text_cfg.cursor.blink;
+            case CURSOR_CHAR:
+                return text_cfg.cursor.char;
+            case CURSOR_COLOR:
+                return (text_cfg.cursor.bg_color << 4) |
+                       (text_cfg.cursor.fg_color & 0xf);
+            case CTRL_REG:
+                return (text_cfg.flags.auto_scroll_x << 5) |
+                       (text_cfg.flags.auto_scroll_y << 4) |
+                       (text_cfg.flags.eat_newline   << 3) |
+                       (text_cfg.flags.scroll_y_occurred << 0);
+            default:
+                return 0;
+        }
     }
 
-    function is_address_w(address) {
-        return is_address_rw(address)
-            || (address >= mem_wo_from && address < mem_wo_to);
+
+    /* -------------------------------------------------------------------------- */
+    /*                        Mapping Configuration Related                       */
+    /* -------------------------------------------------------------------------- */
+
+    /**
+     * @brief Video configuration sees a write, address is relative to this space
+     */
+    function vConfigWrite(address, value) {
+        switch (address) {
+            case 0xe: mapping.io_bank = value & 0x3f;
+                break;
+            case 0xf: mapping.mem_start = (value & 0x1f) >> (22 - 5);
+                break;
+            default:
+                break;
+        }
     }
 
+    function vConfigRead(address) {
+        const MAJ = 0;
+        const MIN = 1;
+        const REV = 0;
+
+        switch (address) {
+            case 0x0: return REV;
+            case 0x1: return MIN;
+            case 0x2: return MAJ;
+            case 0xe: return mapping.io_bank;
+            case 0xf: return mapping.mem_start >> (22 - 5);
+        }
+        return 0;
+    }
+
+    /* -------------------------------------------------------------------------- */
+    /*                          Physical Mapping Related                          */
+    /* -------------------------------------------------------------------------- */
+
+    const IO_MAPPING_TEXT = 0;
+    // const IO_MAPPING_RSVD = 1;
+    // const IO_MAPPING_RSVD = 2;
+    // const IO_MAPPING_RSVD = 3;
+
+    /* Highest five bits of the FPGA 22-bit physical memory address */
+    const mapping = {
+        mem_start : 0x100000, // Mapped at 1MB by default
+        mem_size  : 128*1024, // Even if some ranges are not mapped, let's
+        io_start  : 0x80,
+        io_size   : 0x30, // 3 banks of 16 bytes
+        io_bank : 0,
+    };
+
+    /**
+     * @brief Called when the CPU is trying to access a memory address
+     */
     function is_valid_address(read, address) {
-        return is_address_rw(address);
-        /* Remove the support for writing to ROM address
-         *|| (!read && is_address_w(address)) ;
-         */
+        return address >= mapping.mem_start &&
+               address <  mapping.mem_start + mapping.mem_size;
     }
 
     function is_valid_port(read, port) {
-        return !read && port >= 0x80;
+        /* We only care about the lowest byte here */
+        port = port & 0xff;
+
+        return port >= mapping.io_start &&
+               port <  mapping.io_start + mapping.io_size;
     }
 
     function mem_read(address) {
-        /* Only support the first 16KB at the moment */
-        if (address >= mem_rw_from + 16*1024) {
-            return;
-        }
-
-        const physaddress = address & (mem_size - 1);
-        return framebuffer[physaddress];
+        /* TODO: Support read on the subcomponents that support it */
+        return 0;   // data lines pulled low
     }
 
-    function mem_write(address, value) {
-        /* Only support the first 16KB at the moment */
-        if (address >= mem_rw_from + 16*1024) {
-            return;
-        }
+    function mem_write(phys_address, value) {
+        /* Determine the address relative to the FPGA memory space */
+        const address = phys_address - mapping.mem_start;
+        value = value & 0xff;
 
-        /* Get an address between 0 and 128KB. Masking with size works because mem_rw_from is aligned on 128KB. */
-        const physaddress = address & (mem_size - 1);
-
-        if (video_mode == TEXT_MODE || video_mode == SMALL_TEXT_MODE)
-            mem_write_text_mode(physaddress, value);
-        else if (video_mode == BIG_SPRITE_MODE)
-            mem_write_big_sprite_mode(physaddress, value);
-        else
-            console.log("Small sprite mode video mode currently not supported");
+        // TODO: Fix hardcoded values
+        // TODO: Support memory write to I/O devices
+        if (address < 0xc80)
+            tilemap.layer0.mem_write(address, value);
+        else if (address >= 0xe00 && address < 0x1000)
+            // TODO: Update all the tiles since the color may have changed
+            palette.mem_write(address - 0xe00, value);
+        else if (address >= 0x1000 && address < 0x1c80)
+            tilemap.layer1.mem_write(address - 0x1000, value);
+        else if (address >= 0x2800 && address < 0x2a00)
+            sprites.mem_write(address - 0x2800, value);
+        else if (address >= 0x3000 && address < 0x3000 + 3072)
+            // TODO: Update all the tiles since the pixels may have changed
+            font.mem_write(address - 0x3000, value);
+        else if (address >= 0x10000 && address < 0x20000)
+            tileset.mem_write(address - 0x10000, value);
     }
 
-    function mem_write_text_mode(address, value) {
-        /* Text characters are mapped between 0 and 3200 */
-        if (address < 3200) {
-            writeChar(value, address);
-        } else if (address >= 0x2000 && address < 0x2000 + 3200) {
-            /* Color attributes for the characters */
-            const bak_foreground = text_color_index;
-            const bak_background = background_color_index;
-            background_color_index = (value >> 4) & 0xf;
-            text_color_index = value & 0xf;
-            framebuffer[address] = value;
-            reWriteChar(address - 0x2000);
-            text_color_index = bak_foreground;
-            background_color_index = bak_background;
-        } else {
-            /* Not a char, not a color either, nothing at the moment.
-             * Maybe palette in the future? Char table? */
+    function io_write(port, value) {
+        port  &= 0xff;
+        value &= 0xff;
+
+        if (port >= 0x80 && port <= 0x8f) {
+            vConfigWrite(port - 0x80, value);
         }
-    }
-
-    const big_sprite_bytes = 256;
-    const big_sprite_per_line = 40;
-    const big_sprite_size = 16;
-
-    function updateSpriteOnScreen(address, newspritenum, layer1) {
-        if (layer1) {
-            console.log("Layer1 not supported yet");
-            return;
+        else if (port >= 0x90 && port <= 0x9f) {
+            // TODO: Scrolling values and enable screen
+            if ((port - 0x90) == 0xc) updateModeData(canvas, canvas_layer1, value);
         }
-
-        const spriteline = Math.floor(address / big_sprite_per_line);
-        const spritecol = address % big_sprite_per_line;
-        const originalx = spritecol * big_sprite_size * ratio
-        var spritey = spriteline * big_sprite_size * ratio;
-        var spritex = originalx;
-
-        for (var i = 0; i < big_sprite_size; i++) {
-            for (var j = 0; j < big_sprite_size; j++) {
-                const color = spriteram[newspritenum * big_sprite_bytes + i * big_sprite_size + j];
-                //const color = palette256[coloridx];
-                ctx.fillStyle = color;
-                ctx.fillRect(spritex, spritey, ratio + errorrate, ratio + errorrate);
-                spritex += ratio;
-            }
-            spritex = originalx;
-            spritey += ratio;
-        }
-    }
-
-    function mem_write_big_sprite_mode(address, value) {
-        if (mapped_vram) {
-            /* Check that the address passed is valid */
-            if ((address >= 0x8000) ||
-                (address >= MAX_BIG_SPRITE_COUNT && address < 0x2000) ||
-                (address >= 0x2000 + MAX_BIG_SPRITE_COUNT && address < 0x8000))
-                    return;
-
-            framebuffer[address] = (value & 0xff);
-            updateSpriteOnScreen(address, (value & 0xff), address >= 0x2000);
-        } else if (mapped_sprite) {
-            /* One big sprites takes 16*16 bytes */
-            const color = palette256[value & 0xff];
-            spriteram[address] = color;
-            // const sprite_idx = Math.floor(address / big_sprite_bytes);
-            // TODO: updatePixelOnScreen(sprite_idx, address, color);
+        else if (port >= 0xa0 && port <= 0xaf && mapping.io_bank == IO_MAPPING_TEXT) {
+            textConfigWrite(port - 0xa0, value);
         }
     }
 
     function io_read(port) {
-    }
+        port  &= 0xff;
 
-    var start = 0;
-
-    function io_write(port, value) {
-        port &= 0xff;
-        console.assert (port >= 0x80, "Wrong port for VideoChip");
-        if (port == 0x80) {
-            putChar(value);
-        } else if (port == 0x87) {
-            putCharNoInc(value);
-        }  else if (port == 0x81) {
-            y_cursor = value;
-        } else if (port == 0x82) {
-            x_cursor = value;
-        } else if (port == 0x83) {
-            video_mode = value & 0x3;
-            updateModeData(canvas);
-        } else if (port == 0x84) {
-            mapped_vram = (value == 0);
-            mapped_sprite = (value == 1);
-        } else if (port == 0x85) {
-            scroll = value;
-            scroll_screen();
-        } else if (port == 0x86) {
-            text_color_index = value & 0xf;
-            background_color_index = (value >> 4) & 0xf;
+        if (port >= 0x80 && port < 0x90) {
+            return vConfigRead(port - 0x80);
         }
+        else if (port >= 0x90 && port < 0xa0) {
+            // TODO: Scrolling values and video mode
+            if (port - 0x90 == 0xd) {
+                return video_cfg.vblank << 1;
+            }
+        }
+        else if (port >= 0xa0 && port < 0xb0 && mapping.io_bank == IO_MAPPING_TEXT) {
+            return textConfigRead(port - 0xa0);
+        }
+        return 0;
     }
+
+    function renderScreen() {
+        const visible_ctx = canvas.getContext("2d", {
+            alpha: false,
+            desynchronized: false,
+            willReadFrequently: false,
+        });
+        /* Check if any tile has been updated while the tilemap was already written */
+        checkAndUpdateTiles();
+        /* Extract the visible part out of the offscreen canvas contex */
+        const visible_x = (video_cfg.is_text ? text_cfg.scroll_x * video_cfg.obj_width : gfx_cfg.scroll_x);
+        const visible_y = (video_cfg.is_text ? text_cfg.scroll_y * video_cfg.obj_height : gfx_cfg.scroll_y);
+        const visible_width  = Math.min(video_cfg.width, video_cfg.max_width - visible_x);
+        const visible_height = Math.min(video_cfg.height, video_cfg.max_height - visible_y);
+        /* Parameters:
+         *  - Source canvas
+         *  - (x,y) source coordinates
+         *  - Source size
+         *  - (x,y) destination coordinates
+         *  - Destination size
+         */
+        visible_ctx.drawImage(canvas.offscreenCanvas,
+                              visible_x, visible_y,
+                              visible_width, visible_height,
+                              0, 0,
+                              visible_width, visible_height);
+        if (!video_cfg.is_text) {
+            visible_ctx.drawImage(canvas_layer1,
+                                  visible_x, visible_y,
+                                  visible_width, visible_height,
+                                  0, 0,
+                                  visible_width, visible_height);
+        }
+        if (visible_width != video_cfg.width) {
+            /* Part of the screen should wrap, we need to copy the "left" part of the canvas */
+            const remaining = video_cfg.width - visible_width;
+            visible_ctx.drawImage(canvas.offscreenCanvas,
+                0, visible_y,
+                remaining, visible_height,
+                visible_width, 0,
+                remaining, visible_height);
+        }
+        if (visible_height != video_cfg.height) {
+            /* Similarly for Y */
+            const remaining = video_cfg.height - visible_height;
+            visible_ctx.drawImage(canvas.offscreenCanvas,
+                visible_x, 0,
+                visible_width, remaining,
+                0, visible_height,
+                visible_width, remaining);
+        }
+
+        /* Draw the sprites on screen */
+        sprites.drawSprites(canvas);
+
+        /* Add the cursor if it needs to be visible */
+        printCursor(visible_ctx);
+    }
+
 
     /* PIO and signal generation related */
     const IO_HBLANK_PIN      = 5;
@@ -346,6 +1149,7 @@ function VideoChip(Zeal, PIO, scale) {
     const vblank_interval = zeal.registerTstateInterval(() => {
         /* Clear VBLANK bit in the PIO state */
         pio.pio_set_b_pin(IO_VBLANK_PIN, 0);
+        video_cfg.vblank = 0;
     }, VBLANK_TSTATES_PERIOD);
 
     /* Register the same interval but for disabling the signal
@@ -353,6 +1157,7 @@ function VideoChip(Zeal, PIO, scale) {
      * a bit later (after 63us) */
     const vblank_interval_end = zeal.registerTstateInterval(() => {
         pio.pio_set_b_pin(IO_VBLANK_PIN, 1);
+        video_cfg.vblank = 1;
     }, VBLANK_TSTATES_PERIOD, VBLANK_TSTATES_PERIOD_END);
 
 
@@ -363,4 +1168,5 @@ function VideoChip(Zeal, PIO, scale) {
     this.io_read = io_read;
     this.io_write = io_write;
     this.clear = initialize;
+    this.renderScreen = renderScreen;
 }
