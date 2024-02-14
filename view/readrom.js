@@ -13,7 +13,7 @@
  * @param {*} external_params 
  * You can use variable `load_returns` to get the return value of `dev.loadFile`.
  */
-function loadToDevice(dev, file, reader_method, loadfile_external_params=[], callback){
+function loadToDevice(dev, loadfile_external_params=[], callback){
     let reader = new FileReader();
     $(reader).on('load', function(e) {
         let binary = e.target.result;
@@ -21,24 +21,22 @@ function loadToDevice(dev, file, reader_method, loadfile_external_params=[], cal
         let load_returns = dev.loadFile(binary, ...loadfile_external_params);
         callback(load_returns);
     });
-    if (file) {
-        reader[reader_method](file);
-    }
+    return reader;
 }
 
 function loadRom(file_rom) {
     /* Read the rom file */
     if (file_rom) {
-        loadToDevice(zealcom.rom, file_rom, "readAsBinaryString", [], () => {
+        loadToDevice(zealcom.rom, [], () => {
             $("#romready").addClass("ready");
-        });    
+        }).readAsBinaryString(file_rom);
     }
 }
 
 function loadMap(file_map) {
     /* If a dump/map file was provided, try to load it */
     if (file_map) {
-        loadToDevice(disassembler, file_map, "readAsText", [], (success) => {
+        loadToDevice(disassembler, [], (success) => {
             if (success) {
                 /* symbols are ready! */
                 $("#symready").addClass("ready");
@@ -46,25 +44,25 @@ function loadMap(file_map) {
             else {
                 popup.error("Error while loading map file");
             }
-        });
+        }).readAsText(file_map);
     }    
 }
 
 function loadEEPROM(file_eeprom) {
     /* Read the EEPROM image */
     if (file_eeprom) {
-        loadToDevice(zealcom.eeprom, file_eeprom, "readAsBinaryString", [], () => {
+        loadToDevice(zealcom.eeprom, [], () => {
             $("#eepromready").addClass("ready");
-        });
+        }).readAsBinaryString(file_eeprom);
     }
 }
 
 function loadCf(file_cf) {
     /** Read the Compact Flash image */
     if (file_cf) {
-        loadToDevice(zealcom.compactflash, file_cf, "readAsBinaryString", [], () => {
+        loadToDevice(zealcom.compactflash, [], () => {
             $("#cfready").addClass("ready");
-        });
+        }).readAsBinaryString(file_cf);
     }
 }
 
