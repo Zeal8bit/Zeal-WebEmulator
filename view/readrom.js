@@ -15,8 +15,9 @@
  */
 function loadToDevice(dev, file, reader_method, loadfile_external_params=[], callback){
     let reader = new FileReader();
-    reader.addEventListener('load', function(e) {
+    $(reader).on('load', function(e) {
         let binary = e.target.result;
+        console.log(dev?.isNew);
         let load_returns = dev.loadFile(binary, ...loadfile_external_params);
         callback(load_returns);
     });
@@ -91,16 +92,24 @@ $("#romadvanced a").click(() => {
     $("#romfile").toggle(500);
 });
 
+var fetch_counter = 0;
 function switchToAdvancedMode(error) {
-    popout.error("Could not fetch remote data, switched to advanced mode");
+    popout.error("Could not fetch remote data, trying again");
     console.error(error);
-    /* Hide advanced link option and ROMs list */
-    // $("#romload").hide(250, function() {
-
-    /* Show file uploaders */
-    $("#romfile").show(250);
-
-    // });
+    if (fetch_counter >= 3) {
+        popout.error("Could not fetch remote data, swich to advanced mode");
+        /* Show file uploaders */
+        $("#romfile").show(250);
+        $("#romchoice").html("<option value=''>Click to try again</option>");
+        $("#romchoice").on("focus", fetchIndex);
+        fetch_counter = 0;
+    }
+    else {
+        setTimeout(() => {
+            fetchIndex();
+        }, 4000);
+        fetch_counter += 1;
+    }
 }
 
 /**
@@ -108,13 +117,12 @@ function switchToAdvancedMode(error) {
  * names and links to all of the available ROMs, the first one will always be the default.
  */
 
-const prebuilt_json_url = "https://zeal8bit.com/roms/index.json";
+var prebuilt_json_url = "https://zeal8bit.com/roms/index.json";
 
 /*
-    Only for debug, I don't hold all of the copyright of the
-    prebuild images in this index and I'm not sure they are safe     --Jason
+    Only for debug    --Jason
 */
-// const prebuilt_json_url = "https://jasonmo1.github.io/ZOS-Index-demo/index.json"
+// prebuilt_json_url = "https://jasonmo1.github.io/ZOS-Index-demo/index.json"
 
 /* Process the index JSON object that contains all the ROMs available */
 function processIndex(index) {
@@ -140,6 +148,10 @@ function processIndex(index) {
 
 /* Fetch the remote JSON file, and pass the content to the previous function */
 if (!advancedMode) {
+    fetchIndex();
+}
+
+function fetchIndex() {
     fetch(prebuilt_json_url)
         .then(response => response.json())
         .then(response => processIndex(response))
@@ -164,7 +176,7 @@ var index_src;
  */
 $("#romchoice").on("change", async function() {
     if (rom_chosen === true) {
-        let cover = window.confirm("This will cover the current image, Confirm?");
+        let cover = window.confirm("This will restart the machine emulation, continue?");
         if (cover == false) {
             $("#romchoice").find("option").eq(index_src).prop("selected",true);
             return;

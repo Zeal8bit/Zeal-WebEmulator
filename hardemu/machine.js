@@ -308,6 +308,7 @@ function Zeal8bitComputer() {
         vchip.clear();
         terminal.clear();
         zealcom = new Zeal8bitComputer();
+        zealcom.rom.isNew = true;
         if (resetinterval == true) {
             clearInterval(interval);
             interval = null;
