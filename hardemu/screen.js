@@ -234,35 +234,14 @@ function Tileset(Palette, Tilemap) {
     }
 
 
-    this.getTileCanvas = function (index, transparency, palette, transform) {
-        /* Create the canvas and the 2D context to return */
-        const canvas  = document.createElement('canvas');
-        canvas.width  = TILE_WIDTH;
-        canvas.height = TILE_HEIGHT;
-        const context = canvas.getContext('2d');
+    this.getTileCanvas = function (index, destination, transparency, palette) {
 
         const img = tiles[index];
 
-        if (!img.backup) {
-            img.backup = [];
-        }
-
-        for (var i = 0; i < img.data.length; i++)
-            img.backup[i] = img.data[i];
-
         this.getTileRGB888(index, transparency, palette);
-        if (transform) {
-            for (var i = 0; i < transform.length; i++) {
-                transform[i](img.data);
-            }
-        }
-
-        context.putImageData(img, 0, 0);
 
         for (var i = 0; i < img.data.length; i++)
-            img.data[i] = img.backup[i];
-
-        return { canvas, context };
+            destination.data[i] = img.data[i];
     }
 
 
@@ -333,8 +312,20 @@ function Sprites(Tileset)
             tile: 0,
             flip_x: 0,
             flip_y: 0,
-            palette: 0
+            palette: 0,
+            updates: {
+                flip_x: false,
+                flip_y: false,
+                tile: true,
+            },
+            img: new ImageData(TILE_WIDTH, TILE_HEIGHT),
+            canvas: document.createElement('canvas'),
+            ctx: null
         };
+
+        attributes[i].canvas.width  = TILE_WIDTH;
+        attributes[i].canvas.height = TILE_HEIGHT;
+        attributes[i].ctx = attributes[i].canvas.getContext('2d');
     }
 
     /**
@@ -357,11 +348,23 @@ function Sprites(Tileset)
             else attribute.x = (attribute.x & 0xff00) | (data & 0xff);
         } else if (register == ATTR_FLAG_REG) {
             if (msb) {
-                attribute.tile_msb = (data >> 0) & 1; // 4-bit mode
-                attribute.flip_y   = (data >> 2) & 1;
-                attribute.flip_x   = (data >> 3) & 1;
-                attribute.palette  = (data >> 4) & 0xf;
+                const new_tile_msb = (data >> 0) & 1; // 4-bit mode;
+                attribute.updates.tile = attribute.updates.tile || (attribute.tile_msb != new_tile_msb);
+                attribute.tile_msb = new_tile_msb;
+
+                const new_flip_y = (data >> 2) & 1;
+                attribute.updates.flip_y = (attribute.flip_y != new_flip_y);
+                attribute.flip_y         = new_flip_y;
+
+                const new_flip_x = (data >> 3) & 1;
+                attribute.updates.flip_x = (attribute.flip_x != new_flip_x);
+                attribute.flip_x         = new_flip_x;
+
+                const new_palette = (data >> 4) & 0xf;
+                attribute.updates.tile = attribute.updates.tile || (attribute.palette != new_palette);
+                attribute.palette       = new_palette;
             } else {
+                attribute.updates.tile = attribute.updates.tile || (attribute.tile != data);
                 attribute.tile = data;
             }
         }
@@ -372,6 +375,45 @@ function Sprites(Tileset)
      */
     this.setColorMode8Bit = function(mode8) {
         mode8bit = mode8;
+    }
+
+
+    /**
+     * @brief Check if any update occurred on the sprite
+     */
+    function hasUpdates(sprite) {
+        const updates = sprite.updates;
+        return updates.flip_x || updates.flip_y || updates.tile;
+    }
+
+
+    function swapPixel (img, x, y, x2, y2) {
+        for (var p = 0; p < 4; p++) {
+            const idx0 = (y  * TILE_WIDTH + x)  * 4;
+            const idx1 = (y2 * TILE_WIDTH + x2) * 4;
+            const tmp = img[idx0 + p];
+            img[idx0 + p] = img[idx1 + p];
+            img[idx1 + p] = tmp;
+        }
+    }
+
+    function flipX (img) {
+        /* For each pixel line, flip all the pixels */
+        for (var i = 0; i < TILE_HEIGHT; i++) {
+            for (var j = 0; j < TILE_WIDTH / 2; j++) {
+                swapPixel(img.data, j, i, TILE_WIDTH - 1 - j, i);
+            }
+        }
+    }
+
+    function flipY (img) {
+        /* Flip all the pixels for each column */
+        for (var j = 0; j < TILE_WIDTH; j++) {
+            for (var i = 0; i < TILE_HEIGHT / 2; i++) {
+                swapPixel(img.data, j, i, j, TILE_HEIGHT - 1 - i);
+            }
+        }
+
     }
 
 
@@ -393,39 +435,45 @@ function Sprites(Tileset)
             const height = 16;
             const x = sprite.x - width;
             const y = sprite.y - height;
-            const swapPixel = (img, x, y, x2, y2) => {
-                for (var p = 0; p < 4; p++) {
-                    const idx0 = (y  * width + x)  * 4;
-                    const idx1 = (y2 * width + x2) * 4;
-                    const tmp = img[idx0 + p];
-                    img[idx0 + p] = img[idx1 + p];
-                    img[idx1 + p] = tmp;
-                }
-            }
-            const flipX = function (img) {
-                /* For each pixel line, flip all the pixels */
-                for (var i = 0; i < height; i++) {
-                    for (var j = 0; j < width / 2; j++) {
-                        swapPixel(img, j, i, width - 1 - j, i);
-                    }
-                }
-            }
-            const flipY = function (img) {
-                /* Flip all the pixels for each column */
-                for (var j = 0; j < width; j++) {
-                    for (var i = 0; i < height / 2; i++) {
-                        swapPixel(img, j, i, j, height - 1 - i);
-                    }
-                }
 
+            /* Check if we can re-use the cache */
+            if (!hasUpdates(sprite)) {
+                ctx.drawImage(sprite.canvas, x, y);
+                continue;
             }
 
-            const transform = [];
-            if (sprite.flip_x) transform.push(flipX);
-            if (sprite.flip_y) transform.push(flipY);
+            /* Some updates ocurred, check which ones and update the tile */
+            if (sprite.updates.tile) {
+                tileset.getTileCanvas(sprite.tile, sprite.img, true, sprite.palette);
 
-            const spr = tileset.getTileCanvas(sprite.tile, true, sprite.palette, transform);
-            ctx.drawImage(spr.canvas, x, y);
+                if (sprite.flip_x)
+                    flipX(sprite.img);
+
+                if (sprite.flip_y)
+                    flipY(sprite.img);
+
+
+                sprite.ctx.putImageData(sprite.img, 0, 0);
+
+            } else {
+                if (sprite.updates.flip_x) {
+                    flipX(sprite.img);
+                }
+
+                if (sprite.updates.flip_y) {
+                    flipY(sprite.img);
+                }
+
+                sprite.ctx.putImageData(sprite.img, 0, 0);
+            }
+
+            sprite.updates = {
+                flip_x: false,
+                flip_y: false,
+                tile: false,
+            };
+
+            ctx.drawImage(sprite.canvas, x, y);
         }
     }
 }
@@ -1034,7 +1082,7 @@ function VideoChip(Zeal, PIO, scale) {
             palette.mem_write(address - 0xe00, value);
         else if (address >= 0x1000 && address < 0x1c80)
             tilemap.layer1.mem_write(address - 0x1000, value);
-        else if (address >= 0x2800 && address < 0x2a00)
+        else if (address >= 0x2800 && address < 0x2c00)
             sprites.mem_write(address - 0x2800, value);
         else if (address >= 0x3000 && address < 0x3000 + 3072)
             // TODO: Update all the tiles since the pixels may have changed
