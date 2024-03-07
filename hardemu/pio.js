@@ -1,13 +1,13 @@
 /**
- * SPDX-FileCopyrightText: 2022 Zeal 8-bit Computer <contact@zeal8bit.com>
- * 
+ * SPDX-FileCopyrightText: 2022-2024 Zeal 8-bit Computer <contact@zeal8bit.com>
+ *
  * SPDX-License-Identifier: Apache-2.0
  */
 const MODE_OUTPUT  = 0;
 const MODE_INPUT   = 1;
 const MODE_BIDIR   = 2;
 const MODE_BITCTRL = 3;
- 
+
 const DIR_INPUT  = 1;
 const DIR_OUTPUT = 0;
 
@@ -43,7 +43,7 @@ function PIO(Zeal) {
          * So we have a most 8 listeners */
         listeners: []
     };
-    
+
     const IO_PIO_DATA_A = 0xd0;
     const IO_PIO_DATA_B = 0xd1;
     const IO_PIO_CTRL_A = 0xd2;
@@ -59,7 +59,7 @@ function PIO(Zeal) {
      */
     function pio_check_bitctrl_interrupt(port, pin, value) {
         const activemask = port.active_high ? 0xff : 0;
-    
+
         /* Check that BITCTRL mode is ON */
         return port.mode == MODE_BITCTRL &&
             /* Check if the pin is monitored */
@@ -72,45 +72,22 @@ function PIO(Zeal) {
             (!port.and_op || (port.state == activemask));
     }
 
-    /* Public functions */
-    function is_valid_address(read, address) {
-        return false;
-    }
-
-    function is_valid_port(read, port) {
-        port &= 0xff;
-        return (port >= IO_PIO_DATA_A && port <= IO_PIO_CTRL_B);
-    }
-
-    function mem_read(address) {
-        return false;
-    }
-
-    function mem_write(address, value) {
-        return false;
-    }
-
     function io_read(port) {
-        port &= 0xff;
-        
+        /* Even ports represent A, else B */
+        const hw_port = (port & 1) == 0 ? port_a : port_b;
         /* Control or data port? (0 and 1 = data, 2 and 3 = ctrl) */
         const ctrl = (port & 2) != 0;
         const data = !ctrl;
-        
+
         if (ctrl) {
             /* TODO: Check on real hardware */
             return 0x43;
-        } else if (port == IO_PIO_DATA_B) {
-            return port_b.state;
         } else {
-            return port_a.state;
+            return hw_port.state;
         }
     }
 
     function io_write(port, value) {
-        port &= 0xff;
-        /* Select the hardware port according to the address */
-        console.assert(port >= IO_PIO_DATA_A && port <= IO_PIO_CTRL_B);
         /* Even ports represent A, else B */
         const hw_port = (port & 1) == 0 ? port_a : port_b;
         /* Control or data port? (0 and 1 = data, 2 and 3 = ctrl) */
@@ -133,7 +110,7 @@ function PIO(Zeal) {
         } else if (ctrl && (value & 0xf) == 7) {
             /* Interrupt Control Word */
             hw_port.mask_follows = BIT(value, 4) == 1;
-            hw_port.active_high  = BIT(value, 5) == 1; 
+            hw_port.active_high  = BIT(value, 5) == 1;
             hw_port.and_op       = BIT(value, 6) == 1;
             hw_port.int_enable   = BIT(value, 7) == 1;
             /* As stated in the PIO User manual, if mask follows is set, the interrupt requests are
@@ -149,7 +126,7 @@ function PIO(Zeal) {
             hw_port.int_vector = value & 0xff;
         } else if (data && hw_port.mode != MODE_INPUT) {
             /* Backup the state to check for transitions on pins */
-            const former_state = hw_port.state; 
+            const former_state = hw_port.state;
             if (hw_port.mode == MODE_BIDIR || hw_port.mode == MODE_OUTPUT) {
                 hw_port.state = value & 0xff;
             } else {
@@ -159,7 +136,7 @@ function PIO(Zeal) {
                 /* Clear the output pins value from the state and OR it with the new value */
                 hw_port.state = (hw_port.state & hw_port.dir) | new_out_val;
             }
-            
+
             for (var pin = 0; pin < 8; pin++) {
                 const listener = hw_port.listeners[pin];
                 if (BIT(hw_port.dir, pin) == DIR_OUTPUT && listener) {
@@ -210,12 +187,13 @@ function PIO(Zeal) {
         port.listeners[pin] = callback;
     }
 
-    this.is_valid_address = is_valid_address;
-    this.is_valid_port = is_valid_port;
-    this.mem_read = mem_read;
-    this.mem_write = mem_write;
-    this.io_read = io_read;
-    this.io_write = io_write;
+    this.io_region = {
+        write: io_write,
+        read: io_read,
+        size: 0x10
+    };
+
+
     this.pio_set_a_pin = (pin, value) => pio_set_pin(port_a, pin, value);
     this.pio_set_b_pin = (pin, value) => pio_set_pin(port_b, pin, value);
     this.pio_get_a_pin = (pin) => pio_get_pin(port_a, pin);
