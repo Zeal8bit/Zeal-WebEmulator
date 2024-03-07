@@ -7,8 +7,6 @@
  function ROM(Zeal) {
     const zeal = Zeal;
     const size = 256*KB;
-    const from = 0x00_0000;
-    const to = 0x08_0000;
 
     /* If we are emulating the SST39 NOR flash, write/erase is supported */
     const emulate_sst39 = true;
@@ -25,16 +23,6 @@
         data[i] = 0xFF;
     }
 
-    function _base64ToArrayBuffer(base64) {
-        const binary_string = atob(base64);
-        const len = binary_string.length;
-        const bytes = new Uint8Array(len);
-        for (var i = 0; i < len; i++) {
-            bytes[i] = binary_string.charCodeAt(i);
-        }
-        return bytes;
-    }
-
     /**
      * Accept both a string or an array as "binary" data
      */
@@ -48,20 +36,12 @@
         }
     }
 
-    function is_valid_address(read, address) {
-        /* Only accept writes if we are emulating the SST39 Flash */
-        return (read || emulate_sst39) && address >= from && address < to;
-    }
-
-    function is_valid_port(read, port) {
-        return false;
-    }
-
+    /**
+     * @brief Function called when the CPU performs a write on an address where the ROM is mapped
+     *
+     * @param address Address to read, relative to the memory space (between 0 and size-1)
+     */
     function mem_read(address) {
-        console.assert (address >= from && address < to, "Wrong read address for ROM");
-        /* On real hardware, the upper addresses (bigger than ROM) are a mirror of the
-         * lower part, reproduce the same scheme here too. */
-        address &= (size - 1);
         if (erasing) {
             /* TODO: Check read-during-erase on real hardware */
             return 0xFF;
@@ -85,10 +65,7 @@
     }
 
     function mem_write(address, value) {
-        console.assert (address >= from && address < to, "Wrong write address for ROM");
         console.assert(emulate_sst39, "Write is only supported with SST39 emulation");
-        /* Same reasons as explained in the read function */
-        address &= (size - 1);
         /* Make sure we aren't already erasing or writing a byte */
         if (writing || erasing) {
             /* Nothing */
@@ -127,7 +104,6 @@
              * Get the corresponding 4KB-sector to erase out of the 22-bit address */
             const sector = address & 0x3ff000;
             erasing = true;
-            console.log("Erasing FLASH");
             /* Erasing a sector takes 25ms on real hardware, register a callback to actually reflect this */
             zeal.registerTstateCallback(() => {
                 for (var i = 0 ; i< 4096; i++)
@@ -162,7 +138,6 @@
             /* The byte being written must have bit 7 flipped, DQ6 must be toggled at each read */
             writing_byte = value ^ 0x80;
             writing = true;
-            console.log("Writing byte to FLASH");
             /* Writing a byte takes 20us on real hardware, register a callback to actually reflect this */
             zeal.registerTstateCallback(() => {
                 data[address] = value;
@@ -204,15 +179,6 @@
                transaction1.value == transaction2.value;
     }
 
-    function io_read(port) {
-        console.assert(false, "IO read on ROM impossible");
-        return 0;
-    }
-
-    function io_write(port, value) {
-        console.assert(false, "IO write on ROM impossible");
-    }
-
     function dumpToFile() {
         const array = new Uint8Array(data);
         const blob = new Blob([array], { type: "octet/stream" });
@@ -224,12 +190,14 @@
 
     $("#dump-button").click(dumpToFile);
 
-    this.is_valid_address = is_valid_address;
-    this.is_valid_port = is_valid_port;
-    this.mem_read = mem_read;
-    this.mem_write = mem_write;
-    this.io_read = io_read;
-    this.io_write = io_write;
+    /* Memory region requird by the machine */
+    this.mem_region = {
+        /* Only accept writes if we are emulating the SST39 Flash */
+        write: emulate_sst39 ? mem_write : null,
+        read: mem_read,
+        size: size
+    };
+
     this.loadFile = loadFile;
     this.dumpToFile = dumpToFile;
 }

@@ -1,5 +1,5 @@
 /**
- * SPDX-FileCopyrightText: 2022 Zeal 8-bit Computer <contact@zeal8bit.com>
+ * SPDX-FileCopyrightText: 2022-2024 Zeal 8-bit Computer <contact@zeal8bit.com>
  *
  * SPDX-License-Identifier: Apache-2.0
  */
@@ -217,7 +217,6 @@ function Keyboard(Zeal, PIO) {
     }
 
     /* Attributes related to PIO */
-    const KB_IO_ADDRESS = 0xe8;
     const pio = PIO;
     const zeal = Zeal;
     const IO_KEYBOARD_PIN = 7;
@@ -358,19 +357,13 @@ function Keyboard(Zeal, PIO) {
     this.key_pressed = key_pressed;
     this.key_released = key_released;
 
-    this.is_valid_port = function(read, port) {
-        /* Can only read from the keyboard */
-        return read && (port & 0xff) == KB_IO_ADDRESS;
-    }
-
-    this.io_read = function(port) {
+    function io_read() {
         return shift_register;
     }
 
-    this.io_write = () => { console.assert(false); };
-
-    this.is_valid_address = () => false;
-    this.mem_read = () => { console.assert(false); return 0; };
-    this.mem_write = () => { console.assert(false); };
-
+    this.io_region = {
+        write: null,
+        read: io_read,
+        size: 0x10
+    };
 }

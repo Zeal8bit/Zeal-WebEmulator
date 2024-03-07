@@ -1047,32 +1047,7 @@ function VideoChip(Zeal, PIO, scale) {
         io_bank : 0,
     };
 
-    /**
-     * @brief Called when the CPU is trying to access a memory address
-     */
-    function is_valid_address(read, address) {
-        return address >= mapping.mem_start &&
-               address <  mapping.mem_start + mapping.mem_size;
-    }
-
-    function is_valid_port(read, port) {
-        /* We only care about the lowest byte here */
-        port = port & 0xff;
-
-        return port >= mapping.io_start &&
-               port <  mapping.io_start + mapping.io_size;
-    }
-
-    function mem_read(address) {
-        /* TODO: Support read on the subcomponents that support it */
-        return 0;   // data lines pulled low
-    }
-
-    function mem_write(phys_address, value) {
-        /* Determine the address relative to the FPGA memory space */
-        const address = phys_address - mapping.mem_start;
-        value = value & 0xff;
-
+    function mem_write(address, value) {
         // TODO: Fix hardcoded values
         // TODO: Support memory write to I/O devices
         if (address < 0xc80)
@@ -1092,38 +1067,42 @@ function VideoChip(Zeal, PIO, scale) {
     }
 
     function io_write(port, value) {
-        port  &= 0xff;
-        value &= 0xff;
-
-        if (port >= 0x80 && port <= 0x8f) {
-            vConfigWrite(port - 0x80, value);
-        }
-        else if (port >= 0x90 && port <= 0x9f) {
+        if (port >= 0x0 && port <= 0xf) {
+            vConfigWrite(port, value);
+        } else if (port >= 0x10 && port <= 0x1f) {
             // TODO: Scrolling values and enable screen
-            if ((port - 0x90) == 0xc) updateModeData(canvas, canvas_layer1, value);
-        }
-        else if (port >= 0xa0 && port <= 0xaf && mapping.io_bank == IO_MAPPING_TEXT) {
-            textConfigWrite(port - 0xa0, value);
+            if ((port - 0x10) == 0xc) updateModeData(canvas, canvas_layer1, value);
+        } else if (port >= 0x20 && port <= 0x2f && mapping.io_bank == IO_MAPPING_TEXT) {
+            textConfigWrite(port - 0x20, value);
         }
     }
 
     function io_read(port) {
-        port  &= 0xff;
-
-        if (port >= 0x80 && port < 0x90) {
-            return vConfigRead(port - 0x80);
-        }
-        else if (port >= 0x90 && port < 0xa0) {
+        if (port >= 0x0 && port < 0x10) {
+            return vConfigRead(port);
+        } else if (port >= 0x10 && port < 0x20) {
             // TODO: Scrolling values and video mode
-            if (port - 0x90 == 0xd) {
+            if (port - 0x10 == 0xd) {
                 return video_cfg.vblank << 1;
             }
-        }
-        else if (port >= 0xa0 && port < 0xb0 && mapping.io_bank == IO_MAPPING_TEXT) {
-            return textConfigRead(port - 0xa0);
+        } else if (port >= 0x20 && port < 0x30 && mapping.io_bank == IO_MAPPING_TEXT) {
+            return textConfigRead(port - 0x20);
         }
         return 0;
     }
+
+
+    this.mem_region = {
+        write: mem_write,
+        read: null,
+        size: mapping.mem_size
+    };
+    this.io_region = {
+        write: io_write,
+        read: io_read,
+        size: mapping.io_size
+    };
+
 
     function renderScreen() {
         const visible_ctx = canvas.getContext("2d", {
@@ -1209,12 +1188,6 @@ function VideoChip(Zeal, PIO, scale) {
     }, VBLANK_TSTATES_PERIOD, VBLANK_TSTATES_PERIOD_END);
 
 
-    this.is_valid_address = is_valid_address;
-    this.is_valid_port = is_valid_port;
-    this.mem_read = mem_read;
-    this.mem_write = mem_write;
-    this.io_read = io_read;
-    this.io_write = io_write;
     this.clear = initialize;
     this.renderScreen = renderScreen;
 }
