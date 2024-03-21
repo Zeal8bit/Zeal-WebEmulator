@@ -554,7 +554,10 @@ function VideoChip(Zeal, PIO, scale) {
         obj_total: 0,
         obj_width: 0,
         obj_height: 0,
-        vblank: 0
+        vblank: 0,
+        /* Enable after each emulated v-blank, marks whether we need to redraw the screen
+         * the screen or not. This will prevent redraw if the emulation is paused/stopped */
+        update_screen: false
     };
 
     /* Text mode configuration */
@@ -1105,6 +1108,12 @@ function VideoChip(Zeal, PIO, scale) {
 
 
     function renderScreen() {
+        if (!video_cfg.update_screen) {
+            return;
+        }
+
+        video_cfg.update_screen = false;
+
         const visible_ctx = canvas.getContext("2d", {
             alpha: false,
             desynchronized: false,
@@ -1185,6 +1194,7 @@ function VideoChip(Zeal, PIO, scale) {
     const vblank_interval_end = zeal.registerTstateInterval(() => {
         pio.pio_set_b_pin(IO_VBLANK_PIN, 1);
         video_cfg.vblank = 1;
+        video_cfg.update_screen = true;
     }, VBLANK_TSTATES_PERIOD, VBLANK_TSTATES_PERIOD_END);
 
 
