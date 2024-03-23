@@ -31,9 +31,9 @@ The emulator has been tested on Opera, Google Chrome and Microsoft Edge.
 
 ## What about performance then?
 
-The emulator is slower than the real hardware, even though the real hardware is using a Z80 running at 10MHz. This is due to the overhead of Javascript itself and the web browser itself. But as I said above, the main feature this was made for is **debugging** programs and for this, there is no doubt it is efficient.
+The emulator implementation should now reach the native Zeal 8-bit Computer speed: 10MHz CPU and 60FPS. However, performance also depend on your computer and browser performances, as well as the emulated program. For example, a program that makes extensive use of the all the available sprites at each frame may result in slower execution. This is due to the overhead of Javascript itself and the way HTML canvas are implemented. Keep in mind the main purpose of this emulator is **debugging** programs and for this, there is no doubt it is efficient.
 
-Writing a native emulator in **C** (w/ SDL) would cover the requirement of a full-speed emulator. However, this needs some time investment. Feel free to contact me or contribute if such a project interest you.
+Writing a native emulator in **C** (w/ SDL) would cover the requirement of a full-speed emulator even on lower-spec computers. However, this needs some time investment. Feel free to contact me (or contribute directly) if such a project interest you.
 
 ## How to start using the emulator?
 
@@ -65,39 +65,16 @@ If you encounter any issues, you can find more information on [the official elec
 
 #### Running
 
-Once the dependencies are ready, it can be executed thanks to
-
-```bash
-yarn start
-```
-
-or
-
-```bash
-npm start
-```
-
-commands.
+Once the dependencies are ready, it can be executed thanks to `yarn start` or `npm start` commands.
 
 #### Compiling
 
-Supported arch:
+Supported architectures are the following: `win`, `win64`, and `linux`.
 
-`win` `win64` `linux`
+Choose your architecture and replace it in either `npm run dist-<arch>` or `yarn dist-<arch>` commands to compile the project.
 
-npm:
 
-```bash
-npm run dist-<arch>
-```
-
-yarn:
-
-```bash
-yarn dist-<arch>
-```
-
-for example, if you want to build for windows-x64, run following commands:
+For example, if you want to build for Windows x64, run the following command:
 
 ```bash
 npm run dist-win64
@@ -118,7 +95,7 @@ Currently, the following features from Zeal 8-bit Computer are emulated:
 * 22-bit MMU
 * 256KB ROM
 * 512KB RAM
-* Video chip: 640x480 text mode w/ colors, 640x480 graphic mode w/ colors
+* Zeal 8-bit **Video Card**: 640x480 and 320x240px modes, text mode, including cursor and scrolling, graphic modes, including sprites, X/Y flipping, palettes, 4-bit and 8-bit color modes
 * PS/2 Keyboard, with interrupts
 * UART: it is possible to send and receive bytes. It is also possible to send files. The baudrate can be changed from the GUI
 * I2C: bus emulated, supporting write/read/write-read operations
@@ -128,23 +105,22 @@ Currently, the following features from Zeal 8-bit Computer are emulated:
 Features of the emulator itself implemented:
 
 * Debugger: breakpoints, step, step over instruction, continue until next breakpoint
-* Assembler: when the emulator reaches a breakpoint, the code at *Program Counter* is disassembled. Clicking on one of the instructions will toggle a breakpoint. A map file can be provided to specify symbols.
+* Disassembler: when the emulator reaches a breakpoint, the code at *Program Counter* is disassembled. Clicking on one of the instructions will toggle a breakpoint.
 * Load a binary file, loaded into ROM directly
-* Load a dump file generated from `z88dk-dis` to view assembly code while doing step-by-step debugging
-* Set breakpoints with either a **hexadecimal** PC address or a symbol (from the dump file)
+* Load a map file generated from `z88dk-z88dk` to view symbols in the assembly view when doing step-by-step debugging
+* Set breakpoints with either a **hexadecimal** PC address or a symbol (from the map file)
 * View memory content when doing step-by-step debugging
-* Dedicated tab for the UART view
+* Dedicated tab for the UART view: can send files to the emulated target
 
 ## TODO
 
 On the emulation side, the remaining tasks to do are:
 
 * I2C RTC set date. Currently, it always returns the current browser date, so writing to it will have no effect.
-* Sound support¹
-* SD Card emulation¹
-* Video chip: 320x240 text mode, 320x240 graphic mode¹, sprites¹, 4-bit palettes¹, etc...
+* Sound support (part of Zeal 8-bit Video Card)
+* SD Card emulation (part of Zeal 8-bit Video Card)
+* <s>Video chip: 320x240 text mode, 320x240 graphic mode¹, sprites¹, 4-bit palettes¹, etc...</s> **IMPLEMENTED!**
 
-¹: features **not** in high priority as they have not been implemented on real hardware yet.
 
 On the project/debugger side itself:
 
