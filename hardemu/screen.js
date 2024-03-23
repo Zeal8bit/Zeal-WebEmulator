@@ -1008,6 +1008,18 @@ function VideoChip(Zeal, PIO, scale) {
      */
     function vConfigWrite(address, value) {
         switch (address) {
+            case 0x0:
+            case 0x2:
+            case 0x3:
+            case 0x4:
+            case 0x5:
+                /* Try to detect a former driver that needs to be updated */
+                if (!vConfigWrite.alerted) {
+                    alert("This ROM image seems to be using an old implementation of video card.\n"
+                        + "Please update it to match the newest implementation");
+                    vConfigWrite.alerted = true;
+                }
+            break;
             case 0xe: mapping.io_bank = value & 0x3f;
                 break;
             case 0xf: mapping.mem_start = (value & 0x1f) >> (22 - 5);
