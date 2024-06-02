@@ -327,7 +327,14 @@ function FontTable() {
      * @param data    Byte to write at the given offset.
      */
     this.mem_write = function(address, data) {
-        console.assert(address < fontTable.length);
-        fontTable[address / CHARACTER_SIZE][address % CHARACTER_SIZE] = data;
+        console.assert(address < fontTable.length * CHARACTER_SIZE);
+        const index = Math.floor(address / CHARACTER_SIZE);
+        fontTable[index][address % CHARACTER_SIZE] = data;
+    };
+
+    this.mem_read = function(address) {
+        console.assert(address < fontTable.length * CHARACTER_SIZE);
+        const index = Math.floor(address / CHARACTER_SIZE);
+        return fontTable[index][address % CHARACTER_SIZE];
     };
 }

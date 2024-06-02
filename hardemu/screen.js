@@ -111,8 +111,14 @@ function Tileset(Palette, Tilemap) {
     const tilemap = Tilemap;
     const palette = Palette;
     var   mode8bit = true;
-    /* List the tile that got updated, either because of a pixel change or because a color changed */
+    /* List the tile that got updated, either because of a pixel change or because a color changed.
+     * These updates should be flushed after rendering the whole screen, and not only right after recalculating
+     * the corresponding tile, else duplicated tiles would only see their first occurence updated.
+     */
     var tiles_updates = {};
+    /* These updates are internal, markign whether a tile has seen its data updated. This is useful to
+     * only update the image data once, even the tiles are duplicated in the tilemap */
+    var tiles_img_updates = {};
 
     /* Optimize the tileset by representing it as an array of 256 images */
     const TILE_HEIGHT = 16;
@@ -120,10 +126,10 @@ function Tileset(Palette, Tilemap) {
     const TILE_SIZE   = TILE_HEIGHT * TILE_WIDTH;
 
     /* Raw content of the tileset */
-    const tiles_raw = new Array(256 * TILE_SIZE);
+    const tiles_raw = new Array(256 * TILE_SIZE).fill(0);
 
     /* ImageData table for each tile */
-    const tiles = new Array(512);
+    const tiles = new Array(512).fill(0);
     for (var i = 0; i < tiles.length; i++) {
         tiles[i] = new ImageData(TILE_WIDTH, TILE_HEIGHT);
     }
@@ -136,8 +142,9 @@ function Tileset(Palette, Tilemap) {
      */
     function tileWritten(address, data) {
         tiles_raw[address] = data;
-        const tileidx = Math.floor(address / TILE_SIZE);
         if (mode8bit) {
+            /* Each tile takes 256 bytes in this mode */
+            const tileidx = Math.floor(address / 256);
             const img = tiles[tileidx];
             /* Each pixel takes 4 bytes in RGB888 */
             const pixel = (address % TILE_SIZE) * 4;
@@ -148,11 +155,14 @@ function Tileset(Palette, Tilemap) {
             img.data[pixel + 3] = 255;
             /* Mark the tile as updated */
             tiles_updates[tileidx] = true;
+            tiles_img_updates[tileidx] = true;
         } else {
+            /* Each tile takes 128 bytes in this mode */
+            const tileidx = Math.floor(address / 128);
             /* In 4-bit mode, modifying one byte will modify two pixels  */
             /* Tiles are twice smaller in 4-bit mode */
-            const img = tiles[2 * tileidx];
-            const pixel = (address % Math.floor(TILE_SIZE / 2)) * 8;
+            const img = tiles[tileidx];
+            const pixel = (address % 128) * 8;
             /* Hight nibble is the first pixel */
             const palidx = (tilemap.getPaletteNumber(tileidx) << 4);
             var rgb = palette.getColorRGB888(palidx | (data >> 4));
@@ -167,7 +177,8 @@ function Tileset(Palette, Tilemap) {
             img.data[pixel + 6] = rgb[2];
             img.data[pixel + 7] = 255;
             /* Mark the tile as updated */
-            tiles_updates[2 * tileidx] = true;
+            tiles_updates[tileidx] = true;
+            tiles_img_updates[tileidx] = true;
         }
     }
     this.mem_write = tileWritten;
@@ -190,11 +201,20 @@ function Tileset(Palette, Tilemap) {
      * @param transparency Boolean set to true if transparency is needed
      */
     this.getTileRGB888 = function(index, transparency, palette_4bit) {
-        tiles_updates[index] = false;
         var img = tiles[index];
 
         const data = img.data;
         const opacity = transparency ? 0 : 255;
+
+        /* Get the former transparency */
+        const former_transparency = data[3];
+
+        /* If the image data is already updated, return the image directly */
+        if (!tiles_img_updates[index] && former_transparency == opacity) {
+            return img;
+        }
+
+        tiles_img_updates[index] = false;
 
         if (mode8bit) {
             for (var i = 0; i < TILE_SIZE; i++) {
@@ -257,10 +277,14 @@ function Tileset(Palette, Tilemap) {
         const length = tiles_raw.length;
         const hasChanged = palette.colorUpdated;
         for (var i = 0; i < length; i++) {
-            const color = tiles_raw[i];
-            if (hasChanged(color)) {
+            const colors = tiles_raw[i];
+            if (
+                (mode8bit && hasChanged(colors)) ||
+                (!mode8bit && hasChanged(colors & 0xf) || hasChanged((colors >> 4) & 0xf))
+               )
+            {
                 /* Simulate a write from the Z80 */
-                tileWritten(i, color);
+                tileWritten(i, colors);
             }
         }
 
@@ -303,8 +327,8 @@ function Sprites(Tileset)
     const ATTR_Y_REG = 0;
     const ATTR_X_REG = 1;
     const ATTR_FLAG_REG = 2;
-    const attributes = new Array(ATTR_COUNT);
-    const attributes_raw = new Array(ATTR_COUNT * ATTR_SIZE);
+    const attributes = new Array(ATTR_COUNT).fill(0);
+    const attributes_raw = new Array(ATTR_COUNT * ATTR_SIZE).fill(0);
     for (var i = 0; i < attributes.length; i++) {
         attributes[i] = {
             x: 0,
@@ -517,11 +541,11 @@ function VideoChip(Zeal, PIO, scale) {
     const tilemap = {
         layer0 : {
             mem_write : (addr, data) => layerWritten(0, addr, data),
-            data: new Array(TILE_MAX_COUNT)
+            data: Array(TILE_MAX_COUNT).fill(0),
         },
         layer1 : {
             mem_write : (addr, data) => layerWritten(1, addr, data),
-            data : new Array(TILE_MAX_COUNT),
+            data : Array(TILE_MAX_COUNT).fill(0),
         }
     };
 
@@ -825,6 +849,7 @@ function VideoChip(Zeal, PIO, scale) {
             /* not be visible until the tilemap is updated again... */
             var transparency = false;
             var context = ctx;
+            var palette = 0;
             if (video_cfg.is_8bit) {
                 if (layer_num == 1) {
                     transparency = true;
@@ -835,8 +860,10 @@ function VideoChip(Zeal, PIO, scale) {
             } else {
                 /* 4-bit mode, update the tile */
                 var tileidx = ((tilemap.layer1.data[address] & 1) << 8) | (tilemap.layer0.data[address]);
+                palette = (tilemap.layer1.data[address] >> 4) & 0xf;
             }
-            const img = tileset.getTileRGB888(tileidx, transparency);
+
+            const img = tileset.getTileRGB888(tileidx, transparency, palette);
             context.putImageData(img, x * TILE_WIDTH, y * TILE_HEIGHT);
         }
     }
@@ -1064,7 +1091,6 @@ function VideoChip(Zeal, PIO, scale) {
 
     function mem_write(address, value) {
         // TODO: Fix hardcoded values
-        // TODO: Support memory write to I/O devices
         if (address < 0xc80)
             tilemap.layer0.mem_write(address, value);
         else if (address >= 0xe00 && address < 0x1000)
@@ -1079,6 +1105,12 @@ function VideoChip(Zeal, PIO, scale) {
             font.mem_write(address - 0x3000, value);
         else if (address >= 0x10000 && address < 0x20000)
             tileset.mem_write(address - 0x10000, value);
+    }
+
+    function mem_read(address) {
+        // TODO: Fix hardcoded values
+        if (address >= 0x3000 && address < 0x3000 + 3072)
+            return font.mem_read(address - 0x3000);
     }
 
     function io_write(port, value) {
@@ -1109,7 +1141,7 @@ function VideoChip(Zeal, PIO, scale) {
 
     this.mem_region = {
         write: mem_write,
-        read: null,
+        read: mem_read,
         size: mapping.mem_size
     };
     this.io_region = {
@@ -1150,7 +1182,7 @@ function VideoChip(Zeal, PIO, scale) {
                               visible_width, visible_height,
                               0, 0,
                               visible_width, visible_height);
-        if (!video_cfg.is_text) {
+        if (!video_cfg.is_text && video_cfg.is_8bit) {
             visible_ctx.drawImage(canvas_layer1,
                                   visible_x, visible_y,
                                   visible_width, visible_height,
