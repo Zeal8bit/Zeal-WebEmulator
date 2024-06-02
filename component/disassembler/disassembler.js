@@ -65,7 +65,7 @@ function Disassembler() {
         0x36: (snd)      => ({ text: `LD     (HL), ${hex8(snd)}`, size: 2 }),
         0x37: ()         => ({ text: `SCF`, size: 1 }),
         0x38: (snd)      => ({ text: `JR     C, 0x${snd}`, size: 2, label: true, offset: snd }),
-        0x39: ()         => ({ text: `ADD    SL, SP`, size: 1 }),
+        0x39: ()         => ({ text: `ADD    HL, SP`, size: 1 }),
         0x3a: (snd, trd) => ({ text: `LD     A, (${hex16(trd, snd)})`, size: 3, label: true, address: ((trd << 8) | snd) }),
         0x3b: ()         => ({ text: `DEC    SP`, size: 1 }),
         0x3c: ()         => ({ text: `INC    A`, size: 1 }),
