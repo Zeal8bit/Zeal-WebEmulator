@@ -35,7 +35,7 @@ function opcode_ED_x(snd, third, fourth) {
         0x5E: 'IM 2',
         0xA0: 'LDI',
         0xB0: 'LDIR',
-        0xA8: 'LDIR',
+        0xA8: 'LDD',
         0xB8: 'LDDR',
         0xA1: 'CPI',
         0xB1: 'CPIR',

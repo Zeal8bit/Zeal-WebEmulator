@@ -153,9 +153,11 @@ function opcode_DD_FD_CB_x(third, fourth)
         case 0x3e: return `SRL (r+\$${hex8(third)})`;
         default:
             if ((fourth & 0xc7) == 0x46) {
-                const bit = (fourth >> 8) & 0x7;
+                const bit = (fourth >> 3) & 0x7;
                 return `BIT ${bit},(r+\$${hex8(third)})`;
-            } else if ((fourth & 0xc7) == 0xc) {
+            } else if ((fourth & 0xc7) == 0x86) {
+                return `RES ${(fourth >> 3) & 0x7},(r+\$${hex8(third)})`;
+            } else if ((fourth & 0xc7) == 0xc6) {
                 return `SET ${(fourth >> 3) & 0x7},(r+\$${hex8(third)})`;
             }
             return 'ILL';
