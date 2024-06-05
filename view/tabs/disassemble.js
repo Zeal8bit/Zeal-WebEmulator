@@ -1,10 +1,10 @@
 /**
- * SPDX-FileCopyrightText: 2022-2023 Zeal 8-bit Computer <contact@zeal8bit.com>
+ * SPDX-FileCopyrightText: 2022-2024 Zeal 8-bit Computer <contact@zeal8bit.com>
  *
  * SPDX-License-Identifier: Apache-2.0
  */
 
-function setASMView() {
+function disassembleAndShow() {
     let regs = zealcom.getCPUState();
     /* Get the PC, which is a virtual address */
     const pc = regs != null ? (regs.pc) : 0;
@@ -44,4 +44,13 @@ function setASMView() {
     });
 
     $("#memdump").html(dumptxt);
+}
+
+function clearDisassemblerView()
+{
+    $("#memdump").html("");
+}
+
+function disassembleHideActive() {
+    $("#memdump .activeline").removeClass("activeline");
 }

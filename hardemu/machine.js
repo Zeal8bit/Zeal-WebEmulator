@@ -354,9 +354,7 @@ class Z80Machine {
                     if (bk.enabled && bk.address == pc) {
                         running = false;
                         setRegView();
-                        if (bk.callback) {
-                            bk.callback(bk);
-                        }
+                        triggeredBreakpoint(bk);
                     }
                 }
 
@@ -398,31 +396,36 @@ class Z80Machine {
                 return;
             }
 
-            /* Ideally, we would need the size of the instruction, to know where to put the breakpoint
-            * but as we don't have such thing yet, we can put 4 breakpoints, one after each byte.
-            * TODO: refactor once we have a working disassembler. */
             var pc = zpu.getPC();
-            var former_breakpoints = [...breakpoints];
-            /* Define the callback that will be called when reaching one of the breakpoints */
-            const callback = (obj) => {
-                /* Restore the breakpoints list */
-                breakpoints = former_breakpoints;
-            };
+            /* Read 4 bytes from the Z80 virtual memory, as required by `getInstructionSize` */
+            var memory = [];
+            for (var i = 0; i < 4; i++) {
+                memory.push(zealcom.mem_read(pc + i));
+            }
+            const size = disassembler.getInstructionSize(memory);
+            /* Add a breakpoint at the next instruction */
+            const next_pc = pc + size;
 
-            for (var i = 1; i <= 4; i++) {
-                var brk = getBreakpoint(pc + i);
-                if (brk == null) {
-                    breakpoints.push({ address: pc + i, enabled: true, callback });
-                } else {
-                    /* Enable it */
-                    brk.enabled = true;
-                }
+            var brk = getBreakpoint(next_pc);
+            if (brk == null) {
+                addBreakpoint(next_pc, true);
+            } else {
+                enableBreakpoint(brk);
             }
 
+            clearRegView();
+            clearDisassemblerView();
             step_cpu();
         }
 
+        /**
+         * @brief Continue the CPU execution. Called when the "Play/Resume" button is clicked or when a ROM iamge is loaded.
+         */
         function cont() {
+            /* Clear the register view */
+            clearRegView();
+            /* Clear the whole disassembler view */
+            clearDisassemblerView();
             step_cpu();
         }
 
@@ -475,6 +478,8 @@ class Z80Machine {
     reset() {
         this.zpu.reset();
         terminal.clear();
+        clearRegView();
+        clearDisassemblerView();
         this.step_cpu();
     }
 

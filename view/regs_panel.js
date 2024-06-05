@@ -34,9 +34,22 @@ function setRegView() {
 
     $("#flags").text(flags);
 
-    /* Toggle RAM */
-    setASMView();
+    /* Disassemble the current code and show the instructions */
+    disassembleAndShow();
 }
+
+
+function clearRegView() {
+    const views = ["#rega", "#regb", "#regc", "#regd", "#rege",
+                   "#regh", "#regl", "#regix", "#regiy", "#regbc",
+                   "#regde", "#reghl", "#regpc", "#regsp", "#tstates", "#flags"];
+    const length = views.length;
+    for (var i = 0; i < length; i++) {
+        const reg = views[i];
+        $(reg).text("");
+    }
+}
+
 
 $(".regaddr").click(function() {
     const virtaddr = parseInt($(this).text(), 16);

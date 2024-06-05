@@ -1,5 +1,5 @@
 /**
- * SPDX-FileCopyrightText: 2022 Zeal 8-bit Computer <contact@zeal8bit.com>
+ * SPDX-FileCopyrightText: 2022-2024 Zeal 8-bit Computer <contact@zeal8bit.com>
  *
  * SPDX-License-Identifier: Apache-2.0
  */
@@ -12,13 +12,21 @@ $("#bps").on("click", "li", function() {
     toggleBreakpoint(bkpaddr);
 });
 
+function isValidHexadecimal(str) {
+    const regexp = /^[0-9A-Fa-f]+$/;
+    return regexp.test(str);
+}
+
 $("#addbp").on("click", function (){
     const written = $("#bpaddr").val();
     /* Empty the text field */
     $("#bpaddr").val("");
     if (written.length < 1) return;
-    var result = parseInt(written, 16);
-    if (isNaN(result)) {
+    /* Check if the string only contains valid hex digits */
+    var result = 0;
+    if (isValidHexadecimal(written)) {
+        result = parseInt(written, 16);
+    } else {
         /* Could be a label, let's check this */
         const addr = disassembler.labelAddress(written);
         if (addr === null) {
@@ -36,9 +44,16 @@ $("#bpaddr").on('keydown', function(event) {
     }
 });
 
-function addBreakpoint(addr) {
+
+/**
+ * @brief Add a breakpoint to the global breakpoint list
+ *
+ * @param addr Virtual address to break on
+ * @param autodelete Flag to mark whether the breakpoint should be auto deleted once triggered (false by default)
+ */
+function addBreakpoint(addr, autodelete = false) {
     if (!breakpoints.includes(addr) && addr <= 0xFFFF) {
-        breakpoints.push({ address: addr, enabled: true });
+        breakpoints.push({ address: addr, enabled: true, autodelete });
         $("#bps").append(`<li data-addr="${addr}">${hex(addr)}</li>`);
         /* If the line is currently being disassembled, mark it as a breakpoint */
         $(`.dumpline[data-addr='${addr}']`).addClass("brk");
@@ -52,12 +67,35 @@ function toggleBreakpoint(brkaddr) {
     /* Find the breakpoint object in the breakpoint list */
     const bkrobj = breakpoints.find(element => element.address == brkaddr);
     /* Toggle enabled field in the breakpoint */
-    if (bkrobj != undefined)
+    if (bkrobj != undefined) {
         bkrobj.enabled ^= true;
+    }
 }
 
 function getBreakpoint(addr) {
     /* Find the breakpoint object in the breakpoint list */
     const bkrobj = breakpoints.find(element => element.address == addr);
     return (bkrobj != undefined) ? bkrobj : null;
+}
+
+
+function arrayRemoveElement(array, index) {
+    if (index > -1 && index < array.length) {
+        array.splice(index, 1);
+    }
+    return array;
+}
+
+
+/**
+ * @brief Function called when a breakpoint is triggered
+ */
+function triggeredBreakpoint(bkrobj) {
+    if (bkrobj?.autodelete) {
+        arrayRemoveElement(breakpoints, bkrobj.address);
+    }
+}
+
+function enableBreakpoint(bkrobj) {
+    bkrobj.enabled = true;
 }
