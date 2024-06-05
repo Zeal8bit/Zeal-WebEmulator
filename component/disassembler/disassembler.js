@@ -23,8 +23,9 @@ function Disassembler() {
         0x0e: (snd)      => ({ text: `LD     C, ${hex8(snd)}`, size: 2 }),
         0x0f: ()         => ({ text: `RRCA`, size: 1 }),
         /* 'label' field tells the disassembler the destination may be an existing label
-         * 'offset' tells it is not a hardcoded address */
-        0x10: (snd)      => ({ text: `DJNZ   0x${snd}`, size: 2, label: true, offset: snd }),
+         * 'offset' tells it is not a hardcoded address
+         * The `0x` in `text` field will be replaced by the caller */
+        0x10: (snd)      => ({ text: `DJNZ   0x`, size: 2, label: true, offset: snd }),
         0x11: (snd, trd) => ({ text: `LD     DE, ${hex16(trd, snd)}`, size: 3 }),
         0x12: ()         => ({ text: `LD     (DE), A`, size: 1 }),
         0x13: ()         => ({ text: `INC    DE`, size: 1 }),
@@ -32,7 +33,7 @@ function Disassembler() {
         0x15: ()         => ({ text: `DEC    D`, size: 1 }),
         0x16: (snd)      => ({ text: `LD     D, ${hex8(snd)}`, size: 2 }),
         0x17: ()         => ({ text: `RLA`, size: 1 }),
-        0x18: (snd)      => ({ text: `JR     0x${snd}`, size: 2, label: true, offset: snd }),
+        0x18: (snd)      => ({ text: `JR     0x`, size: 2, label: true, offset: snd }),
         0x19: ()         => ({ text: `ADD    HL, DE`, size: 1 }),
         0x1a: ()         => ({ text: `LD     A,(DE)`, size: 1 }),
         0x1b: ()         => ({ text: `DEC    DE`, size: 1 }),
@@ -40,7 +41,7 @@ function Disassembler() {
         0x1d: ()         => ({ text: `DEC    E`, size: 1 }),
         0x1e: (snd)      => ({ text: `LD     E, ${hex8(snd)}`, size: 2 }),
         0x1f: ()         => ({ text: `RRA`, size: 1 }),
-        0x20: (snd)      => ({ text: `JR     NZ, 0x${snd}`, size: 2, label: true, offset: snd }),
+        0x20: (snd)      => ({ text: `JR     NZ, 0x`, size: 2, label: true, offset: snd }),
         0x21: (snd, trd) => ({ text: `LD     HL, ${hex16(trd, snd)}`, size: 3 }),
         0x22: (snd, trd) => ({ text: `LD     (${hex16(trd, snd)}), HL`, size: 3, label: true, address: ((trd << 8) | snd) }),
         0x23: ()         => ({ text: `INC    HL`, size: 1 }),
@@ -48,7 +49,7 @@ function Disassembler() {
         0x25: ()         => ({ text: `DEC    H`, size: 1 }),
         0x26: (snd)      => ({ text: `LD     H, ${hex8(snd)}`, size: 2 }),
         0x27: ()         => ({ text: `DAA`, size: 1 }),
-        0x28: (snd)      => ({ text: `JR     Z, 0x${snd}`, size: 2, label: true, offset: snd }),
+        0x28: (snd)      => ({ text: `JR     Z, 0x`, size: 2, label: true, offset: snd }),
         0x29: ()         => ({ text: `ADD    HL, HL`, size: 1 }),
         0x2a: (snd, trd) => ({ text: `LD     HL, (${hex16(trd, snd)})`, size: 3, label: true, address: ((trd << 8) | snd) }),
         0x2b: ()         => ({ text: `DEC    HL`, size: 1 }),
@@ -56,7 +57,7 @@ function Disassembler() {
         0x2d: ()         => ({ text: `DEC    L`, size: 1 }),
         0x2e: (snd)      => ({ text: `LD     L, ${hex8(snd)}`, size: 2 }),
         0x2f: ()         => ({ text: `CPL`, size: 1 }),
-        0x30: (snd)      => ({ text: `JR     NC, 0x${snd}`, size: 2, label: true, offset: snd }),
+        0x30: (snd)      => ({ text: `JR     NC, 0x`, size: 2, label: true, offset: snd }),
         0x31: (snd, trd) => ({ text: `LD     SP, ${hex16(trd, snd)}`, size: 3 }),
         0x32: (snd, trd) => ({ text: `LD     (${hex16(trd, snd)}), A`, size: 3, label: true, address: ((trd << 8) | snd) }),
         0x33: ()         => ({ text: `INC    SP`, size: 1 }),
@@ -64,7 +65,7 @@ function Disassembler() {
         0x35: ()         => ({ text: `DEC    (HL)`, size: 1 }),
         0x36: (snd)      => ({ text: `LD     (HL), ${hex8(snd)}`, size: 2 }),
         0x37: ()         => ({ text: `SCF`, size: 1 }),
-        0x38: (snd)      => ({ text: `JR     C, 0x${snd}`, size: 2, label: true, offset: snd }),
+        0x38: (snd)      => ({ text: `JR     C, 0x`, size: 2, label: true, offset: snd }),
         0x39: ()         => ({ text: `ADD    HL, SP`, size: 1 }),
         0x3a: (snd, trd) => ({ text: `LD     A, (${hex16(trd, snd)})`, size: 3, label: true, address: ((trd << 8) | snd) }),
         0x3b: ()         => ({ text: `DEC    SP`, size: 1 }),
@@ -354,6 +355,10 @@ function Disassembler() {
                         /* Replace it in the instruction */
                         text = text.replace(/0x[0-9a-fA-F]+/, name);
                     }
+                    /* If we couldn't find a label and the instruction refers to an offset, calculate the destination */
+                    else if (entry.offset) {
+                        text = text.replace("0x", "0x" + dest.toString(16));
+                    }
                 }
             }
 
@@ -379,6 +384,28 @@ function Disassembler() {
         }
 
         return instructions;
+    }
+
+
+    /**
+     * @brief Get the size of the given instruction
+     *
+     * @param memory Array of bytes to disassemble, must be of size 4
+     *
+     * @returns Size of the instruction in bytes
+     */
+    function getInstructionSize(memory)
+    {
+        const lambda = m_opcodes[memory[0]];
+        /* If the entry doesn't exist, ignore it */
+        var size = 1;
+
+        if (lambda) {
+            const entry = lambda(memory[1], memory[2], memory[3]);
+            size = entry.size;
+        }
+
+        return size;
     }
 
 
@@ -435,4 +462,5 @@ function Disassembler() {
     this.disassemble = disassembleMemory;
     this.loadSymbols = loadSymbols;
     this.labelAddress = labelAddress;
+    this.getInstructionSize = getInstructionSize;
 }

@@ -66,7 +66,30 @@ function opcode_ED_x(snd, third, fourth) {
         0xA3: 'OUTI',
         0xB3: 'OTIR',
         0xAB: 'OUTD',
-        0xBB: 'OTDR'
+        0xBB: 'OTDR',
+        /* Undocumented */
+        0x64: 'NEG',
+        0x65: 'RETN',
+        0x66: 'IM 0',
+        0x4C: 'NEG',
+        0x6C: 'NEG',
+        0x6D: 'RETN',
+        0x4E: 'IM 0',
+        0x6E: 'IM 0',
+        0x70: 'IN     (C)',
+        0x71: 'OUT    (C),0',
+        0x54: 'NEG',
+        0x74: 'NEG',
+        0x55: 'RETN',
+        0x75: 'RETN',
+        0x76: 'IM 1',
+        0x77: 'NOP',
+        0x5C: 'NEG',
+        0x7C: 'NEG',
+        0x5D: 'RETN',
+        0x7D: 'RETN',
+        0x7E: 'IM 2',
+        0x7F: 'NOP'
     };
 
     /* Index of each 16-bit pair for 16-bit LD loads */
