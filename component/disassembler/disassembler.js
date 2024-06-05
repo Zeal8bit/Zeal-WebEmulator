@@ -353,7 +353,7 @@ function Disassembler() {
                         /* Always use the last label if multiple defined */
                         const name = label[label.length - 1];
                         /* Replace it in the instruction */
-                        text = text.replace(/0x[0-9a-fA-F]+/, name);
+                        text = text.replace("0x", name);
                     }
                     /* If we couldn't find a label and the instruction refers to an offset, calculate the destination */
                     else if (entry.offset) {
