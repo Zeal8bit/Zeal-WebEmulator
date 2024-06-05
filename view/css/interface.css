@@ -60,3 +60,8 @@
     text-align: right;
     width: 70%;
 }
+
+#sending {
+    display: inline-block;
+    visibility: hidden;
+}

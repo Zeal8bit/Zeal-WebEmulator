@@ -80,8 +80,9 @@ function UART(Zeal, PIO) {
      * bit by bit. */
     var received = [];
     var shift_register = null;
+    var success_callback = null;
 
-    function start_shifting() {
+    function start_shifting () {
         console.assert(shift_register != null);
         var callback = true;
         if (!shift_register.start) {
@@ -97,6 +98,11 @@ function UART(Zeal, PIO) {
             } else {
                 shift_register = null;
                 callback = false;
+                const tocall = success_callback;
+                success_callback = null;
+                if (tocall) {
+                    tocall();
+                }
             }
         } else if (shift_register.shifted == 8) {
             /* Stop bit */
@@ -135,7 +141,7 @@ function UART(Zeal, PIO) {
         /* Nothing to do if a read is occurring, we already notify the PIO of any changes (asynchronously) */
     }
 
-    function send_binary_array(binary) {
+    function send_binary_array(binary, callback = null) {
         if (typeof binary === "string") {
             for (var i = 0; i < binary.length; i++)
                 received.push(binary.charCodeAt(i));
@@ -144,6 +150,7 @@ function UART(Zeal, PIO) {
                 received.push(binary[i]);
         }
 
+        success_callback = callback;
         start_transfer();
     }
 
