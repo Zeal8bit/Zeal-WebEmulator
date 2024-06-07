@@ -384,7 +384,7 @@ function opcode_DD_FD_x(second, third, fourth) {
     } else if ((second & 0xf8) == 0x70) {
 
         /* Special case because the opcode contains the parameter */
-        const reg_idx = ["B", "C", "D", "E", "H", "L", "A"];
+        const reg_idx = ["B", "C", "D", "E", "H", "L", "UNK", "A"];
 
         const text = `LD     (r+\$${hex8(third)}), ${reg_idx[second & 0x7]}`;
         return { text, size: 3 };
