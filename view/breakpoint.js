@@ -52,8 +52,19 @@ $("#bpaddr").on('keydown', function(event) {
  * @param autodelete Flag to mark whether the breakpoint should be auto deleted once triggered (false by default)
  */
 function addBreakpoint(addr, autodelete = false) {
-    if (!breakpoints.includes(addr) && addr <= 0xFFFF) {
-        breakpoints.push({ address: addr, enabled: true, autodelete });
+    /* Find the breakpoint object in the breakpoint list */
+    var bkrobj = breakpoints.find(element => element.address == addr);
+
+    if (bkrobj != undefined) {
+        /* This may be possible if the former breakpoitn was "hidden" (auto-delete). Modify to be a regular breakpoint */
+        bkrobj.autodelete = false;
+    } else if (addr <= 0xFFFF) {
+        bkrobj = { address: addr, enabled: true, autodelete };
+        breakpoints.push(bkrobj);
+    }
+
+    /* Only add the breakpoint to the list if it was manually added by the user, not if step over was clicked */
+    if (! bkrobj?.autodelete) {
         $("#bps").append(`<li data-addr="${addr}">${hex(addr)}</li>`);
         /* If the line is currently being disassembled, mark it as a breakpoint */
         $(`.dumpline[data-addr='${addr}']`).addClass("brk");
@@ -61,11 +72,12 @@ function addBreakpoint(addr, autodelete = false) {
 }
 
 function toggleBreakpoint(brkaddr) {
+    /* Find the breakpoint object in the breakpoint list */
+    const bkrobj = breakpoints.find(element => element.address == brkaddr);
+
     $(`#bps li[data-addr='${brkaddr}']`).toggleClass("disabled");
     $(`.dumpline[data-addr='${brkaddr}']`).toggleClass("brk");
 
-    /* Find the breakpoint object in the breakpoint list */
-    const bkrobj = breakpoints.find(element => element.address == brkaddr);
     /* Toggle enabled field in the breakpoint */
     if (bkrobj != undefined) {
         bkrobj.enabled ^= true;
@@ -75,7 +87,7 @@ function toggleBreakpoint(brkaddr) {
 function getBreakpoint(addr) {
     /* Find the breakpoint object in the breakpoint list */
     const bkrobj = breakpoints.find(element => element.address == addr);
-    return (bkrobj != undefined) ? bkrobj : null;
+    return (bkrobj != undefined && !bkrobj.autodelete) ? bkrobj : null;
 }
 
 

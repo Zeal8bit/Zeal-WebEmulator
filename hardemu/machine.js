@@ -118,7 +118,7 @@ class Z80Machine {
                             /* Remove the entry from the list in all cases */
                             tstates_callbacks.pop();
                             state.in_callback = true;
-                            entry.callback();
+                            entry.callback(t_state);
                             if (entry.period != 0) {
                                 entry.tstates += entry.period;
                                 tstates_callbacks.insert(entry);
