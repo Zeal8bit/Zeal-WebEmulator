@@ -18,10 +18,14 @@ function isValidHexadecimal(str) {
 }
 
 $("#addbp").on("click", function (){
-    const written = $("#bpaddr").val();
+    var written = $("#bpaddr").val();
     /* Empty the text field */
     $("#bpaddr").val("");
     if (written.length < 1) return;
+    /* Remove the 0x prefix if it exists */
+    if (written.startsWith('0x')) {
+        written = written.slice(2);
+    }
     /* Check if the string only contains valid hex digits */
     var result = 0;
     if (isValidHexadecimal(written)) {
@@ -56,8 +60,9 @@ function addBreakpoint(addr, autodelete = false) {
     var bkrobj = breakpoints.find(element => element.address == addr);
 
     if (bkrobj != undefined) {
-        /* This may be possible if the former breakpoitn was "hidden" (auto-delete). Modify to be a regular breakpoint */
-        bkrobj.autodelete = false;
+        /* This may be possible if the former breakpoitn was "hidden" (auto-delete)
+         * If it was clicked by the user, it will become a regular breakpoint, else, it won't change */
+        bkrobj.autodelete = autodelete;
     } else if (addr <= 0xFFFF) {
         bkrobj = { address: addr, enabled: true, autodelete };
         breakpoints.push(bkrobj);
@@ -91,20 +96,12 @@ function getBreakpoint(addr) {
 }
 
 
-function arrayRemoveElement(array, index) {
-    if (index > -1 && index < array.length) {
-        array.splice(index, 1);
-    }
-    return array;
-}
-
-
 /**
  * @brief Function called when a breakpoint is triggered
  */
 function triggeredBreakpoint(bkrobj) {
     if (bkrobj?.autodelete) {
-        arrayRemoveElement(breakpoints, bkrobj.address);
+        breakpoints = breakpoints.filter(element => element.address !== bkrobj.address);
     }
 }
 
