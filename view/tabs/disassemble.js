@@ -10,8 +10,8 @@ function disassembleAndShow() {
     const pc = regs != null ? (regs.pc) : 0;
     /* Set the number of instructions we need to disassemble and show */
     const instructions = 20;
-    /* The average number of bytes per instruction is 2 or 3 */
-    const bytes = instructions * 3;
+    /* The maximum number of bytes per instruction is 4 */
+    const bytes = instructions * 4;
 
     /* Read "bytes" bytes from the Z80 virtual memory */
     var memory = [];
