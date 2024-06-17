@@ -28,7 +28,7 @@ function RAM(size) {
         }
     }
 
-    /* Memory region requird by the machine */
+    /* Memory region required by the machine */
     this.mem_region = {
         write: mem_write,
         read: mem_read,

@@ -223,12 +223,16 @@
                 <label for="eeprom-bin">EEPROM image:</label>
                 <div class="help" title="Binary file to load into the emulated 64KB I2C EEPROM">?</div>
                 <input type="file" id="eeprom-bin" placeholder="EEPROM image" />
+                <label for="cf-bin">CompactFlash image:</label>
+                <div class="help" title="Binary file to load into the emulated CompactFlash">?</div>
+                <input type="file" id="cf-bin" placeholder="CompactFlash image" />
                 <button id="read-button">Read file(s)</button>
                 <div id="statuspan">
                 <h4>Ready?</h4>
                 <div id="binready" class="status">System image</div>
                 <div id="symready" class="status">Symbols</div>
                 <div id="eepromready" class="status">EEPROM image</div>
+                <div id="cfready" class="status">CompactFlash image</div>
                 </div>
                 <pre id="file-contents"></pre>
             </section>
@@ -338,6 +342,7 @@
     <script src="hardemu/i2c.js"></script>
     <script src="hardemu/ram.js"></script>
     <script src="hardemu/mmu.js"></script>
+    <script src="hardemu/compactflash.js"></script>
     <script src="hardemu/Z80.js"></script>
     <script src="view/popup.js"></script>
     <script src="hardemu/screen.js"></script>

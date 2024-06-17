@@ -53,6 +53,18 @@ $("#read-button").on('click', function() {
     if (typeof file !== "undefined") {
         eepromr.readAsBinaryString(file);
     }
+
+    /* Read the CompactFlash image */
+    file = $("#cf-bin")[0].files[0];
+    let cfr = new FileReader();
+    cfr.addEventListener('load', function(e) {
+        let binary = e.target.result;
+        zealcom.compactflash.loadFile(binary);
+        $("#cfready").addClass("ready");
+    });
+    if (typeof file !== "undefined") {
+        cfr.readAsBinaryString(file);
+    }
 });
 
 /**

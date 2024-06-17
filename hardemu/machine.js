@@ -335,10 +335,6 @@ class Z80Machine {
 
         const outer_this = this;
         function instruction_loop() {
-            // const now = performance.now();
-            // const elpased = now - this.previous;
-            // console.log("Called " + elpased + "ms ago");
-            // this.previous = performance.now();
 
             /* In 16ms, the number of T-states the CPU could execute is Math.floor(16666.666 / TSTATES_US) */
             const to_execute = us_to_tstates(16666.666);

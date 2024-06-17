@@ -21,6 +21,8 @@ class Zeal8bitComputer extends Z80Machine {
         const i2c = new I2C(this, pio);
         const keyboard = new Keyboard(this, pio);
         const ds1307 = new I2C_DS1307(this, i2c);
+        /* Extensions */
+        const compactflash = new CompactFlash(this);
         /* We could pass an initial content to the EEPROM, but set it to null for the moment */
         const eeprom = new I2C_EEPROM(this, i2c, null);
 
@@ -41,6 +43,7 @@ class Zeal8bitComputer extends Z80Machine {
         this.machine_add_mem_device(0x10_0000, vchip.mem_region);
 
         /* Similarly for the I/O bus */
+        this.machine_add_io_device(0x70, compactflash.io_region);
         this.machine_add_io_device(0x80, vchip.io_region);
         this.machine_add_io_device(0xd0, pio.io_region);
         this.machine_add_io_device(0xe0, keyboard.io_region);
@@ -57,6 +60,7 @@ class Zeal8bitComputer extends Z80Machine {
         this.keyboard = keyboard;
         this.ds1307 = ds1307;
         this.eeprom = eeprom;
+        this.compactflash = compactflash;
     }
 
     /**
