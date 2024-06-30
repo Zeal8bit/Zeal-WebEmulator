@@ -24,6 +24,8 @@ function I2C(Zeal, PIO) {
     var sending_ack = false;
     var receiving_ack = false;
     var shifted = 0;
+    /* Number of bytes shifted in total */
+    var shifted_bytes = 0;
     var device = 0;
     var rd_fifo = [];
     var wr_fifo = [];
@@ -58,9 +60,11 @@ function I2C(Zeal, PIO) {
             /* If the new request is a read, inform the device */
             if ((dev_addr & 1) == 1) {
                 rd_fifo = connected_devices[real_address].read();
+                shift_register_out = rd_fifo.length > 0 ? rd_fifo.shift() : 0;
             }
         }
 
+        shifted_bytes = 0;
         shifted = 0;
         sending_ack = false;
         receiving_ack = false;
@@ -75,6 +79,11 @@ function I2C(Zeal, PIO) {
 
         if (state == STATE_WR_REQ) {
             connected_devices[real_address].write(wr_fifo);
+        } else if (state == STATE_RD_REQ) {
+            const callback = connected_devices[real_address].total_read;
+            if (callback) {
+                callback(shifted_bytes);
+            }
         }
     }
 
@@ -132,6 +141,7 @@ function I2C(Zeal, PIO) {
                 shifted++;
                 if (shifted == 8) {
                     shifted = 0;
+                    shifted_bytes++;
                     shift_register_out = (rd_fifo.length > 0) ? rd_fifo.shift() : 0;
                     receiving_ack = true;
                 }
@@ -233,6 +243,7 @@ function I2C_EEPROM(Zeal, I2C, content) {
     const DEVICE_ADDR = 0x50;
     const size = 64*KB;
     const page_size = 64;
+    const zealfs_version = 1;
 
     var data = new Array(size);
 
@@ -252,10 +263,10 @@ function I2C_EEPROM(Zeal, I2C, content) {
     /* Format the EEPROM to use ZealFS */
     if (!content) {
         data[0] = 0x5A;
-        data[1] = 0x01;
+        data[1] = zealfs_version;
         data[2] = 0x20;
-        data[3] = 0xFF;
-        data[4] = 0x01;
+        data[3] = zealfs_version == 2 ? 0xFE : 0xFF;
+        data[4] = zealfs_version == 2 ? 0x03 : 0x01;
     }
 
     function dumpToFile() {
@@ -274,7 +285,11 @@ function I2C_EEPROM(Zeal, I2C, content) {
 
     var acc = 0;
     function read() {
-        return data[acc++];
+        return data.slice(acc);
+    }
+
+    function total_read(bytes) {
+        acc += bytes;
     }
 
     function write(wr_fifo) {
@@ -290,6 +305,7 @@ function I2C_EEPROM(Zeal, I2C, content) {
             data[address + page_index] = wr_fifo.shift();
             page_index = (page_index + 1) % page_size;
         }
+        acc = address + page_index;
     }
 
     function write_read(wr_fifo) {
@@ -299,11 +315,14 @@ function I2C_EEPROM(Zeal, I2C, content) {
         const high = wr_fifo.length > 0 ? wr_fifo.shift() : 0;
         const low  = wr_fifo.length > 0 ? wr_fifo.shift() : 0;
         const address = ((high << 8) | low) & (size - 1);
+        acc = address;
         /* Read from the EEPROM memory */
         return data.slice(address);
     }
 
     this.read = read;
+    /* Callback invoked after a write_read to notify the EEPROM how many bytes were read */
+    this.total_read = total_read;
     this.write = write;
     this.write_read = write_read;
     this.loadFile = loadFile;
