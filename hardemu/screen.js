@@ -1033,6 +1033,7 @@ function VideoChip(Zeal, PIO, scale) {
     /**
      * @brief Video configuration sees a write, address is relative to this space
      */
+    var previous_tstate = 0;
     function vConfigWrite(address, value) {
         switch (address) {
             case 0x0:
@@ -1047,6 +1048,14 @@ function VideoChip(Zeal, PIO, scale) {
                     vConfigWrite.alerted = true;
                 }
             break;
+            case 0x6:
+                /* Benchmark! */
+                const current_states = zealcom.getTstates();
+                const diff = current_states - previous_tstate;
+                const micros = diff/10
+                const millis = micros/1000;
+                console.log("Elapsed T-states: " + diff + " (" + millis + " ms)");
+                previous_tstate = current_states;
             case 0xe: mapping.io_bank = value & 0x3f;
                 break;
             case 0xf: mapping.mem_start = (value & 0x1f) >> (22 - 5);
@@ -1153,7 +1162,7 @@ function VideoChip(Zeal, PIO, scale) {
 
     function renderScreen() {
         if (!video_cfg.update_screen) {
-            return;
+            // return;
         }
 
         video_cfg.update_screen = false;

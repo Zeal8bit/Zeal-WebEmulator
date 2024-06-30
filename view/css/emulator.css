@@ -80,9 +80,11 @@ input[type=text] {
     margin-bottom: 1em;
 }
 
+
 #debug table {
-    font-size:14pt;
+    table-layout: fixed;
     width: 100%;
+    font-size:14pt;
     border: 0;
     border-collapse:collapse;
 }
@@ -105,14 +107,19 @@ hr {
     border: none;
 }
 
-#debug table td {
+#debug table td:nth-child(1) {
     padding-left: 0.5em;
+    width: 30%;
+}
+
+#debug table td:nth-child(2) {
+    text-align: right !important;
+    padding-right: 0.5em;
 }
 
 #debug table tr:nth-child(2n) {
     background-color: var(--fourth-bg-color);
 }
-
 
 #debug table tr:hover {
     background-color: var(--third-bg-color);
