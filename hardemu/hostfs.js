@@ -138,6 +138,7 @@
         const opts = { id: 7777, mode: "readwrite"};
         try {
             root_handle = await window.showDirectoryPicker(opts);
+            return ZOS_SUCCESS;
         } catch (error) {
             return ZOS_FAILURE;
         }
