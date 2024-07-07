@@ -3,8 +3,13 @@
  *
  * SPDX-License-Identifier: Apache-2.0
  */
+var debug_keydown = false;
 
 $("#screen").on("keydown", function(e) {
+    if (debug_keydown) {
+        console.log(`Code: ${e.keyCode}, key: ${e.key}`);
+    }
+
     const handled = zealcom.KeyboardKeyPressed(e.keyCode);
 
     if (handled) {

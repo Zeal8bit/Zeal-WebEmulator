@@ -110,6 +110,11 @@ function Keyboard(Zeal, PIO) {
     const KEYCODE_BACKSLASH = 220;
     const KEYCODE_CLOSEBRAKET = 221;
     const KEYCODE_SINGLEQUOTE = 222;
+    const KEYCODE_RIGHTALT = 225;
+
+    const FIREFOX_KEYCODE_SEMI_COLON = 59;
+    const FIREFOX_KEYCODE_DASH = 173;
+    const FIREFOX_KEYCODE_EQUALSIGN = 61;
 
     /* Object to convert JavaScript keycodes to PS/2 */
     const js_to_ps2 = {}
@@ -120,7 +125,8 @@ function Keyboard(Zeal, PIO) {
         js_to_ps2[KEYCODE_ENTER] = [0x5A];
         js_to_ps2[KEYCODE_SHIFT] = [0x59];
         js_to_ps2[KEYCODE_CTRL] = [0xE0, 0x14];
-        js_to_ps2[KEYCODE_ALT] = [0xE0, 0x11];
+        js_to_ps2[KEYCODE_ALT] = [0x11];
+        js_to_ps2[KEYCODE_RIGHTALT] = [0xE0, 0x11];
         js_to_ps2[KEYCODE_PAUSE] = [0xE1, 0x14, 0x77, 0xE1, 0xF0, 0x14, 0xE0, 0x77];
         js_to_ps2[KEYCODE_CAPSLOCK] = [0x58];
         js_to_ps2[KEYCODE_ESCAPE] = [0x76];
@@ -213,7 +219,15 @@ function Keyboard(Zeal, PIO) {
         js_to_ps2[KEYCODE_BACKSLASH] = [0x5D];
         js_to_ps2[KEYCODE_CLOSEBRAKET] = [0x5B];
         js_to_ps2[KEYCODE_SINGLEQUOTE] = [0x52];
-        js_to_ps2[KEYCODE_BACKQUOTE] = [0x0E]
+        js_to_ps2[KEYCODE_BACKQUOTE] = [0x0E];
+
+        /* Add Firefox key codes, make sure there is no conflict */
+        console.assert(!js_to_ps2[FIREFOX_KEYCODE_SEMI_COLON]);
+        console.assert(!js_to_ps2[FIREFOX_KEYCODE_DASH]);
+        console.assert(!js_to_ps2[FIREFOX_KEYCODE_EQUALSIGN]);
+        js_to_ps2[FIREFOX_KEYCODE_SEMI_COLON] = js_to_ps2[KEYCODE_SEMI_COLON];
+        js_to_ps2[FIREFOX_KEYCODE_DASH]       = js_to_ps2[KEYCODE_DASH];
+        js_to_ps2[FIREFOX_KEYCODE_EQUALSIGN]  = js_to_ps2[KEYCODE_EQUALSIGN];
     }
 
     /* Attributes related to PIO */
