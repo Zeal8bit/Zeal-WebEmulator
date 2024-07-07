@@ -559,9 +559,9 @@ function VideoChip(Zeal, PIO, scale) {
     const sprites = new Sprites(tileset);
 
     /* Video mode configuration */
-    const video_cfg = {
+    let video_cfg = {
         mode: 0,
-        is_text: false,
+        is_text: true,
         is_8bit: true,
         /* Resolution, in pixels, associated to the current configuration */
         width: 0,
@@ -579,13 +579,15 @@ function VideoChip(Zeal, PIO, scale) {
         obj_width: 0,
         obj_height: 0,
         vblank: 0,
+        /* The running program can explicitly disabled or enable the screen */
+        screen_enabled: 1,
         /* Enable after each emulated v-blank, marks whether we need to redraw the screen
          * the screen or not. This will prevent redraw if the emulation is paused/stopped */
         update_screen: false
     };
 
     /* Text mode configuration */
-    const text_cfg = {
+    let text_cfg = {
         /* Index for the current color, both foreground and background */
         fg_color: DEFAULT_FG_COLOR,
         bg_color: DEFAULT_BG_COLOR,
@@ -615,12 +617,51 @@ function VideoChip(Zeal, PIO, scale) {
     };
 
     /* Graphics mode configuration */
-    const gfx_cfg = {
+    let gfx_cfg = {
         scroll_x: 0,
         scroll_y: 0,
     };
 
     const { canvas, ctx, canvas_layer1, ctx_layer1 } = initialize();
+
+    function reset() {
+        /* Reset button pressed! */
+        gfx_cfg = { scroll_x: 0, scroll_y: 0 };
+
+        text_cfg = {
+            fg_color: DEFAULT_FG_COLOR,
+            bg_color: DEFAULT_BG_COLOR,
+            scroll_x: 0, scroll_y: 0,
+            cursor : {
+                x: 0,
+                y: 0,
+                blink: 255,
+                blink_state: 0,
+                blink_shown: false,
+                char: 0,
+                fg_color: DEFAULT_BG_COLOR,
+                bg_color: DEFAULT_FG_COLOR,
+                dump_x: 0,
+                dump_y: 0
+            },
+            flags: {
+                auto_scroll_x: 0,
+                auto_scroll_y: 0,
+                eat_newline:   0,
+                scroll_y_occurred : 0,
+            }
+        };
+
+        video_cfg = {
+            max_width: 640, max_height: 480,
+            base_scale: 1, view_scale: 1,
+            vblank: 0,
+            screen_enabled: 1,
+            update_screen: false
+        };
+        updateModeData(canvas, canvas_layer1, DEFAULT_MODE);
+    }
+
 
     function initialize() {
         /* Create both the canvas and off-screen canvas */
@@ -1126,8 +1167,11 @@ function VideoChip(Zeal, PIO, scale) {
         if (port >= 0x0 && port <= 0xf) {
             vConfigWrite(port, value);
         } else if (port >= 0x10 && port <= 0x1f) {
-            // TODO: Scrolling values and enable screen
-            if ((port - 0x10) == 0xc) updateModeData(canvas, canvas_layer1, value);
+            // TODO: Scrolling values
+            if (port == 0x1c)
+                updateModeData(canvas, canvas_layer1, value);
+            else if (port == 0x1d)
+                video_cfg.screen_enabled = (value >> 7) & 1;
         } else if (port >= 0x20 && port <= 0x2f && mapping.io_bank == IO_MAPPING_TEXT) {
             textConfigWrite(port - 0x20, value);
         }
@@ -1172,6 +1216,14 @@ function VideoChip(Zeal, PIO, scale) {
             desynchronized: false,
             willReadFrequently: false,
         });
+
+        /* If the screen is disabled, show a black screen */
+        if (video_cfg.screen_enabled == 0) {
+            visible_ctx.fillStyle = "black";
+            visible_ctx.fillRect(0, 0, video_cfg.max_width, video_cfg.max_height);
+            return;
+        }
+
         /* Check if any tile has been updated while the tilemap was already written */
         checkAndUpdateTiles();
         /* Extract the visible part out of the offscreen canvas contex */
@@ -1251,6 +1303,6 @@ function VideoChip(Zeal, PIO, scale) {
     }, VBLANK_TSTATES_PERIOD, VBLANK_TSTATES_PERIOD_END);
 
 
-    this.clear = initialize;
+    this.clear = reset;
     this.renderScreen = renderScreen;
 }
