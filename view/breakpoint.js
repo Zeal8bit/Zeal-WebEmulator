@@ -39,7 +39,9 @@ $("#addbp").on("click", function (){
         result = addr;
     }
     /* Only add the breakpoint if not in the list */
-    addBreakpoint(result);
+    if (!getBreakpoint(result)) {
+        addBreakpoint(result);
+    }
 });
 
 $("#bpaddr").on('keydown', function(event) {
@@ -60,7 +62,7 @@ function addBreakpoint(addr, autodelete = false) {
     var bkrobj = breakpoints.find(element => element.address == addr);
 
     if (bkrobj != undefined) {
-        /* This may be possible if the former breakpoitn was "hidden" (auto-delete)
+        /* This may be possible if the former breakpoint was "hidden" (auto-delete)
          * If it was clicked by the user, it will become a regular breakpoint, else, it won't change */
         bkrobj.autodelete = autodelete;
     } else if (addr <= 0xFFFF) {
