@@ -13,16 +13,16 @@ $("#popup-message").on("click", function() {
  * Manage the popup message
  */
 function Popup() {
-    function msg(data, instead, _class) {
+    function msg(data, instead, _class, duration = 3000, speed = 1000) {
         console[instead](data);
         const popup = $("#popup-message");
         popup.removeClass();
         popup.addClass(_class);
         popup.html(data);
-        popup.fadeIn(1000);
+        popup.fadeIn(speed);
         setTimeout(() => {
-            popup.fadeOut(1000);
-        }, 3000);
+            popup.fadeOut(speed);
+        }, duration);
     }
 
     function doc(target) {
@@ -34,10 +34,10 @@ function Popup() {
         target_elt.fadeIn(500);
     }
 
-    this.error = (data)   => msg(data, "error", "poperror");
-    this.warn  = (data)   => msg(data, "warn", "popwarn");
-    this.info  = (data)   => msg(data, "log", "poplog");
-    this.log   = (data)   => msg(data, "log", "poplog");
+    this.error = (data, duration, speed)   => msg(data, "error", "poperror", duration, speed);
+    this.warn  = (data, duration, speed)   => msg(data, "warn", "popwarn", duration, speed);
+    this.info  = (data, duration, speed)   => msg(data, "log", "poplog", duration, speed);
+    this.log   = (data, duration, speed)   => msg(data, "log", "poplog", duration, speed);
     this.doc   = (target) => doc(target);
 }
 

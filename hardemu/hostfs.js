@@ -134,8 +134,11 @@
      */
     async function check_root() {
         if (root_handle) return ZOS_SUCCESS;
-        window.alert("Specify the directory to use as a virtual disk");
         const opts = { id: 7777, mode: "readwrite"};
+        const duration = 3000;
+        const speed = 100;
+        popout.info("Specify the directory to use as a virtual disk", duration, speed);
+        await new Promise(resolve => setTimeout(resolve, 1500));
         try {
             root_handle = await window.showDirectoryPicker(opts);
             return ZOS_SUCCESS;

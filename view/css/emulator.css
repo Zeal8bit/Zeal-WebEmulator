@@ -454,6 +454,7 @@ button {
 }
 
 #popup-message {
+    font-weight: bold;
     position: fixed;
     display: none;
     left: calc(50% - 17.5em);
@@ -465,6 +466,7 @@ button {
     margin-left: auto;
     margin-right: auto;
     z-index: 20;
+    cursor: pointer;
 }
 
 .poperror {
@@ -481,7 +483,7 @@ button {
 
 .poplog {
     color: #074670;
-    background: #699de1;
+    background: #7ca7e0;
     border: 1px solid #0071bf;
 }
 
