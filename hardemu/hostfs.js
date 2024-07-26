@@ -254,7 +254,8 @@
                 fhandle = await handle.getFileHandle(name, { create: o_creat });
                 is_dir = false;
             } catch (error) {
-                /* TODO: Check if file doesn't exist ?*/
+                /* Check if the directory exists, if not, an exception will be raised */
+                await handle.getDirectoryHandle(name);
             }
 
             if (is_dir) {
@@ -427,7 +428,7 @@
 
 
     /**
-     * @brief Open a file (not directory!) from the file system
+     * @brief Close an opened entry (file or directory)
      * @params
      *  REG0 - Abstract index (opened entry)
      * @returns
@@ -450,8 +451,9 @@
         set_status(ZOS_SUCCESS);
     }
 
+
     /**
-     * @brief Open a file (not directory!) from the file system
+     * @brief Open a directory from the file system
      * @params
      *  REG0 - Empty
      *  REG1 - Address of path (LSB)
