@@ -117,14 +117,14 @@ Features of the emulator itself implemented:
 On the emulation side, the remaining tasks to do are:
 
 * I2C RTC set date. Currently, it always returns the current browser date, so writing to it will have no effect.
-* Sound support (part of Zeal 8-bit Video Card)
+* <s>Sound support (part of Zeal 8-bit Video Card)</s> **IMPLEMENTED!** Noise and custom wavetable voice still needs to be implemented.
 * SD Card emulation (part of Zeal 8-bit Video Card)
 * <s>Video chip: 320x240 text mode, 320x240 graphic mode¹, sprites¹, 4-bit palettes¹, etc...</s> **IMPLEMENTED!**
 
 
 On the project/debugger side itself:
 
-* A better way to **parse breakpoint input**. A known bug is that providing a label starting with a hexadecimal letter would be interpreted as a PC value instead of a label. For example, inputting *date_routine* as a label to break in would result in the addition of a breakpoint at address 0xda instead of the address of label *date_routine* (because *date* starts with hex letters *da*)
+* <s>A better way to **parse breakpoint input**. A known bug is that providing a label starting with a hexadecimal letter would be interpreted as a PC value instead of a label. For example, inputting *date_routine* as a label to break in would result in the addition of a breakpoint at address 0xda instead of the address of label *date_routine* (because *date* starts with hex letters *da*)</s> **FIXED!**
 
 ## Contributing
 

@@ -1125,12 +1125,13 @@ function VideoChip(Zeal, PIO, scale) {
     /*                          Physical Mapping Related                          */
     /* -------------------------------------------------------------------------- */
 
-    const IO_MAPPING_TEXT = 0;
-    // const IO_MAPPING_RSVD = 1;
-    const IO_MAPPING_CRC = 2;
-    // const IO_MAPPING_RSVD = 3;
+    const IO_MAPPING_TEXT  = 0;
+    const IO_MAPPING_SPI   = 1;
+    const IO_MAPPING_CRC   = 2;
+    const IO_MAPPING_SOUND = 3;
 
     const peri_crc32 = new CRC32();
+    const peri_sound = new Sound();
 
     /* Highest five bits of the FPGA 22-bit physical memory address */
     const mapping = {
@@ -1176,10 +1177,13 @@ function VideoChip(Zeal, PIO, scale) {
                 video_cfg.screen_enabled = (value >> 7) & 1;
         } else if (port >= 0x20 && port <= 0x2f) {
             const subport = port - 0x20;
+
             if (mapping.io_bank == IO_MAPPING_TEXT) {
                 textConfigWrite(subport, value);
             } else if (mapping.io_bank == IO_MAPPING_CRC) {
                 peri_crc32.io_write(subport, value);
+            } else if (mapping.io_bank == IO_MAPPING_SOUND) {
+                peri_sound.io_write(subport, value);
             }
         }
     }
@@ -1194,10 +1198,13 @@ function VideoChip(Zeal, PIO, scale) {
             }
         } else if (port >= 0x20 && port < 0x30) {
             const subport = port - 0x20;
+
             if (mapping.io_bank == IO_MAPPING_TEXT) {
                 return textConfigRead(subport);
             } else if (mapping.io_bank == IO_MAPPING_CRC) {
                 return peri_crc32.io_read(subport);
+            } else if (mapping.io_bank == IO_MAPPING_SOUND) {
+                return peri_sound.io_read(subport);
             }
 
         }
