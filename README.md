@@ -117,7 +117,7 @@ Features of the emulator itself implemented:
 On the emulation side, the remaining tasks to do are:
 
 * I2C RTC set date. Currently, it always returns the current browser date, so writing to it will have no effect.
-* <s>Sound support (part of Zeal 8-bit Video Card)</s> **IMPLEMENTED!** Noise and custom wavetable voice still needs to be implemented.
+* <s>Sound support (part of Zeal 8-bit Video Card)</s> **IMPLEMENTED!** waveforms table and custom sample implemented! (noise still needs to be implemented)
 * SD Card emulation (part of Zeal 8-bit Video Card)
 * <s>Video chip: 320x240 text mode, 320x240 graphic mode¹, sprites¹, 4-bit palettes¹, etc...</s> **IMPLEMENTED!**
 
