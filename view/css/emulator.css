@@ -68,6 +68,7 @@ input[type=text] {
 #toppanel {
     display: flex;
     justify-content: space-between;
+    margin-bottom: 1em;
 }
 
 #debug {
@@ -132,7 +133,7 @@ hr {
 #container canvas {
     position: absolute;
     top: 0;
-    margin-top: 3em;
+    margin-top: 0.5em;
     background-color: black;
     transform-origin: left top;
     image-rendering: pixelated;
