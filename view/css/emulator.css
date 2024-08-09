@@ -133,7 +133,7 @@ hr {
 #container canvas {
     position: absolute;
     top: 0;
-    margin-top: 0.5em;
+    margin-top: 3em;
     background-color: black;
     transform-origin: left top;
     image-rendering: pixelated;
