@@ -99,7 +99,8 @@ function switchToAdvancedMode(error) {
  * names and links to all of the available ROMs, the first one will always be the default.
  */
 
-const prebuilt_json_url = "https://zeal8bit.com/roms/index.json";
+const prebuilt_json_url_host = "https://zeal8bit.com";
+const prebuilt_json_url_path = "/roms/index.json";
 
 /*
     Only for debug, I don't hold all of the copyright of the
@@ -131,10 +132,15 @@ function processIndex(index) {
 
 /* Fetch the remote JSON file, and pass the content to the previous function */
 if (!advancedMode) {
-    fetch(prebuilt_json_url)
+    fetch(prebuilt_json_url_host + prebuilt_json_url_path)
         .then(response => response.json())
         .then(response => processIndex(response))
-        .catch(switchToAdvancedMode);
+        .catch(() => {
+            fetch(prebuilt_json_url_path)
+            .then(response => response.json())
+            .then(response => processIndex(response))
+            .catch(switchToAdvancedMode);
+        });
 }
 
 function resetRom() {
