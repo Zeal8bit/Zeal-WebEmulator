@@ -1290,7 +1290,9 @@ function VideoChip(Zeal, PIO, scale) {
         }
 
         /* Draw the sprites on screen */
-        sprites.drawSprites(canvas);
+        if (!video_cfg.is_text) {
+            sprites.drawSprites(canvas);
+        }
 
         /* Add the cursor if it needs to be visible */
         printCursor(visible_ctx);
