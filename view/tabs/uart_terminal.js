@@ -61,6 +61,26 @@ $('#uart-rows').on('change', function() {
     terminal.resize(UART_SIZE.cols, UART_SIZE.rows);
 });
 
+$("#uart-char-send").on("click", function() {
+    /* If we are already sending a file, do nothing */
+    if (sending) {
+        return;
+    }
+
+    const binary = [$("#uart-char").val()];
+    console.log("binary", binary);
+    sending = true;
+    $("#sending").text(sending_message);
+    $("#sending").visible();
+
+    setTimeout(function() {
+        zealcom.uart.send_binary_array(binary, function() {
+            sending = false;
+            $("#sending").invisible();
+        });
+    }, 10);
+});
+
 $("#clearterm").on("click", function() {
     terminal.reset();
 });

@@ -68,6 +68,12 @@ input[type=text] {
     height: 1.7em;
 }
 
+.short {
+    max-width: 6ch;
+    text-align: right;
+    font-family: monospace;
+}
+
 #toppanel {
     display: grid;
     grid-template-columns: 240px auto 240px;
