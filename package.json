@@ -27,24 +27,24 @@
   },
   "license": "Apache-2.0",
   "dependencies": {
-    "electron-squirrel-startup": "^1.0.0",
+    "electron-squirrel-startup": "^1.0.1",
     "opn": "^6.0.0",
-    "yargs": "^17.1.1-candidate.0"
+    "yargs": "^17.7.2"
   },
   "devDependencies": {
-    "live-server": "^1.2.2",
-    "@electron-forge/cli": "^7.2.0",
-    "@electron-forge/maker-deb": "^7.2.0",
-    "@electron-forge/maker-rpm": "^7.2.0",
-    "@electron-forge/maker-squirrel": "^7.2.0",
-    "@electron-forge/maker-zip": "^7.2.0",
-    "@electron-forge/plugin-auto-unpack-natives": "^7.2.0",
-    "electron": "^28.2.0",
-    "electron-builder": "^24.9.1",
-    "electron-squirrel-startup": "^1.0.0"
+    "@electron-forge/cli": "^7.4.0",
+    "@electron-forge/maker-deb": "^7.4.0",
+    "@electron-forge/maker-rpm": "^7.4.0",
+    "@electron-forge/maker-squirrel": "^7.4.0",
+    "@electron-forge/maker-zip": "^7.4.0",
+    "@electron-forge/plugin-auto-unpack-natives": "^7.4.0",
+    "electron": "^28.3.3",
+    "electron-builder": "^24.13.3",
+    "electron-squirrel-startup": "^1.0.0",
+    "live-server": "^1.2.2"
   },
   "build": {
-    "appId": "com.zealwebemulator",
+    "appId": "com.zealemu",
     "productName": "Zeal-WebEmulator",
     "files": [
       "**/*"
@@ -78,5 +78,6 @@
     "linux": {
       "icon": "./imgs/installer/zeal.png"
     }
-  }
+  },
+  "packageManager": "pnpm@9.5.0+sha512.140036830124618d624a2187b50d04289d5a087f326c9edfc0ccd733d76c4f52c3a313d4fc148794a2a9d81553016004e6742e8cf850670268a7387fc220c903"
 }

@@ -1,70 +1,61 @@
-/**
- * SPDX-FileCopyrightText: 2022 Zeal 8-bit Computer <contact@zeal8bit.com>
- *
- * SPDX-License-Identifier: Apache-2.0
- */
-
-function load_bin(file){
+function loadToDevice(dev, loadfile_external_params=[], callback){
     let reader = new FileReader();
-    const isos = $("#os").prop("checked");
-    reader.addEventListener('load', function(e) {
+    $(reader).on('load', function(e) {
         let binary = e.target.result;
-        if (isos) {
-            zealcom.rom.loadFile(binary);
-            $("#binready").addClass("ready");
-        } else {
-            const addr = $("#address").val();
-            const result = parseInt(addr, 16);
-            zealcom.ram.loadFile(result, binary);
-        }
+        console.log(dev?.isNew);
+        let load_returns = dev.loadFile(binary, ...loadfile_external_params);
+        callback(load_returns);
     });
-    if (typeof file !== "undefined") {
-        reader.readAsBinaryString(file);
+    return reader;
+}
+
+function loadRom(file_rom) {
+    /* Read the rom file */
+    if (file_rom) {
+        loadToDevice(zealcom.rom, [], () => {
+            $("#romready").addClass("ready");
+        }).readAsBinaryString(file_rom);
     }
 }
 
-$("#read-button").on('click', function() {
+function loadMap(file_map) {
     /* If a dump/map file was provided, try to load it */
-    let fdump = $("#file-dump")[0].files[0];
-    if (typeof fdump !== "undefined") {
-        let rdump = new FileReader();
-        rdump.addEventListener('load', (e) => {
-            const success = disassembler.loadSymbols(e.target.result);
+    if (file_map) {
+        loadToDevice(disassembler, [], (success) => {
             if (success) {
                 /* symbols are ready! */
                 $("#symready").addClass("ready");
             }
-        });
-        rdump.readAsText(fdump);
-    }
+            else {
+                popup.error("Error while loading map file");
+            }
+        }).readAsText(file_map);
+    }    
+}
 
-    /* Read the binary executable */
-    let file = $("#file-input")[0].files[0];
-    load_bin(file);
-
+function loadEEPROM(file_eeprom) {
     /* Read the EEPROM image */
-    file = $("#eeprom-bin")[0].files[0];
-    let eepromr = new FileReader();
-    eepromr.addEventListener('load', function(e) {
-        let binary = e.target.result;
-        zealcom.eeprom.loadFile(binary);
-        $("#eepromready").addClass("ready");
-    });
-    if (typeof file !== "undefined") {
-        eepromr.readAsBinaryString(file);
+    if (file_eeprom) {
+        loadToDevice(zealcom.eeprom, [], () => {
+            $("#eepromready").addClass("ready");
+        }).readAsBinaryString(file_eeprom);
     }
+}
 
-    /* Read the CompactFlash image */
-    file = $("#cf-bin")[0].files[0];
-    let cfr = new FileReader();
-    cfr.addEventListener('load', function(e) {
-        let binary = e.target.result;
-        zealcom.compactflash.loadFile(binary);
-        $("#cfready").addClass("ready");
-    });
-    if (typeof file !== "undefined") {
-        cfr.readAsBinaryString(file);
+function loadCf(file_cf) {
+    /** Read the Compact Flash image */
+    if (file_cf) {
+        loadToDevice(zealcom.compactflash, [], () => {
+            $("#cfready").addClass("ready");
+        }).readAsBinaryString(file_cf);
     }
+}
+
+$("#read-button").on('click', function() {
+    loadRom($("#file-rom")[0].files[0]);
+    loadMap($("#file-map")[0].files[0]);
+    loadEEPROM($("#file-eeprom")[0].files[0]);
+    loadCf($("#file-cf")[0].files[0]);
 });
 
 /**
@@ -76,7 +67,7 @@ const urlGetParam = new URLSearchParams(window.location.search);
 var advancedMode = urlGetParam.get("advanced") === "true";
 
 if (advancedMode) {
-    $("#romload").hide();
+    // $("#romload").hide();
     $("#romfile").show();
 }
 
@@ -84,14 +75,24 @@ $("#romadvanced a").click(() => {
     $("#romfile").toggle(500);
 });
 
+var fetch_counter = 0;
 function switchToAdvancedMode(error) {
-    popout.error("Could not fetch remote data, switched to advanced mode");
+    popout.error("Could not fetch remote data, trying again");
     console.error(error);
-    /* Hide advanced link option and ROMs list */
-    $("#romload").hide(250, function() {
+    if (fetch_counter >= 3) {
+        popout.error("Could not fetch remote data, swich to advanced mode");
         /* Show file uploaders */
         $("#romfile").show(250);
-    });
+        $("#romchoice").html("<option value=''>Click here to try again</option>");
+        $("#romchoice").on("focus", fetchIndex);
+        fetch_counter = 0;
+    }
+    else {
+        setTimeout(() => {
+            fetchIndex();
+        }, 4000);
+        fetch_counter += 1;
+    }
 }
 
 /**
@@ -101,12 +102,6 @@ function switchToAdvancedMode(error) {
 
 const prebuilt_json_url_host = "https://zeal8bit.com";
 const prebuilt_json_url_path = "/roms/index.json";
-
-/*
-    Only for debug, I don't hold all of the copyright of the
-    prebuild images in this index and I'm not sure they are safe     --Jason
-*/
-// const prebuilt_json_url = "https://jasonmo1.github.io/ZOS-Index-demo/index.json"
 
 /* Process the index JSON object that contains all the ROMs available */
 function processIndex(index) {
@@ -129,6 +124,10 @@ function processIndex(index) {
 
 /* Fetch the remote JSON file, and pass the content to the previous function */
 if (!advancedMode) {
+    fetchIndex();
+}
+
+function fetchIndex() {
     fetch(prebuilt_json_url_host + prebuilt_json_url_path)
         .then(response => response.json())
         .then(response => processIndex(response))
@@ -158,7 +157,7 @@ var index_src;
  */
 $("#romchoice").on("change", async function() {
     if (rom_chosen === true) {
-        let cover = window.confirm("This will cover the current image, Confirm?");
+        let cover = window.confirm("This will restart the machine emulation, continue?");
         if (cover == false) {
             $("#romchoice").find("option").eq(index_src).prop("selected",true);
             return;
@@ -184,7 +183,7 @@ $("#romchoice").on("change", async function() {
         let data = await readBlobFromUrl(url);
         let hashcomp = await filehash(data, hash);
         if (hashcomp == true) {
-            load_bin(data);
+            loadRom(data);
         }
         $("#loading_img").invisible();
         zealcom.cont();
