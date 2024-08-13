@@ -202,7 +202,7 @@ setTimeout(() => {
             params.r = $('#romchoice optgroup[data-type=latest] option:first-child').val();
         }
         if(params.r == 'nightly') {
-            params.r = $('#romchoice optgroup[data-type=latest] option:last-child').val();
+            params.r = $('#romchoice optgroup[data-type=nightly] option:last-child').val();
         }
         console.log('pre-built rom', params.r);
         $('#romchoice').val(params.r).trigger('change');
