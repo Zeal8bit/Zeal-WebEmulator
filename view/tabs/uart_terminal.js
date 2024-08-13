@@ -11,6 +11,7 @@ let dots_count = 3;
 /* It is possible to send files as raw binary data on the UART, place
  * a listener on the send button for that */
 $("#uart-file-send").on("click", function() {
+    const $button = $(this);
     /* If we are already sending a file, do nothing */
     if (sending) {
         return;
@@ -22,8 +23,7 @@ $("#uart-file-send").on("click", function() {
     reader.addEventListener('load', function(e) {
         let binary = e.target.result;
         sending = true;
-        $("#sending").text(sending_message);
-        $("#sending").visible();
+        $button.text(sending_message);
 
         /* Animate the tailing dots */
         const interval = setInterval(function() {
@@ -33,7 +33,7 @@ $("#uart-file-send").on("click", function() {
                 dots_count++;
             }
             const dots_str = '.'.repeat(dots_count);
-            $("#sending").text(sending_message + dots_str);
+            $button.text(sending_message + dots_str);
         }, 333);
 
         setTimeout(function() {
@@ -41,6 +41,7 @@ $("#uart-file-send").on("click", function() {
                 sending = false;
                 clearInterval(interval);
                 $("#sending").invisible();
+                $button.text('Send');
             });
         }, 10);
 
@@ -48,6 +49,16 @@ $("#uart-file-send").on("click", function() {
     if (typeof file !== "undefined") {
         reader.readAsBinaryString(file);
     }
+});
+
+$('#uart-cols').on('change', function() {
+    UART_SIZE.cols = $(this).val()
+    terminal.resize(UART_SIZE.cols, UART_SIZE.rows);
+});
+
+$('#uart-rows').on('change', function() {
+    UART_SIZE.rows = $(this).val()
+    terminal.resize(UART_SIZE.cols, UART_SIZE.rows);
 });
 
 $("#clearterm").on("click", function() {

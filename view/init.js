@@ -17,7 +17,20 @@ function us_to_tstates(us) {
     return Math.floor(us / TSTATES_US);
 }
 
-var terminal = new Terminal();
+const UART_SIZE = {
+    cols: 80,
+    rows: 24,
+};
+
+var terminal = new Terminal({
+    ...UART_SIZE,
+    screenKeys: true,
+    convertEol: true,
+    cursorBlink: true,
+    fontSize: 14,
+});
+$('#uart-cols').val(UART_SIZE.cols);
+$('#uart-rows').val(UART_SIZE.rows);
 terminal.open(document.getElementById('terminal'));
 
 // Init shortcut key
