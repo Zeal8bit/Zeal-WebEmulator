@@ -47,3 +47,18 @@ function hex16(high, lower, noprefix) {
     const value = (high << 8) | lower;
     return `${noprefix ? "" : "0x"}${hex(value, true)}`;
 }
+
+
+/**
+ * 
+ * @param params string
+ * @returns [key: string]: string
+ */
+function parseQueryParams(params) {
+    if(params.startsWith('?')) params = params.slice(1);
+    return params.split('&').reduce((acc, kvp) => {
+        const [key,value] = kvp.split('=');
+        acc[key] = value ?? false;
+        return acc;
+    }, {});
+}

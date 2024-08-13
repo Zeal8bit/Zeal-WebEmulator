@@ -119,9 +119,9 @@ function processIndex(index) {
 
     const all_options =
     `<option value="">Choose an image...</option>` +
-    `<optgroup label="--- Latest ---">` + latest + `</optgroup>` +
-    `<optgroup label="--- Nightly ---">` + nightly.join("") + `</optgroup>` +
-    `<optgroup label="--- Stable ---">` + stable.join("") + `</optgroup>`;
+    `<optgroup label="--- Latest ---" data-type="latest">` + latest + `</optgroup>` +
+    `<optgroup label="--- Nightly ---"  data-type="nightly">` + nightly.join("") + `</optgroup>` +
+    `<optgroup label="--- Stable ---"  data-type="stable">` + stable.join("") + `</optgroup>`;
 
 
     $("#romchoice").html(all_options);
@@ -193,3 +193,18 @@ $("#romchoice").on("change", async function() {
         switchToAdvancedMode(error);
     }
 });
+
+const params = parseQueryParams(window.location.search);
+setTimeout(() => {
+    console.log('params', params);
+    if(params.r) {
+        if(params.r == 'latest') {
+            params.r = $('#romchoice optgroup[data-type=latest] option:first-child').val();
+        }
+        if(params.r == 'nightly') {
+            params.r = $('#romchoice optgroup[data-type=latest] option:last-child').val();
+        }
+        console.log('pre-built rom', params.r);
+        $('#romchoice').val(params.r).trigger('change');
+    }
+}, 250);
