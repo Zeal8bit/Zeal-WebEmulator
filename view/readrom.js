@@ -103,6 +103,18 @@ function switchToAdvancedMode(error) {
 const prebuilt_json_url_host = "https://zeal8bit.com";
 const prebuilt_json_url_path = "/roms/index.json";
 
+function fetchIndex() {
+    fetch(prebuilt_json_url_host + prebuilt_json_url_path)
+        .then(response => response.json())
+        .then(response => processIndex(response))
+        .catch(() => {
+            fetch(prebuilt_json_url_path)
+            .then(response => response.json())
+            .then(response => processIndex(response))
+            .catch(switchToAdvancedMode);
+        });
+}
+
 /* Process the index JSON object that contains all the ROMs available */
 function processIndex(index) {
     const to_option = (entry) => `<option value="${entry.urls}" data-version="${entry.version}" data-hash="${entry.hash}">${entry.name}</option>`;
@@ -125,18 +137,6 @@ function processIndex(index) {
 /* Fetch the remote JSON file, and pass the content to the previous function */
 if (!advancedMode) {
     fetchIndex();
-}
-
-function fetchIndex() {
-    fetch(prebuilt_json_url_host + prebuilt_json_url_path)
-        .then(response => response.json())
-        .then(response => processIndex(response))
-        .catch(() => {
-            fetch(prebuilt_json_url_path)
-            .then(response => response.json())
-            .then(response => processIndex(response))
-            .catch(switchToAdvancedMode);
-        });
 }
 
 function resetRom() {
@@ -189,7 +189,10 @@ $("#romchoice").on("change", async function() {
         zealcom.cont();
     }
     catch (error) {
-        switchToAdvancedMode(error);
+        $("#loading_img").invisible();
+        rom_chosen = false;
+        popout.error("Error while fetching the image");
+        $("#romchoice").html("<option value=''>Choose an image...</option>");
     }
 });
 

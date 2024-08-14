@@ -2,6 +2,7 @@
 node_modules
 
 # Package manager files:
+pnpm-lock.yaml
 yarn-error.log
 *.lock
 

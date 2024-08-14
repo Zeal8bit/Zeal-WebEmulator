@@ -11,6 +11,7 @@ const { hideBin } = require('yargs/helpers')
 const opn = require('opn');
 const { app, BrowserWindow, Menu, ipcMain, ipcRenderer } = require('electron');
 const path = require('node:path');
+const fs = require("node:fs");
 const menuBar = require("./menubar.js");
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
@@ -33,22 +34,23 @@ function create_mainWindow() {
     return mainWindow;
 }
 
-const createWindow = () => {
-    mainWindow = create_mainWindow();
+function createWindow() {
+    var mainWindow = create_mainWindow();
     // Set up the menu bar
     const menu = Menu.buildFromTemplate(menuBar);
     // Set up the top menu
     Menu.setApplicationMenu(menu);
 };
 
-app.on('ready', async () => {
-    argv = initalizeCli();
+app.on('ready', () => {
+    let argv = getArgs();
+    console.log('argv', argv);
     if(!argv) {
         app.quit();
         return;
     }
-
     createWindow();
+    parseArgs();
 });
 
 app.on('window-all-closed', () => {
@@ -63,29 +65,8 @@ app.on('activate', () => {
     }
 });
 
-function initalizeCli() {
-    const argv = parseArgs();
-    console.log('argv', argv);
-    // TODO: parse the args and determine if we should continue
-
-    /**
-     * Manage the pre-built ROMs list. Available ROMs will be fetched from a remote JSON file that contains
-     * names and links to all of the available ROMs, the first one will always be the default.
-     */
-    // const prebuilt_json_url = "https://zeal8bit.com/roms/index.json";
-    // let indexjson = fetch(prebuilt_json_url)
-    //     .then(response => response.json())
-    //     .catch(() => {
-    //         console.error("2Error occuceded while proccessing the index");
-    //     });
-    // console.log(indexjson);
-
-    // return false to quit the app
-    return argv;
-}
-
-function parseArgs() {
-    // Parse the parameters
+function getArgs() {
+    // Get the parameters
     let failed = false;
     var argv = yargs(hideBin(process.argv))
         .help("h").alias("h", "help")
@@ -139,5 +120,21 @@ function parseArgs() {
         })
         .parse();
     if(failed) return false;
+    return argv;
+}
+
+function parseArgs(argv) {
+    let img_regex = /^v[0-9]*\.[0-9]*\.[0-9]*/;
+    if (fs.existsSync(`./roms/${argv.rom}.img`)) {
+        argv.rom = `./roms/${argv.rom}.img`;
+        mainWindow.webContents.send('rom', false, argv.rom);
+    }
+    else if (img_regex.test(argv.rom)) {
+        mainWindow.webContents.send('rom', true, argv.rom);
+    }
+    else {
+        mainWindow.webContents.send('rom', false, argv.rom);
+    }
+
     return argv;
 }
