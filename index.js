@@ -35,7 +35,7 @@ function create_mainWindow() {
 }
 
 function createWindow() {
-    var mainWindow = create_mainWindow();
+    mainWindow = create_mainWindow();
     // Set up the menu bar
     const menu = Menu.buildFromTemplate(menuBar);
     // Set up the top menu
@@ -50,7 +50,7 @@ app.on('ready', () => {
         return;
     }
     createWindow();
-    parseArgs();
+    parseArgs(argv);
 });
 
 app.on('window-all-closed', () => {
@@ -135,6 +135,8 @@ function parseArgs(argv) {
     else {
         mainWindow.webContents.send('rom', false, argv.rom);
     }
+
+    let rom_bin = fs.readFileSync(argv.rom);
 
     return argv;
 }

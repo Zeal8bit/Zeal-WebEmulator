@@ -210,3 +210,9 @@ setTimeout(() => {
         $('#romchoice').val(params.r).trigger('change');
     }
 }, 250);
+
+// electron
+if (electronAPI) {
+    electronAPI.on("rom", loadRom);
+}
+

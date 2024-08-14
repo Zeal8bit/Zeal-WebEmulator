@@ -1,15 +1,5 @@
-const { ipcRenderer } = require('electron');
+const { contextBridge, ipcRenderer } = require('electron');
 
-var $ = (id) => document.getElementById(id);
-
-window.addEventListener('DOMContentLoaded', () => {
-    const counter = document.getElementById('counter');
-    ipcRenderer.on('rom', (_event, prebuilt, value) => {
-        if (prebuilt) {
-            $("")
-        }
-        else {
-
-        }
-    });
+contextBridge.exposeInMainWorld('electronAPI', {
+    on: (event, callback) => ipcRenderer.on(event, (_event, data) => callback(data))
 });
