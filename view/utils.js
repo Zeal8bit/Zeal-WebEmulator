@@ -62,3 +62,5 @@ function parseQueryParams(params) {
         return acc;
     }, {});
 }
+
+let tob = (arr) => new Blob([arr], {type: 'application/octet-stream'});

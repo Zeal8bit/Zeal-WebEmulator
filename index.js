@@ -21,7 +21,7 @@ if (require('electron-squirrel-startup')) {
 
 function create_mainWindow() {
     // Create the browser window.
-    const mainWindow = new BrowserWindow({
+    let mainWindow = new BrowserWindow({
         width: 1200,
         height: 800,
         webPreferences: {
@@ -44,7 +44,7 @@ function createWindow() {
 
 app.on('ready', () => {
     let argv = getArgs();
-    console.log('argv', argv);
+    // console.log('argv', argv);
     if(!argv) {
         app.quit();
         return;
@@ -75,16 +75,17 @@ function getArgs() {
         .option('rom', {
             type: 'string',
             alias: 'r',
-            // choices: ['peanut-butter', 'jelly', 'banana', 'pickles'],
             description: 'Select a prebuild romdisk or a local image',
             nargs: 1,
         })
-        .option('binary', {
-            type: 'string',
-            alias: 'b',
-            description: 'Load a executable binary into ZOS',
-            nargs: 1,
-        })
+        // TODO: 
+        // .option('binary', {
+        //     type: 'string',
+        //     alias: 'b',
+        //     description: 'Load a executable binary into ZOS',
+        //     nargs: 1,
+        // })
+        // .implies("binary", "rom")
         .option('breakpoint', {
             type: 'string',
             alias: 'B',
@@ -92,6 +93,7 @@ function getArgs() {
             array: true,
             nargs: 1,
         })
+        .array("breakpoint")
         .option('map', {
             type: 'string',
             alias: 'm',
@@ -124,19 +126,46 @@ function getArgs() {
 }
 
 function parseArgs(argv) {
-    let img_regex = /^v[0-9]*\.[0-9]*\.[0-9]*/;
-    if (fs.existsSync(`./roms/${argv.rom}.img`)) {
-        argv.rom = `./roms/${argv.rom}.img`;
-        mainWindow.webContents.send('rom', false, argv.rom);
+    if (argv.rom) {
+        let img_regex = /^v[0-9]*\.[0-9]*\.[0-9]*/;
+        if (img_regex.test(argv.rom)) {
+            if (fs.existsSync(`./roms/${argv.rom}.img`)) {
+                argv.rom = `./roms/${argv.rom}.img`;
+            }
+            else {
+                // TODO: get image by auto and add `--rom latest`
+                console.log("please run `pnpm get-prebuilt` to get latest images");
+            }
+        }
+        setTimeout(()=>{
+            mainWindow.webContents.send('rom', fs.readFileSync(argv.rom));
+        }, 2000)
     }
-    else if (img_regex.test(argv.rom)) {
-        mainWindow.webContents.send('rom', true, argv.rom);
+    if (argv.map) {
+        setTimeout(()=>{
+            mainWindow.webContents.send('map', fs.readFileSync(argv.map));
+        }, 2000)
     }
-    else {
-        mainWindow.webContents.send('rom', false, argv.rom);
+    if (argv.eeprom) {
+        setTimeout(()=>{
+            mainWindow.webContents.send('eeprom', fs.readFileSync(argv.eeprom));
+        }, 2000)
     }
-
-    let rom_bin = fs.readFileSync(argv.rom);
-
+    if (argv.cf) {
+        setTimeout(()=>{
+            mainWindow.webContents.send('cf', fs.readFileSync(argv.cf));
+        }, 2000)
+    }
+    // if (argv.binary) {
+    //     setTimeout(()=>{
+    //         mainWindow.webContents.send('binary', fs.readFileSync(argv.binary));
+    //     }, 2000)
+    // }
+    if (argv.breakpoint) {
+        setTimeout(()=>{
+            mainWindow.webContents.send('breakpoint', argv.breakpoint);
+        }, 2000)
+    }
+    
     return argv;
 }

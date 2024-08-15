@@ -2,7 +2,6 @@ function loadToDevice(dev, loadfile_external_params=[], callback){
     let reader = new FileReader();
     $(reader).on('load', function(e) {
         let binary = e.target.result;
-        console.log(dev?.isNew);
         let load_returns = dev.loadFile(binary, ...loadfile_external_params);
         callback(load_returns);
     });
@@ -51,11 +50,19 @@ function loadCf(file_cf) {
     }
 }
 
+function loadRam(file_ram, offset) {
+    /* Read the rom file */
+    if (file_ram) {
+        loadToDevice(zealcom.ram, [offset], () => {}).readAsBinaryString(file_ram);
+    }
+}
+
 $("#read-button").on('click', function() {
     loadRom($("#file-rom")[0].files[0]);
     loadMap($("#file-map")[0].files[0]);
     loadEEPROM($("#file-eeprom")[0].files[0]);
     loadCf($("#file-cf")[0].files[0]);
+    zealcom.cont();
 });
 
 /**
@@ -99,7 +106,7 @@ function switchToAdvancedMode(error) {
  * Manage the pre-built ROMs list. Available ROMs will be fetched from a remote JSON file that contains
  * names and links to all of the available ROMs, the first one will always be the default.
  */
-
+    // TODO: use roms/index.json
 const prebuilt_json_url_host = "https://zeal8bit.com";
 const prebuilt_json_url_path = "/roms/index.json";
 
@@ -140,7 +147,7 @@ if (!advancedMode) {
 }
 
 function resetRom() {
-    rom_chosen = false;
+    rom_loaded = false;
     /* Reset all the file inputs */
     $("#romfile [type=file]").val("");
     /* Remove the ticks from the ready list */
@@ -150,13 +157,14 @@ function resetRom() {
     });
 }
 
-var rom_chosen = false;
+// TODO: add a `loaded` attribute for every devices
+var rom_loaded = false;
 var index_src;
 /**
  * Add a listener to the romchoice list, load the ROM when selected
  */
 $("#romchoice").on("change", async function() {
-    if (rom_chosen === true) {
+    if (rom_loaded === true) {
         let cover = window.confirm("This will restart the machine emulation, continue?");
         if (cover == false) {
             $("#romchoice").find("option").eq(index_src).prop("selected",true);
@@ -166,7 +174,7 @@ $("#romchoice").on("change", async function() {
             zealcom.restart(reset_rom_selected=false);
         }
     }
-    rom_chosen = true;
+    rom_loaded = true;
     index_src = $("#romchoice").get(0).selectedIndex;
     /* Get the URL of the current choice */
     let url = $(this).val();
@@ -190,7 +198,7 @@ $("#romchoice").on("change", async function() {
     }
     catch (error) {
         $("#loading_img").invisible();
-        rom_chosen = false;
+        rom_loaded = false;
         popout.error("Error while fetching the image");
         $("#romchoice").html("<option value=''>Choose an image...</option>");
     }
@@ -213,6 +221,29 @@ setTimeout(() => {
 
 // electron
 if (electronAPI) {
-    electronAPI.on("rom", loadRom);
+    electronAPI.on("rom", (data) => {
+        loadRom(tob(data));
+        rom_loaded = true;
+        zealcom.cont();
+    });
+    // TODO: fix this
+    // electronAPI.on("binary", (data) => {
+    //     let state = zealcom.zpu.getState();
+    //     state.pc = 0x8;
+    //     state.l = 15;
+    //     zealcom.zpu.setState(state);
+    //     newBreakpoint("0x4000");
+    //     loadRam(tob(data), 0x4000);
+    //     zealcom.cont();
+    // });
+    electronAPI.on("map", (data) => {
+        loadMap(tob(data));
+    });
+    electronAPI.on("eeprom", (data) => {
+        loadEEPROM(tob(data));
+    });
+    electronAPI.on("cf", (data) => {
+        loadCf(tob(data));
+    });
 }
 
