@@ -1,3 +1,9 @@
+/**
+ * SPDX-FileCopyrightText: 2022-2024 Zeal 8-bit Computer <contact@zeal8bit.com>; Jason Mo <jasonmo2009@hotmail.com>
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 function loadToDevice(dev, loadfile_external_params=[], callback){
     let reader = new FileReader();
     $(reader).on('load', function(e) {
@@ -74,7 +80,7 @@ const urlGetParam = new URLSearchParams(window.location.search);
 var advancedMode = urlGetParam.get("advanced") === "true";
 
 if (advancedMode) {
-    // $("#romload").hide();
+    $("#romload").hide();
     $("#romfile").show();
 }
 
@@ -220,30 +226,20 @@ setTimeout(() => {
 }, 250);
 
 // electron
-if (electronAPI) {
+if (typeof electronAPI != 'undefined') {
     electronAPI.on("rom", (data) => {
-        loadRom(tob(data));
+        loadRom(array_to_blob(data));
         rom_loaded = true;
         zealcom.cont();
     });
-    // TODO: fix this
-    // electronAPI.on("binary", (data) => {
-    //     let state = zealcom.zpu.getState();
-    //     state.pc = 0x8;
-    //     state.l = 15;
-    //     zealcom.zpu.setState(state);
-    //     newBreakpoint("0x4000");
-    //     loadRam(tob(data), 0x4000);
-    //     zealcom.cont();
-    // });
     electronAPI.on("map", (data) => {
-        loadMap(tob(data));
+        loadMap(array_to_blob(data));
     });
     electronAPI.on("eeprom", (data) => {
-        loadEEPROM(tob(data));
+        loadEEPROM(array_to_blob(data));
     });
     electronAPI.on("cf", (data) => {
-        loadCf(tob(data));
+        loadCf(array_to_blob(data));
     });
 }
 

@@ -1,5 +1,5 @@
 /**
- * SPDX-FileCopyrightText: 2022 Zeal 8-bit Computer <contact@zeal8bit.com>
+ * SPDX-FileCopyrightText: 2022-2024 Zeal 8-bit Computer <contact@zeal8bit.com>
  *
  * SPDX-License-Identifier: Apache-2.0
  */
@@ -63,4 +63,4 @@ function parseQueryParams(params) {
     }, {});
 }
 
-let tob = (arr) => new Blob([arr], {type: 'application/octet-stream'});
+let array_to_blob = (arr) => new Blob([arr], {type: 'application/octet-stream'});

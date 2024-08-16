@@ -42,13 +42,6 @@ module.exports = [
                 click() {
                     mainWindow.webContents.openDevTools();
                 }
-            },
-            {
-                label: 'Send image',
-                click() {
-                    let rom_bin = fs.readFileSync('./roms/v0.4.0-9-ge68eb04.img');
-                    mainWindow.webContents.send('rom', rom_bin);
-                }
             }
         ]
     },

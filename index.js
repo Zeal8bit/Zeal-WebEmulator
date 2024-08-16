@@ -5,7 +5,6 @@
  */
 
 // This file is a part of electron version, it will init main window and chrome
-// const yargs = require("yargs/yargs")
 const yargs = require("yargs/yargs");
 const { hideBin } = require('yargs/helpers')
 const opn = require('opn');
@@ -44,13 +43,14 @@ function createWindow() {
 
 app.on('ready', () => {
     let argv = getArgs();
-    // console.log('argv', argv);
     if(!argv) {
         app.quit();
         return;
     }
     createWindow();
-    parseArgs(argv);
+    ipcMain.on("load", () => {
+        parseArgs(argv);
+    });
 });
 
 app.on('window-all-closed', () => {
@@ -78,14 +78,6 @@ function getArgs() {
             description: 'Select a prebuild romdisk or a local image',
             nargs: 1,
         })
-        // TODO: 
-        // .option('binary', {
-        //     type: 'string',
-        //     alias: 'b',
-        //     description: 'Load a executable binary into ZOS',
-        //     nargs: 1,
-        // })
-        // .implies("binary", "rom")
         .option('breakpoint', {
             type: 'string',
             alias: 'B',
@@ -137,34 +129,19 @@ function parseArgs(argv) {
                 console.log("please run `pnpm get-prebuilt` to get latest images");
             }
         }
-        setTimeout(()=>{
-            mainWindow.webContents.send('rom', fs.readFileSync(argv.rom));
-        }, 2000)
+        mainWindow.webContents.send('rom', fs.readFileSync(argv.rom));
     }
     if (argv.map) {
-        setTimeout(()=>{
-            mainWindow.webContents.send('map', fs.readFileSync(argv.map));
-        }, 2000)
+        mainWindow.webContents.send('map', fs.readFileSync(argv.map));
     }
     if (argv.eeprom) {
-        setTimeout(()=>{
-            mainWindow.webContents.send('eeprom', fs.readFileSync(argv.eeprom));
-        }, 2000)
+        mainWindow.webContents.send('eeprom', fs.readFileSync(argv.eeprom));
     }
     if (argv.cf) {
-        setTimeout(()=>{
-            mainWindow.webContents.send('cf', fs.readFileSync(argv.cf));
-        }, 2000)
+        mainWindow.webContents.send('cf', fs.readFileSync(argv.cf));
     }
-    // if (argv.binary) {
-    //     setTimeout(()=>{
-    //         mainWindow.webContents.send('binary', fs.readFileSync(argv.binary));
-    //     }, 2000)
-    // }
     if (argv.breakpoint) {
-        setTimeout(()=>{
-            mainWindow.webContents.send('breakpoint', argv.breakpoint);
-        }, 2000)
+        mainWindow.webContents.send('breakpoint', argv.breakpoint);
     }
     
     return argv;

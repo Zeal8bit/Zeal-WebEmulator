@@ -116,7 +116,7 @@ function enableBreakpoint(bkrobj) {
 }
 
 // electron
-if (electronAPI) {
+if (typeof electronAPI != 'undefined') {
     electronAPI.on("breakpoint", (breakpoints) => {
         for (let i = 0; i < breakpoints.length; i++) {
             newBreakpoint(breakpoints[i]);
