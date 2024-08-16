@@ -110,7 +110,7 @@ const prebuilt_json_url_path = "/roms/index.json";
 
 /* Process the index JSON object that contains all the ROMs available */
 function processIndex(index) {
-    const to_option = entry => `<option value="${entry.urls}" data-version="${entry.version}" data-hash="${entry.hash}">${entry.name}</option>`;
+    const to_option = (entry) => `<option value="${entry.urls}" data-version="${entry.version}" data-hash="${entry.hash}">${entry.name}</option>`;
 
     /* Generate an HTML option out of each entry */
     const latest  = to_option(index.latest);
@@ -119,12 +119,9 @@ function processIndex(index) {
 
     const all_options =
     `<option value="">Choose an image...</option>` +
-    `<option value="" disabled>--- Latest ---</option>` +
-    latest +
-    `<option value="" disabled>--- Nightly ---</option>` +
-    nightly.join("") +
-    `<option value="" disabled>--- Stable ---</option>` +
-    stable.join("");
+    `<optgroup label="--- Latest ---" data-type="latest">` + latest + `</optgroup>` +
+    `<optgroup label="--- Nightly ---"  data-type="nightly">` + nightly.join("") + `</optgroup>` +
+    `<optgroup label="--- Stable ---"  data-type="stable">` + stable.join("") + `</optgroup>`;
 
 
     $("#romchoice").html(all_options);
@@ -196,3 +193,18 @@ $("#romchoice").on("change", async function() {
         switchToAdvancedMode(error);
     }
 });
+
+const params = parseQueryParams(window.location.search);
+setTimeout(() => {
+    console.log('params', params);
+    if(params.r) {
+        if(params.r == 'latest') {
+            params.r = $('#romchoice optgroup[data-type=latest] option:first-child').val();
+        }
+        if(params.r == 'nightly') {
+            params.r = $('#romchoice optgroup[data-type=nightly] option:last-child').val();
+        }
+        console.log('pre-built rom', params.r);
+        $('#romchoice').val(params.r).trigger('change');
+    }
+}, 250);

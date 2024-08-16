@@ -289,7 +289,7 @@
       <section id="memdump" class="panel hidden">
       </section>
       <section id="memview" class="panel hidden">
-        <section id="dumpfields">
+        <section class="panel-toolbar">
           <input type="text" id="dumpaddr" placeholder="Hex address" />
           <input type="text" id="dumpsize" placeholder="Size" />
           <input type="button" id="dumpnow" value="Dump" />
@@ -305,18 +305,31 @@
         </section>
       </section>
       <section id="uartview" class="panel">
-        <input type="button" id="clearterm" value="Clear" />
-        <label for="baudrate">Baudrate: </label>
-        <select id="baudrate">
-          <option value="57600">57600</option>
-          <option value="38400">38400 </option>
-          <option value="19200">19200</option>
-          <option value="9600">9600</option>
-        </select>
-        <label for="uart-file">Send a file:</label>
-        <input type="file" id="uart-file" placeholder="Send a file through UART" />
-        <input type="button" id="uart-file-send" value="Send" />
-        <div id="sending">Sending...</div>
+        <div class="panel-toolbar">
+          <input type="button" id="clearterm" value="Clear" />
+          <label>
+            Baudrate:
+            <select id="baudrate">
+              <option value="57600">57600</option>
+              <option value="38400">38400 </option>
+              <option value="19200">19200</option>
+              <option value="9600">9600</option>
+            </select>
+          </label>
+          <label>
+            File:
+            <input type="file" id="uart-file" placeholder="Send a file through UART" />
+          </label>
+          <button id="uart-file-send">Send</button>
+          <input type="number" id="uart-char" value="21" class="short" />
+          <input type="button" id="uart-char-send" value="Send Byte" />
+          <label>
+            Cols: <input type="number" value="80" style="width: 5ch;" id="uart-cols" />
+          </label>
+          <label>
+            Rows: <input type="number" value="24" style="width: 5ch;" id="uart-rows" />
+          </label>
+        </div>
         <div id="terminal"></div>
       </section>
     </section>

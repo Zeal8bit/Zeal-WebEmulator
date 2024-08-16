@@ -18,13 +18,13 @@ function setRAMView(virtaddr, size) {
                         hex(virtaddr + i, true) + " (" + hex(physaddr + i, true, 6) + ")" +
                       '</section>' +
                     '<section class="membytes">';
-        
+
         for (var j = 0; j < byte_per_line; j++) {
             const virt = virtaddr + i + j
             var byte = zealcom.mem_read(virt);
             if (isPrintable(byte)) {
                 ascii.push(String.fromCharCode(byte));
-            } 
+            }
             else {
                 ascii.push('.');
             }
