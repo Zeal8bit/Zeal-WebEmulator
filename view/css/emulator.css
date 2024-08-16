@@ -36,6 +36,8 @@ body {
 
 a {
     color: var(--first-txt-color);
+    cursor: pointer;
+    text-decoration: underline;
 }
 
 button, input[type=button] {

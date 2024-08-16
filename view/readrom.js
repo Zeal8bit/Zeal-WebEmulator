@@ -4,6 +4,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+const params = parseQueryParams(window.location.search);
+
 function loadToDevice(dev, loadfile_external_params=[], callback){
     let reader = new FileReader();
     $(reader).on('load', function(e) {
@@ -35,7 +37,7 @@ function loadMap(file_map) {
                 popup.error("Error while loading map file");
             }
         }).readAsText(file_map);
-    }    
+    }
 }
 
 function loadEEPROM(file_eeprom) {
@@ -71,19 +73,6 @@ $("#read-button").on('click', function() {
     zealcom.cont();
 });
 
-/**
- * Manage the "advanced" link that shows all the files uploader
- * If the URL has "advanced" parameters, show these uploaders directly
- */
-
-const urlGetParam = new URLSearchParams(window.location.search);
-var advancedMode = urlGetParam.get("advanced") === "true";
-
-if (advancedMode) {
-    $("#romload").hide();
-    $("#romfile").show();
-}
-
 $("#romadvanced a").click(() => {
     $("#romfile").toggle(500);
 });
@@ -108,14 +97,6 @@ function switchToAdvancedMode(error) {
     }
 }
 
-/**
- * Manage the pre-built ROMs list. Available ROMs will be fetched from a remote JSON file that contains
- * names and links to all of the available ROMs, the first one will always be the default.
- */
-    // TODO: use roms/index.json
-const prebuilt_json_url_host = "https://zeal8bit.com";
-const prebuilt_json_url_path = "/roms/index.json";
-
 function fetchIndex() {
     fetch(prebuilt_json_url_host + prebuilt_json_url_path)
         .then(response => response.json())
@@ -130,26 +111,53 @@ function fetchIndex() {
 
 /* Process the index JSON object that contains all the ROMs available */
 function processIndex(index) {
-    const to_option = (entry) => `<option value="${entry.urls}" data-version="${entry.version}" data-hash="${entry.hash}">${entry.name}</option>`;
+    const to_option = (entry,selected=false) => {
+        const attrs = {
+            value: entry.urls,
+            hash: entry.hash,
+        };
+
+        if(selected) {
+            attrs.selected = true;
+        }
+        const attributes = Object.keys(attrs).reduce((acc,key) => {
+            acc += `${key}`;
+            if(!['selected', 'disabled'].includes(key) && attrs[key]) {
+                acc += `="${attrs[key]}" `;
+            }
+            return acc;
+        }, '');
+
+        return `<option ${attributes}>${entry.name}</option>`;
+    };
 
     /* Generate an HTML option out of each entry */
-    const latest  = to_option(index.latest);
-    const nightly = index.nightly.map(to_option);
-    const stable  = index.stable.map(to_option);
+    let all_options = [
+        `<option value="">Choose an image...</option>`,
+    ];
+    if(index.latest) {
+        const latest  = to_option(index.latest, index.latest.urls == params.r || params.r == 'latest');
+        all_options.push(`<optgroup label="--- Latest ---" data-type="latest">` + latest + `</optgroup>`);
+    }
+    if(index.nightly) {
+        const nightly = index.nightly.reverse().map((entry, index) => {
+            if((params.r == entry.urls) || (params.r == 'nightly' && index == 0)) {
+                return to_option(entry, true);
+            }
+            return to_option(entry, false);
+        });
+        all_options.push(`<optgroup label="--- Nightly ---"  data-type="nightly">` + nightly.join("") + `</optgroup>`);
+    }
+    if(index.stable) {
+        const stable  = index.stable.map((entry) => to_option(entry, false));
+        all_options.push(`<optgroup label="--- Stable ---"  data-type="stable">` + stable.join("") + `</optgroup>`);
+    }
 
-    const all_options =
-    `<option value="">Choose an image...</option>` +
-    `<optgroup label="--- Latest ---" data-type="latest">` + latest + `</optgroup>` +
-    `<optgroup label="--- Nightly ---"  data-type="nightly">` + nightly.join("") + `</optgroup>` +
-    `<optgroup label="--- Stable ---"  data-type="stable">` + stable.join("") + `</optgroup>`;
-
-
-    $("#romchoice").html(all_options);
-}
-
-/* Fetch the remote JSON file, and pass the content to the previous function */
-if (!advancedMode) {
-    fetchIndex();
+    $("#romchoice").html(all_options.join("\n"));
+    $("#romchoice").on("change", switchRom);
+    if(params.r && $("#romchoice").find(":selected").length ) {
+        $('#romchoice').trigger('change');
+    }
 }
 
 function resetRom() {
@@ -163,44 +171,51 @@ function resetRom() {
     });
 }
 
-// TODO: add a `loaded` attribute for every devices
-var rom_loaded = false;
-var index_src;
+var rom_chosen = false;
 /**
  * Add a listener to the romchoice list, load the ROM when selected
  */
-$("#romchoice").on("change", async function() {
-    if (rom_loaded === true) {
-        let cover = window.confirm("This will restart the machine emulation, continue?");
-        if (cover == false) {
-            $("#romchoice").find("option").eq(index_src).prop("selected",true);
+async function switchRom() {
+    const reload = rom_chosen !== false;
+    if(reload) {
+        let cover = window.confirm("This will cover the current image, Confirm?");
+        if(!cover) {
+            $('#romchoice').val(rom_chosen);
             return;
         }
-        else {
-            zealcom.restart(reset_rom_selected=false);
-        }
     }
-    rom_loaded = true;
-    index_src = $("#romchoice").get(0).selectedIndex;
     /* Get the URL of the current choice */
-    let url = $(this).val();
-    /* Get the hash for the current binary */
-    let hash = $('#romchoice option:selected').data("hash");
+    rom_chosen = $(this).val();
+    let compare = false;
+    if(params.r == 'latest') {
+        compare = $('#romchoice optgroup[data-type=latest] option:first-child').val();
+    }
+    if(params.r == 'nightly') {
+        compare = $('#romchoice optgroup[data-type=nightly] option:first-child').val();
+    }
 
-    if (!url) {
+    if (!rom_chosen) {
         return;
     }
-
-    $("#loading_img").visible();
+    if(rom_chosen !== compare) {
+        window.history.pushState({}, undefined, `?r=${rom_chosen}`);
+        if(reload) {
+            window.location.reload();
+            return;
+        }
+    }
 
     try {
-        let data = await readBlobFromUrl(url);
+        $("#loading_img").visible();
+        /* Get the hash for the current binary */
+        let hash = $(`#romchoice option[value="${rom_chosen}"]`).attr("hash");
+        let data = await readBlobFromUrl(rom_chosen);
         let hashcomp = await filehash(data, hash);
         if (hashcomp == true) {
             loadRom(data);
         }
-        $("#loading_img").invisible();
         zealcom.cont();
+        $("#loading_img").invisible();
     }
     catch (error) {
         $("#loading_img").invisible();
@@ -208,22 +223,35 @@ $("#romchoice").on("change", async function() {
         popout.error("Error while fetching the image");
         $("#romchoice").html("<option value=''>Choose an image...</option>");
     }
-});
+};
 
-const params = parseQueryParams(window.location.search);
-setTimeout(() => {
-    console.log('params', params);
-    if(params.r) {
-        if(params.r == 'latest') {
-            params.r = $('#romchoice optgroup[data-type=latest] option:first-child').val();
-        }
-        if(params.r == 'nightly') {
-            params.r = $('#romchoice optgroup[data-type=nightly] option:last-child').val();
-        }
-        console.log('pre-built rom', params.r);
-        $('#romchoice').val(params.r).trigger('change');
+jQuery(() => {
+    if (params.advanced) {
+        /**
+         * Manage the "advanced" link that shows all the files uploader
+         * If the URL has "advanced" parameters, show these uploaders directly
+         */
+        $("#romload").hide();
+        $("#romfile").show();
+    } else {
+        /**
+         * Manage the pre-built ROMs list. Available ROMs will be fetched from a remote JSON file that contains
+         * names and links to all of the available ROMs, the first one will always be the default.
+         */
+        const prebuilt_json_url_host = "https://zeal8bit.com";
+        const prebuilt_json_url_path = "/roms/index.json";
+        /* Fetch the remote JSON file, and pass the content to the previous function */
+        fetch(prebuilt_json_url_host + prebuilt_json_url_path)
+            .then(response => response.json())
+            .then(response => processIndex(response))
+            .catch(() => {
+                fetch(prebuilt_json_url_path)
+                .then(response => response.json())
+                .then(response => processIndex(response))
+                .catch(switchToAdvancedMode);
+            });
     }
-}, 250);
+});
 
 // electron
 if (typeof electronAPI != 'undefined') {
@@ -242,4 +270,3 @@ if (typeof electronAPI != 'undefined') {
         loadCf(array_to_blob(data));
     });
 }
-
