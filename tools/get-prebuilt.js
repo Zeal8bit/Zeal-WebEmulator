@@ -4,7 +4,6 @@ const fs = require("fs");
 const prebuilt_json_url = "https://zeal8bit.com/roms/index.json";
 
 const getRom = async (rom, remote = null) => {
-    const fileName = rom.urls.split("/").slice(-1)[0];
     // rename files to match "unique" name, to avoid conflicts
     const romPath = `roms/${rom.name}.img`
 
@@ -103,8 +102,10 @@ const getAll = async () => {
     fs.writeFileSync(`roms/index.json`, fileString);
 };
 
-getAll();
-console.log("Getting Pre-built roms");
+(async () => {
+    console.log("Getting Pre-built ROMs");
+    await getAll();
+})();
 
 // TODO: reuse these functions
 // module.exports = getAll;

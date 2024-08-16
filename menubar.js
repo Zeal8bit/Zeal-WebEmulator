@@ -6,7 +6,7 @@ module.exports = [
         submenu: [
             {
                 label: 'Quit',
-                accelerator: 'ctrl+q',
+                accelerator: 'CommandOrControl+q',
                 click() {
                     app.quit();
                 }
@@ -16,7 +16,7 @@ module.exports = [
             },
             {
                 label: 'Reload',
-                accelerator: 'ctrl+r',
+                accelerator: 'CommandOrControl+r',
                 click() {
                     mainWindow.webContents.reload();
                 }
@@ -26,7 +26,7 @@ module.exports = [
             },
             {
                 label: 'Force Reload',
-                accelerator: 'ctrl+f',
+                accelerator: 'CommandOrControl+f',
                 click() {
                     mainWindow.webContents.reload(true);
                 }
@@ -38,7 +38,7 @@ module.exports = [
         submenu: [
             {
                 label: 'Open DevTools',
-                accelerator: 'ctrl+s',
+                accelerator: 'CommandOrControl+s',
                 click() {
                     mainWindow.webContents.openDevTools();
                 }

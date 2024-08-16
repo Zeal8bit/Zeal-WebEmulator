@@ -20,7 +20,7 @@ if (require('electron-squirrel-startup')) {
 
 function create_mainWindow() {
     // Create the browser window.
-    let mainWindow = new BrowserWindow({
+    const mainWindow = new BrowserWindow({
         width: 1200,
         height: 800,
         webPreferences: {
@@ -71,7 +71,7 @@ function getArgs() {
     var argv = yargs(hideBin(process.argv))
         .help("h").alias("h", "help")
         .usage("Usage: $0 [<options>]")
-        .example("$0 -b zepto.bin", "Start the emulator and execute zepto.bin in the emulator")
+        .example("$0 --rom v0.4.0-9-ge68eb04 --eeprom /your/eeprom/image", "Start the emulator, use zos v0.4.0-9-ge68eb04 and load /your/eeprom/image to eeprom")
         .option('rom', {
             type: 'string',
             alias: 'r',
@@ -80,7 +80,7 @@ function getArgs() {
         })
         .option('breakpoint', {
             type: 'string',
-            alias: 'B',
+            alias: 'b',
             description: 'Set a breakpoint',
             array: true,
             nargs: 1,
@@ -113,7 +113,9 @@ function getArgs() {
             failed = true;
         })
         .parse();
-    if(failed) return false;
+    if(failed || (argv.help == true)) {
+        return false;
+    }
     return argv;
 }
 

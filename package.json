@@ -78,6 +78,5 @@
     "linux": {
       "icon": "./imgs/installer/zeal.png"
     }
-  },
-  "packageManager": "pnpm@9.7.0"
+  }
 }
