@@ -121,16 +121,6 @@ function getArgs() {
 
 function parseArgs(argv) {
     if (argv.rom) {
-        let img_regex = /^v[0-9]*\.[0-9]*\.[0-9]*/;
-        if (img_regex.test(argv.rom)) {
-            if (fs.existsSync(`./roms/${argv.rom}.img`)) {
-                argv.rom = `./roms/${argv.rom}.img`;
-            }
-            else {
-                // TODO: get image by auto and add `--rom latest`
-                console.log("please run `pnpm get-prebuilt` to get latest images");
-            }
-        }
         mainWindow.webContents.send('rom', fs.readFileSync(argv.rom));
     }
     if (argv.map) {
