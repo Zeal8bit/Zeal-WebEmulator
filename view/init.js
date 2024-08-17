@@ -45,3 +45,7 @@ document.addEventListener('keydown', function(event) {
 var zealcom = new Zeal8bitComputer();
 const disassembler = new Disassembler();
 const popout = new Popup();
+
+if (typeof electronAPI != 'undefined') {
+    $(electronAPI.loaded);
+}

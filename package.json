@@ -25,31 +25,32 @@
     "name": "Zeal8bit",
     "email": "contact@zeal8bit.com"
   },
-  "license": "Apache",
+  "license": "Apache-2.0",
   "dependencies": {
-    "electron-squirrel-startup": "^1.0.0",
-    "opn": "^6.0.0"
+    "electron-squirrel-startup": "^1.0.1",
+    "opn": "^6.0.0",
+    "yargs": "^17.7.2"
   },
   "devDependencies": {
-    "live-server": "^1.2.2",
-    "@electron-forge/cli": "^7.1.0",
-    "@electron-forge/maker-deb": "^7.1.0",
-    "@electron-forge/maker-rpm": "^7.1.0",
-    "@electron-forge/maker-squirrel": "^7.1.0",
-    "@electron-forge/maker-zip": "^7.1.0",
-    "@electron-forge/plugin-auto-unpack-natives": "^7.1.0",
-    "electron": "^27.1.2",
-    "electron-builder": "^24.9.1",
-    "electron-squirrel-startup": "^1.0.0"
+    "@electron-forge/cli": "^7.4.0",
+    "@electron-forge/maker-deb": "^7.4.0",
+    "@electron-forge/maker-rpm": "^7.4.0",
+    "@electron-forge/maker-squirrel": "^7.4.0",
+    "@electron-forge/maker-zip": "^7.4.0",
+    "@electron-forge/plugin-auto-unpack-natives": "^7.4.0",
+    "electron": "^28.3.3",
+    "electron-builder": "^24.13.3",
+    "electron-squirrel-startup": "^1.0.0",
+    "live-server": "^1.2.2"
   },
   "build": {
-    "appId": "com.zealwebemulator",
+    "appId": "com.zealemu",
     "productName": "Zeal-WebEmulator",
     "files": [
       "**/*"
     ],
     "directories": {
-      "output": "out/electron-builder/app",
+      "output": "build",
       "app": "./"
     },
     "nsis": {

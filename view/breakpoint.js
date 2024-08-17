@@ -21,18 +21,22 @@ $("#addbp").on("click", function (){
     var written = $("#bpaddr").val();
     /* Empty the text field */
     $("#bpaddr").val("");
-    if (written.length < 1) return;
+    newBreakpoint(written);
+});
+
+function newBreakpoint(value) {
+    if (value.length < 1) return;
     /* Remove the 0x prefix if it exists */
-    if (written.startsWith('0x')) {
-        written = written.slice(2);
+    if (value.startsWith('0x')) {
+        value = value.slice(2);
     }
     /* Check if the string only contains valid hex digits */
     var result = 0;
-    if (isValidHexadecimal(written)) {
-        result = parseInt(written, 16);
+    if (isValidHexadecimal(value)) {
+        result = parseInt(value, 16);
     } else {
         /* Could be a label, let's check this */
-        const addr = disassembler.labelAddress(written);
+        const addr = disassembler.labelAddress(value);
         if (addr === null) {
             return;
         }
@@ -42,7 +46,7 @@ $("#addbp").on("click", function (){
     if (!getBreakpoint(result)) {
         addBreakpoint(result);
     }
-});
+}
 
 $("#bpaddr").on('keydown', function(event) {
     if (event.key === "Enter") {
@@ -110,3 +114,13 @@ function triggeredBreakpoint(bkrobj) {
 function enableBreakpoint(bkrobj) {
     bkrobj.enabled = true;
 }
+
+// electron
+if (typeof electronAPI != 'undefined') {
+    electronAPI.on("breakpoint", (breakpoints) => {
+        for (let i = 0; i < breakpoints.length; i++) {
+            newBreakpoint(breakpoints[i]);
+        }
+    });
+}
+

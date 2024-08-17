@@ -22,9 +22,9 @@ function RAM(size) {
         ram[address] = value;
     }
 
-    function loadFile(offset, binary) {
+    function loadFile(binary, offset) {
         for (var i = 0; i < binary.length; i++) {
-            ram[offset + i ] = binary.charCodeAt(i);
+            ram[offset + i] = binary.charCodeAt(i);
         }
     }
 
