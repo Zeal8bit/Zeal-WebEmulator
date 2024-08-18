@@ -35,7 +35,7 @@ function loadMap(file_map) {
                 popup.error("Error while loading map file");
             }
         }).readAsText(file_map);
-    }    
+    }
 }
 
 function loadEEPROM(file_eeprom) {
@@ -227,19 +227,11 @@ setTimeout(() => {
 
 // electron
 if (typeof electronAPI != 'undefined') {
-    electronAPI.on("rom", (data) => {
-        loadRom(array_to_blob(data));
-        rom_loaded = true;
-        zealcom.cont();
-    });
-    electronAPI.on("map", (data) => {
-        loadMap(array_to_blob(data));
-    });
-    electronAPI.on("eeprom", (data) => {
-        loadEEPROM(array_to_blob(data));
-    });
-    electronAPI.on("cf", (data) => {
-        loadCf(array_to_blob(data));
+    electronAPI.on('load-advanced', (data) => {
+        if(!data.hideAdvanced) {
+            $('#romfile').show();
+        }
+        $('#read-button').trigger('click');
     });
 }
 

@@ -1,4 +1,4 @@
-const fs = require("node:fs");
+const { app } = require('electron');
 
 module.exports = [
     {
