@@ -143,6 +143,27 @@ function getArgs() {
     if(failed || (argv.help == true)) {
         return false;
     }
+
+    if(argv.rom && !fs.existsSync(argv.rom)) {
+        console.warn('--rom', 'invalid filename', argv.rom);
+        return false;
+    }
+
+    if(argv.map && !fs.existsSync(argv.map)) {
+        console.warn('--map', 'invalid filename', argv.map);
+        return false;
+    }
+
+    if(argv.eeprom && !fs.existsSync(argv.eeprom)) {
+        console.warn('--eeprom', 'invalid filename', argv.eeprom);
+        return false;
+    }
+
+    if(argv.cf && !fs.existsSync(argv.cf)) {
+        console.warn('--cf', 'invalid filename', argv.cf);
+        return false;
+    }
+
     return argv;
 }
 
