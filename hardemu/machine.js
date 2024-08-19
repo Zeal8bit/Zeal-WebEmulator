@@ -435,7 +435,7 @@ class Z80Machine {
 
         function restart(resetinterval=true) {
             running = false;
-            vchip.clear();
+            zealcom.reset();
             terminal.clear();
             zealcom = new Zeal8bitComputer();
             if (resetinterval == true) {

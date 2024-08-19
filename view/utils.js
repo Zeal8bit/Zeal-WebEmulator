@@ -50,15 +50,15 @@ function hex16(high, lower, noprefix) {
 
 
 /**
- * 
+ * Parse the Query String
  * @param params string
- * @returns [key: string]: string
+ * @returns Record<string, string>
  */
 function parseQueryParams(params) {
     if(params.startsWith('?')) params = params.slice(1);
     return params.split('&').reduce((acc, kvp) => {
         const [key,value] = kvp.split('=');
-        acc[key] = value ?? false;
+        acc[key] = value ?? true;
         return acc;
     }, {});
 }
