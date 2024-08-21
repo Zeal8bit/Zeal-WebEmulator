@@ -13,7 +13,7 @@ const ElectronConfig = require('electron-config');
 const config = new ElectronConfig();
 const path = require('node:path');
 const fs = require("node:fs");
-const menuBar = require("./electron/menubar.js");
+const menuBar = require("./menubar.js");
 
 if((process.env.ELECTRON_RELOAD) == '1') {
     console.log('Electron Reload enabled');
@@ -51,7 +51,7 @@ function create_mainWindow() {
         console.log('config written to', config.path);
     });
 
-    mainWindow.loadFile(path.join(__dirname, 'index.html'));
+    mainWindow.loadFile(path.join(__dirname, '../index.html'));
     return mainWindow;
 }
 

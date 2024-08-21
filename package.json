@@ -3,7 +3,7 @@
   "productName": "Zeal-WebEmulator",
   "version": "1.0.0",
   "description": "A emulator for Zeal 8-bit Computer based on electron",
-  "main": "index.js",
+  "main": "electron/index.js",
   "scripts": {
     "start": "electron-forge start",
     "watch": "ELECTRON_RELOAD=1 electron-forge start",
