@@ -3,9 +3,10 @@
   "productName": "Zeal-WebEmulator",
   "version": "1.0.0",
   "description": "A emulator for Zeal 8-bit Computer based on electron",
-  "main": "index.js",
+  "main": "electron/index.js",
   "scripts": {
     "start": "electron-forge start",
+    "watch": "ELECTRON_RELOAD=1 electron-forge start",
     "package": "electron-forge package",
     "make": "electron-forge make",
     "publish": "electron-forge publish",
@@ -27,6 +28,7 @@
   },
   "license": "Apache-2.0",
   "dependencies": {
+    "electron-config": "^2.0.0",
     "electron-squirrel-startup": "^1.0.1",
     "opn": "^6.0.0",
     "yargs": "^17.7.2"
@@ -40,6 +42,7 @@
     "@electron-forge/plugin-auto-unpack-natives": "^7.4.0",
     "electron": "^28.3.3",
     "electron-builder": "^24.13.3",
+    "electron-reload": "2.0.0-alpha.1",
     "electron-squirrel-startup": "^1.0.0",
     "live-server": "^1.2.2"
   },

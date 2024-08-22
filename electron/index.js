@@ -12,6 +12,17 @@ const { app, BrowserWindow, Menu, ipcMain, ipcRenderer } = require('electron');
 const path = require('node:path');
 const fs = require("node:fs");
 const menuBar = require("./menubar.js");
+const ElectronConfig = require('electron-config');
+
+const config = new ElectronConfig();
+
+if((process.env.ELECTRON_RELOAD) == '1') {
+    console.log('Electron Reload enabled');
+    require('electron-reload')(__dirname, {
+        electron: path.join(__dirname, 'node_modules', '.bin', 'electron'),
+    });
+}
+
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 if (require('electron-squirrel-startup')) {
@@ -19,17 +30,29 @@ if (require('electron-squirrel-startup')) {
 }
 
 function create_mainWindow() {
-    // Create the browser window.
-    const mainWindow = new BrowserWindow({
+    let opts = {
+        show: false,
         width: 1200,
         height: 800,
+    };
+    Object.assign(opts, config.get("winBounds"));
+
+    // Create the browser window.
+    const mainWindow = new BrowserWindow({
+        ...opts,
         webPreferences: {
             preload: path.join(__dirname, 'preload.js'),
         },
     });
 
-    // and load the index.html of the app.
-    mainWindow.loadFile(path.join(__dirname, 'index.html'));
+    mainWindow.once('ready-to-show', mainWindow.show);
+
+    mainWindow.on("close", function() {
+        config.set('winBounds', mainWindow.getBounds())
+        console.log('config written to', config.path);
+    });
+
+    mainWindow.loadFile(path.join(__dirname, '../index.html'));
     return mainWindow;
 }
 
@@ -48,8 +71,8 @@ app.on('ready', () => {
         return;
     }
     createWindow();
-    ipcMain.on("load", () => {
-        parseArgs(argv);
+    ipcMain.on("load", async () => {
+        await parseArgs(argv);
     });
 });
 
@@ -72,6 +95,12 @@ function getArgs() {
         .help("h").alias("h", "help")
         .usage("Usage: $0 [<options>]")
         .example("$0 --rom v0.4.0-9-ge68eb04 --eeprom /your/eeprom/image", "Start the emulator, use zos v0.4.0-9-ge68eb04 and load /your/eeprom/image to eeprom")
+        .option('hide-advanced', {
+            type: 'boolean',
+            alias: 'a',
+            description: 'Hide the advanced ROM menu',
+            default: false,
+        })
         .option('rom', {
             type: 'string',
             alias: 'r',
@@ -85,7 +114,6 @@ function getArgs() {
             array: true,
             nargs: 1,
         })
-        .array("breakpoint")
         .option('map', {
             type: 'string',
             alias: 'm',
@@ -116,25 +144,75 @@ function getArgs() {
     if(failed || (argv.help == true)) {
         return false;
     }
+
+    if(argv.rom && !fs.existsSync(argv.rom)) {
+        console.warn('--rom', 'invalid filename', argv.rom);
+        return false;
+    }
+
+    if(argv.map && !fs.existsSync(argv.map)) {
+        console.warn('--map', 'invalid filename', argv.map);
+        return false;
+    }
+
+    if(argv.eeprom && !fs.existsSync(argv.eeprom)) {
+        console.warn('--eeprom', 'invalid filename', argv.eeprom);
+        return false;
+    }
+
+    if(argv.cf && !fs.existsSync(argv.cf)) {
+        console.warn('--cf', 'invalid filename', argv.cf);
+        return false;
+    }
+
     return argv;
 }
 
-function parseArgs(argv) {
+async function parseArgs(argv) {
+    async function setFileInput(wc, selector, files) {
+      try {
+        wc.debugger.attach("1.1");
+
+        const { root } = await wc.debugger.sendCommand("DOM.getDocument", {});
+        const { nodeId } = await wc.debugger.sendCommand("DOM.querySelector", {
+          nodeId: root.nodeId,
+          selector,
+        });
+
+        await wc.debugger.sendCommand("DOM.setFileInputFiles", {
+          nodeId,
+          files,
+        });
+        return true;
+      } catch (err) {
+        return false;
+      } finally {
+        wc.debugger.detach();
+      }
+    }
+
+    let loadAdvanced = false;
+
     if (argv.rom) {
-        mainWindow.webContents.send('rom', fs.readFileSync(argv.rom));
+        loadAdvanced |= await setFileInput(mainWindow.webContents, "#file-rom", [path.resolve(argv.rom)]);
     }
     if (argv.map) {
-        mainWindow.webContents.send('map', fs.readFileSync(argv.map));
+        loadAdvanced |= await setFileInput(mainWindow.webContents, "#file-map", [path.resolve(argv.map)]);
     }
     if (argv.eeprom) {
-        mainWindow.webContents.send('eeprom', fs.readFileSync(argv.eeprom));
+        loadAdvanced |= await setFileInput(mainWindow.webContents, "#file-eeprom", [path.resolve(argv.eeprom)]);
     }
     if (argv.cf) {
-        mainWindow.webContents.send('cf', fs.readFileSync(argv.cf));
+        loadAdvanced |= await setFileInput(mainWindow.webContents, "#file-cf", [path.resolve(argv.cf)]);
     }
+
+    if(loadAdvanced) {
+        mainWindow.webContents.send('load-advanced', { hideAdvanced: argv.hideAdvanced });
+    }
+
     if (argv.breakpoint) {
         mainWindow.webContents.send('breakpoint', argv.breakpoint);
     }
-    
+
     return argv;
 }
