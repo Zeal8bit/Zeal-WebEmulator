@@ -194,16 +194,16 @@ async function parseArgs(argv) {
     let loadAdvanced = false;
 
     if (argv.rom) {
-        loadAdvanced = await setFileInput(mainWindow.webContents, "#file-rom", [path.resolve(argv.rom)]);
+        loadAdvanced |= await setFileInput(mainWindow.webContents, "#file-rom", [path.resolve(argv.rom)]);
     }
     if (argv.map) {
-        loadAdvanced = await setFileInput(mainWindow.webContents, "#file-map", [path.resolve(argv.map)]);
+        loadAdvanced |= await setFileInput(mainWindow.webContents, "#file-map", [path.resolve(argv.map)]);
     }
     if (argv.eeprom) {
-        loadAdvanced = await setFileInput(mainWindow.webContents, "#file-eeprom", [path.resolve(argv.eeprom)]);
+        loadAdvanced |= await setFileInput(mainWindow.webContents, "#file-eeprom", [path.resolve(argv.eeprom)]);
     }
     if (argv.cf) {
-        loadAdvanced = await setFileInput(mainWindow.webContents, "#file-cf", [path.resolve(argv.cf)]);
+        loadAdvanced |= await setFileInput(mainWindow.webContents, "#file-cf", [path.resolve(argv.cf)]);
     }
 
     if(loadAdvanced) {
@@ -211,7 +211,6 @@ async function parseArgs(argv) {
     }
 
     if (argv.breakpoint) {
-        console.log('breakpoints', argv.breakpoint);
         mainWindow.webContents.send('breakpoint', argv.breakpoint);
     }
 
