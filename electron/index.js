@@ -9,11 +9,12 @@ const yargs = require("yargs/yargs");
 const { hideBin } = require('yargs/helpers')
 const opn = require('opn');
 const { app, BrowserWindow, Menu, ipcMain, ipcRenderer } = require('electron');
-const ElectronConfig = require('electron-config');
-const config = new ElectronConfig();
 const path = require('node:path');
 const fs = require("node:fs");
 const menuBar = require("./menubar.js");
+const ElectronConfig = require('electron-config');
+
+const config = new ElectronConfig();
 
 if((process.env.ELECTRON_RELOAD) == '1') {
     console.log('Electron Reload enabled');
