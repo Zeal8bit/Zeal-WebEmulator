@@ -18,6 +18,7 @@ class Zeal8bitComputer extends Z80Machine {
         const pio = new PIO(this);
         const vchip = new VideoChip(this, pio, scale);
         const uart = new UART(this, pio);
+        const uart_web_serial = new UART_WebSerial(this, pio);
         const i2c = new I2C(this, pio);
         const keyboard = new Keyboard(this, pio);
         const ds1307 = new I2C_DS1307(this, i2c);
@@ -53,6 +54,8 @@ class Zeal8bitComputer extends Z80Machine {
         this.machine_add_io_device(0xe0, keyboard.io_region);
         this.machine_add_io_device(0xf0, mmu.io_region);
 
+        uart.setActive(true);
+
         /* Make the devices public */
         this.mmu = mmu;
         this.rom = rom;
@@ -65,6 +68,19 @@ class Zeal8bitComputer extends Z80Machine {
         this.ds1307 = ds1307;
         this.eeprom = eeprom;
         this.compactflash = compactflash;
+
+        this.set_serial = (type) => {
+            this.uart.setActive(false);
+            switch(type) {
+                case 'web-serial':
+                    this.uart = uart_web_serial;
+                    break;
+                case 'emulated':
+                default:
+                    this.uart = uart;
+            }
+            this.uart.setActive(true);
+        }
     }
 
     /**

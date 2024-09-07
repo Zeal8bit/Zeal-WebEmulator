@@ -244,8 +244,8 @@
 
           <section class="menu">
             <section class="menutitle">
-                <img class="menuicon" src="imgs/down-arrow.png" />Breakpoints</section>
-            <section class="menucontent">
+                <img class="menuicon" src="imgs/right-arrow.png" />Breakpoints</section>
+            <section class="menucontent visible">
                 <section id="newbp">
                     <input type="text" id="bpaddr" />
                     <button id="addbp">Add</button>
@@ -261,12 +261,18 @@
           <section class="menu">
             <section class="menutitle">
                 <img class="menuicon" src="imgs/right-arrow.png" />Settings</section>
-            <section class="menucontent" style="display: none;">
-                <label for="theme">Switch theme:</label>
-                <select id="theme" name="theme">
-                    <option value="dark" selected>Dark (Default)</option>
-                    <option value="light">Light</option>
-                </select>
+            <section class="menucontent">
+                <label>
+                  Switch theme:
+                  <select id="theme" name="theme">
+                      <option value="dark" selected>Dark (Default)</option>
+                      <option value="light">Light</option>
+                  </select>
+                </label>
+                <div id="web-serial-settings">
+                  <label>Web Serial:</label>
+                  <button id="web-serial-connect">Connect Serial</button>
+                </div>
             </section>
           </section>
         </section>
@@ -276,7 +282,7 @@
       <section class="tabs">
         <div class="tab">Disassemble</div>
         <div id="memory-tab" class="tab">Memory view</div>
-        <div class="tab active">Terminal (UART)</div>
+        <div id="uart-tab" class="tab active">Terminal (UART)</div>
       </section>
       <section id="memdump" class="panel hidden">
       </section>
@@ -340,6 +346,7 @@
     <script src="hardemu/rom.js"></script>
     <script src="hardemu/pio.js"></script>
     <script src="hardemu/uart.js"></script>
+    <script src="hardemu/uart-web-serial.js"></script>
     <script src="hardemu/keyboard.js"></script>
     <script src="hardemu/i2c.js"></script>
     <script src="hardemu/ram.js"></script>
