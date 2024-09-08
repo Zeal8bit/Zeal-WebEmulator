@@ -218,7 +218,7 @@ function UART_WebSerial(Zeal, PIO) {
     this.opened = false;
     this.type = 'web-serial';
     this.setActive = (state) => {
-        console.log(this.type, state);
+        // console.log(this.type, state);
         active = state;
 
         if(active) {
