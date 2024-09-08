@@ -35,9 +35,13 @@ terminal.open(document.getElementById('terminal'));
 
 // Init shortcut key
 document.addEventListener('keydown', function(event) {
-    const binding = {'F9': zealcom.cont, 'F10': zealcom.step, 'F11': zealcom.step_over};
+    const binding = {
+        'F9': $(".cpuexec:not(.hidden)"),
+        'F10': $("#step"),
+        'F11': $("#stepover")
+    };
     if (binding[event.key]) {
-        binding[event.key]();
+        binding[event.key].click();
     }
 });
 

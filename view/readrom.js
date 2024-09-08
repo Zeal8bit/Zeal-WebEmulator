@@ -70,7 +70,7 @@ $("#read-button").on('click', function() {
     loadMap($("#file-map")[0].files[0]);
     loadEEPROM($("#file-eeprom")[0].files[0]);
     loadCf($("#file-cf")[0].files[0]);
-    zealcom.cont();
+    $("#continue").click();
 });
 
 $("#romadvanced a").click(() => {
@@ -214,7 +214,7 @@ async function switchRom() {
         if (hashcomp == true) {
             loadRom(data);
         }
-        zealcom.cont();
+        $("#continue").click();
         $("#loading_img").invisible();
     }
     catch (error) {

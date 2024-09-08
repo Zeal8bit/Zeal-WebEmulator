@@ -5,13 +5,26 @@
  */
 
 $("#step").on("click",     () => zealcom.step());
-$("#stop").on("click",     () => zealcom.stop());
 $("#stepover").on("click", () => zealcom.step_over());
-$("#continue").on("click", () => zealcom.cont());
 $("#reset").on("click",    () => zealcom.reset());
 $("#clean").on("click",    () => {
     zealcom.restart();
     resetRom();
+});
+
+function togglePauseContinue() {
+    $("#continue").toggleClass("hidden");
+    $("#pause").toggleClass("hidden");
+}
+
+$("#continue").on("click", () => {
+    zealcom.cont();
+    togglePauseContinue();
+});
+
+$("#pause").on("click", () => {
+    zealcom.stop();
+    togglePauseContinue();
 });
 
 /**
