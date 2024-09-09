@@ -721,9 +721,9 @@ function VideoChip(Zeal, PIO, scale) {
             video_cfg.height = 480;
             video_cfg.base_scale = 1;
         }
-        const scale = video_cfg.base_scale * video_cfg.view_scale;
-        canvas.style.transform = `scale(${scale})`;
-        canvas_layer1.style.transform = `scale(${scale})`;
+        // const scale = video_cfg.base_scale * video_cfg.view_scale;
+        // canvas.style.transform = `scale(${scale})`;
+        // canvas_layer1.style.transform = `scale(${scale})`;
 
         /* Check the width of the object */
         const obj_width  = video_cfg.is_text ? TEXT_CHAR_WIDTH  : TILE_WIDTH;

@@ -52,12 +52,12 @@ button, input[type=button] {
     cursor: pointer;
 }
 
-button:hover, input[type=button]:hover {
+button:not([disabled]):hover, input[type=button]:not([disabled]):hover {
     background: var(--fourth-bg-color);
 }
 
 
-button:active, input[type=button]:active {
+button:not([disabled]):active, input[type=button]:not([disabled]):active {
     background:#9b9b9b;
     color: var(--second-bg-color);
 }
@@ -139,7 +139,9 @@ hr {
     margin-inline: auto;
     margin-top: 3em;
     background-color: black;
-    transform-origin: left top;
+    /* transform-origin: top; */
+    width: 640px;
+    height: 480px;
     image-rendering: pixelated;
 }
 
@@ -246,10 +248,6 @@ hr {
     flex-direction: column;
 }
 
-.hidden {
-    display: none !important;
-}
-
 .tabs {
     position: relative;
     height: fit-content;
@@ -293,10 +291,14 @@ hr {
     background-color:var(--second-bg-color);
     padding-top: 1em;
     padding-left: 0.5em;
-    cursor: pointer;
     overflow-y:scroll;
     box-sizing: border-box;
     user-select: none;
+    display: none;
+
+    &.active {
+        display: block;
+    }
 }
 
 .panel .panel-toolbar {
@@ -316,6 +318,126 @@ hr {
     flex-grow: 1;
 }
 
+#gamepad {
+    padding-inline: 3ch;
+}
+
+#gamepadview-start {
+    font-size: 2rem;
+    text-align: center;
+    width: 50%;
+    margin-inline: auto;
+}
+
+#gamepadview {
+    padding: 2ch;
+    border-radius: 1ch;
+    background-color: var(--fourth-bg-color);
+
+    &.empty {
+        display: none;
+    }
+
+    .controller {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .toolbar {
+        grid-column: span 2;
+        display: flex;
+        gap: 1ch;
+
+        button.alert {
+            background-color: var(--first-txt-color);
+            color: var(--first-bg-color);
+        }
+
+        button[disabled] {
+            opacity: 0.35;
+            cursor: not-allowed;
+        }
+    }
+
+    h1 {
+        grid-column: span 2;
+    }
+
+    h2 {
+        font-size: 18px;
+        width: 100%;
+        margin-bottom: 0;
+    }
+
+    .buttons, .axes {
+        grid-column: 1;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 2ch;
+        height: fit-content;
+    }
+
+    .svg {
+        grid-column: 2;
+        grid-row: 3 / 5;
+
+        svg {
+            width: 400px;
+            height: fit-content;
+            max-width: 100%;
+            aspect-ratio: 5/3;
+        }
+
+        .svg-button-group {
+            display: none;
+        }
+        .svg-button.svg-button-base {
+            fill: inherit !important;
+        }
+        .svg-button {
+            /* fill: black !important; */
+            opacity: 0.5;
+            &.pressed {
+                opacity: 1.0;
+            }
+        }
+    }
+
+    .axis {
+        min-width: 200px;
+        margin: 1em;
+    }
+
+    .button {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        width: 12ch;
+        gap: 0.5em;
+        padding: 1ch 2ch;
+        border-radius: 0.25em;
+        border: 1px solid black;
+        background-color: var(--second-bg-color);
+        color: var(--second-txt-color);
+        position: relative;
+    }
+
+    .pressed {
+        background-color: var(--third-bg-color);
+    }
+
+    /* .touched::after {
+        content: "touch";
+        display: block;
+        position: absolute;
+        margin-top: -0.2em;
+        margin-left: -0.5em;
+        font-size: 0.8em;
+        opacity: 0.7;
+    } */
+}
+
 .dumpline::before {
     color: rgb(207 49 28);
     display: inline-block;
@@ -333,6 +455,7 @@ hr {
 .dumpline, .labelline {
     white-space: pre;
     border-radius: 10px;
+    cursor: pointer;
 }
 
 .dumpline.activeline, .activefield {
@@ -349,16 +472,25 @@ hr {
     display: inline-block;
     color: #268bd2;
     font-weight: bold;
+
+    grid-column: 1;
+    grid-row: span 2;
 }
+
 
 .membytes, .asciichars, .memline {
     display: inline-block;
     padding-left:1.5em;
 }
 
-.membytes div, .asciichars div {
-    display: inline-block;
-    padding: 0 0.37em 0 0.37em;
+.memline {
+    display: grid;
+    grid-template-columns: 14ch 1fr;
+}
+
+.membytes, .asciichars {
+    display: flex;
+    gap: 1ch;
     line-height: 1.5em;
 }
 
@@ -392,7 +524,8 @@ h3 {
 }
 
 .asciichar {
-    padding: 0em !important;
+    width: 2ch;
+    text-align: right;
 }
 
 #controls {

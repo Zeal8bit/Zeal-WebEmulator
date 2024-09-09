@@ -14,6 +14,7 @@ const DIR_OUTPUT = 0;
 function PIO(Zeal) {
     const zeal = Zeal;
     var port_a = {
+        port: 'a',
         mode: MODE_OUTPUT,
         state: 0xf0,        /* Current value of pins */
         dir: 0xff,          /* Direction of pins: input by default */
@@ -27,8 +28,14 @@ function PIO(Zeal) {
         /* Each listener is a callback that needs to be called when a write or read occurs on a pin.
          * So we have a most 8 listeners */
         listeners: [],
+        /* Each listener is a callback and state that needs to be called when a write occurs on a pin.
+         * The callback is only called if the current state matches the state and the previous state does not.
+         * indicating that the pin has "changed into the expected state"
+         * (ie; we want the pin HIGH, and it was previously LOW) */
+        listeners_change: [],
     };
     var port_b = {
+        port: 'b',
         mode: MODE_OUTPUT,
         state: 0xf0,        /* Current value of pins */
         dir: 0xff,          /* Direction of pins: input by default */
@@ -41,7 +48,12 @@ function PIO(Zeal) {
         dir_follows: false,
         /* Each listener is a callback that needs to be called when a write or read occurs on a pin.
          * So we have a most 8 listeners */
-        listeners: []
+        listeners: [],
+        /* Each listener is a callback and state that needs to be called when a write occurs on a pin.
+         * The callback is only called if the current state matches the state and the previous state does not.
+         * indicating that the pin has "changed into the expected state"
+         * (ie; we want the pin HIGH, and it was previously LOW) */
+        listeners_change: [],
     };
 
     const IO_PIO_DATA_A = 0xd0;
@@ -139,10 +151,17 @@ function PIO(Zeal) {
 
             for (var pin = 0; pin < 8; pin++) {
                 const listener = hw_port.listeners[pin];
+                const listener_change = hw_port.listeners_change[pin];
+                const bit = BIT(hw_port.state, pin);
+                const formerBit = BIT(former_state, pin);
                 if (BIT(hw_port.dir, pin) == DIR_OUTPUT && listener) {
+                    const transition = formerBit != bit;
                     /* Parameters(read, pin, value, transition) */
-                    const transition = BIT(former_state, pin) != BIT(hw_port.state, pin);
-                    listener(false, pin, BIT(hw_port.state, pin), transition);
+                    listener(false, pin, bit, transition);
+                }
+                if(listener_change && formerBit != bit && listener_change.state == bit) {
+                    /* Parameters(pin, value) */
+                    listener_change.callback(pin, bit);
                 }
             }
         }
@@ -184,7 +203,25 @@ function PIO(Zeal) {
         if (pin < 0 || pin > 7 || (callback != null && port.listeners[pin])) {
             return false;
         }
+        if(callback == null) {
+            delete port.listener[pin];
+            return;
+        }
         port.listeners[pin] = callback;
+    }
+
+    function pio_listen_pin_change(port, pin, state, callback) {
+        if (pin < 0 || pin > 7 || (callback != null && port.listeners[pin])) {
+            return false;
+        }
+        if(callback == null) {
+            delete port.listeners_change[pin];
+            return;
+        }
+        port.listeners_change[pin] = {
+            state,
+            callback
+        };
     }
 
     this.io_region = {
@@ -193,13 +230,57 @@ function PIO(Zeal) {
         size: 0x10
     };
 
-
     this.pio_set_a_pin = (pin, value) => pio_set_pin(port_a, pin, value);
     this.pio_set_b_pin = (pin, value) => pio_set_pin(port_b, pin, value);
     this.pio_get_a_pin = (pin) => pio_get_pin(port_a, pin);
     this.pio_get_b_pin = (pin) => pio_get_pin(port_b, pin);
+
+
+    /**
+     * @brief Listen for pin changes
+     * @param pin - Pin
+     * @param cb - Callback - callback(read, pin, bit, transition)
+     */
     this.pio_listen_a_pin = (pin, cb) => pio_listen_pin(port_a, pin, cb);
-    this.pio_listen_b_pin = (pin, cb) => pio_listen_pin(port_b, pin, cb);
+    /**
+     * @brief Listen for pin changes into state
+     * @param pin - Pin
+     * @param state - Target State
+     * @param cb - Callback - callback(pin, bit)
+     */
+    this.pio_listen_a_pin_change = (pin, state, cb) => pio_listen_pin_change(port_a, pin, state, cb);
+    /**
+     * @brief Remove pin listener
+     * @param pin - Pin
+     */
     this.pio_unlisten_a_pin = (pin) => pio_listen_pin(port_a, pin, null);
+    /**
+     * @brief Remove pin change listener
+     * @param pin - Pin
+     */
+    this.pio_unlisten_a_pin_change = (pin) => pio_listen_pin_change(port_a, pin, null);
+
+    /**
+     * @brief Listen for pin changes
+     * @param pin - Pin
+     * @param cb - Callback - callback(read, pin, bit, transition)
+     */
+    this.pio_listen_b_pin = (pin, cb) => pio_listen_pin(port_b, pin, cb);
+    /**
+     * @brief Listen for pin changes into state
+     * @param pin - Pin
+     * @param state - Target State
+     * @param cb - Callback - callback(pin, bit)
+     */
+    this.pio_listen_b_pin_change = (pin, state, cb) => pio_listen_pin_change(port_b, pin, state, cb);
+    /**
+     * @brief Remove pin listener
+     * @param pin - Pin
+     */
     this.pio_unlisten_b_pin = (pin) => pio_listen_pin(port_b, pin, null);
+    /**
+     * @brief Remove pin change listener
+     * @param pin - Pin
+     */
+    this.pio_unlisten_b_pin_change = (pin) => pio_listen_pin_change(port_b, pin, null);
 }
