@@ -413,6 +413,7 @@ h3 {
     cursor: pointer;
     margin-top: 0.5em;
     margin-bottom: 0.5em;
+    user-select: none;
 }
 
 .menu {
@@ -436,9 +437,27 @@ h3 {
 }
 
 .menucontent {
-    padding: 0.5em 0 0.5em 1em;
+    display: flex;
+    flex-direction: column;
+    row-gap: 1ch;
+    padding-inline: 0.5em;
+    padding-block: 0;
     box-sizing: border-box;
     width: 100%;
+
+    max-height: 0;
+    overflow: hidden;
+    transition:
+        max-height 0.25s ease-out,
+        padding-block 0.125ms ease-out 0.25s;
+
+    &.visible {
+        padding-block: 0.5em;
+        max-height: 300px;
+        transition:
+            max-height .125s ease-in,
+            padding-block 0.125ms ease-in;
+    }
 }
 
 #addbp {

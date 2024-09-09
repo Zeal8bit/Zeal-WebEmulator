@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-function UART(Zeal, PIO) {
+function UART_WebSerial(Zeal, PIO) {
     const zeal = Zeal;
     const pio = PIO;
     const IO_UART_RX_PIN = 3;
@@ -19,6 +19,9 @@ function UART(Zeal, PIO) {
     /* TX FIFO containing pairs of { tstates, bit } */
     var tx_fifo = [];
 
+    var openedPort;
+    var reader;
+    var writer;
     var active = false;
 
     function set_baudrate(baudrate) {
@@ -42,8 +45,8 @@ function UART(Zeal, PIO) {
             }
             value |= (line << i);
         }
-        /* The terminal is a global variable */
-        terminal.write([value]);
+
+        send_binary_array([value]);
         /* Reset the FIFO in any case */
         tx_fifo = [];
     }
@@ -132,16 +135,28 @@ function UART(Zeal, PIO) {
         }
     }
 
-    function attachTerminal() {
-        return terminal.onData((data) => {
-            if(!active) return;
-            console.log('terminal', 'onData', active, data);
-            /* Put the current bytes in the waiting list */
-            for (var i = 0; i < data.length; i++){
-                received.push(data.charCodeAt(i) & 0xff);
+    async function readLoop() {
+        while(openedPort && reader) {
+            // Connect to `port` or add it to the list of available ports.
+            try {
+                while(true) {
+                    const { value, done } = await reader.read();
+                    if(done) break;
+
+                    // const str = new TextDecoder().decode(value);
+                    for(var i = 0; i < value.length; i++) {
+                        for(b of value) {
+                            const __val = b & 0xff;
+                            // console.log('byte', {hex: __val.toString(16), dec: __val});
+                            received.push(__val);
+                            start_transfer();
+                        }
+                    }
+                }
+            } catch(err) {
+                console.warn('serial error', err);
             }
-            start_transfer();
-        });
+        }
     }
 
     function read_rx(read, pin, bit, transition) {
@@ -149,16 +164,40 @@ function UART(Zeal, PIO) {
     }
 
     function send_binary_array(binary, callback = null) {
-        if (typeof binary === "string") {
-            for (var i = 0; i < binary.length; i++)
-                received.push(binary.charCodeAt(i));
-        } else {
-            for (var i = 0; i < binary.length; i++)
-                received.push(binary[i]);
-        }
+        if(openedPort && writer) {
+            let data = new Uint8Array(binary);
+            if (typeof binary === "string") {
+                const encoder = new TextEncoder();
+                data = encoder.encode(binary);
+            }
 
-        success_callback = callback;
-        start_transfer();
+            writer.write(data).then(() => {
+                if(callback) callback();
+            });
+        }
+    }
+
+    async function close() {
+        if(reader) { reader.releaseLock(); reader = null };
+        if(writer) { writer.releaseLock(); writer = null };
+
+        return openedPort.forget().then(() => {
+            this.openedPort = null;
+            this.opened = false;
+            zealcom.set_serial('emulated');
+        });
+    };
+
+    async function open(port) {
+        openedPort = port;
+        this.opened = true;
+
+        if(openedPort.readable) {
+            reader = await openedPort.readable.getReader();
+            readLoop(openedPort);
+        }
+        if(openedPort.writable) writer = await openedPort.writable.getWriter();
+        return Promise.resolve(true);
     }
 
     /* Set RX pin to 1 (idle) */
@@ -173,28 +212,26 @@ function UART(Zeal, PIO) {
     /* Send a binary array to the UART */
     this.send_binary_array = send_binary_array;
 
-    this.open = (port) => undefined;
-    this.close = () => undefined;
+    this.close = close;
+    this.open = open;
 
-    this.opened = true;
-    this.type = 'emulated';
+    this.opened = false;
+    this.type = 'web-serial';
     this.setActive = (state) => {
-        console.log(this.type, state);
+        // console.log(this.type, state);
         active = state;
+
         if(active) {
             /* Connect the TX pin to the PIO */
             pio.pio_listen_b_pin(IO_UART_TX_PIN, write_tx);
             /* Connect the RX pin to the PIO */
             pio.pio_listen_b_pin(IO_UART_RX_PIN, read_rx);
-            onData = attachTerminal();
+
         } else {
             /* Connect the TX pin to the PIO */
             pio.pio_unlisten_b_pin(IO_UART_TX_PIN);
             /* Connect the RX pin to the PIO */
             pio.pio_unlisten_b_pin(IO_UART_RX_PIN);
-            if(onData) {
-                onData.dispose();
-            }
         }
     }
 }
