@@ -7,25 +7,24 @@
 $("#step").on("click",     () => zealcom.step());
 $("#stepover").on("click", () => zealcom.step_over());
 $("#reset").on("click",    () => zealcom.reset());
+$("#continue").on("click", () => zealcom.cont());
+$("#pause").on("click", () => zealcom.stop());
 $("#clean").on("click",    () => {
     zealcom.restart();
     resetRom();
 });
 
-function togglePauseContinue() {
-    $("#continue").toggleClass("hidden");
-    $("#pause").toggleClass("hidden");
+
+function showPauseView() {
+    $("#continue").addClass("hidden");
+    $("#pause").removeClass("hidden");
 }
 
-$("#continue").on("click", () => {
-    zealcom.cont();
-    togglePauseContinue();
-});
+function showContinueView() {
+    $("#continue").removeClass("hidden");
+    $("#pause").addClass("hidden");
+}
 
-$("#pause").on("click", () => {
-    zealcom.stop();
-    togglePauseContinue();
-});
 
 /**
  * Events for all menus and their content: breakpoints, CPU control, etc...

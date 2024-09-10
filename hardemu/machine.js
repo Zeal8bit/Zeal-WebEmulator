@@ -333,6 +333,16 @@ class Z80Machine {
         }
 
 
+        function set_running(run) {
+            if (run) {
+                showPauseView();
+            } else {
+                showContinueView();
+            }
+            running = run;
+        }
+
+
         const outer_this = this;
         function instruction_loop() {
 
@@ -348,7 +358,7 @@ class Z80Machine {
                 for (var i = 0; i < breakpoints.length; i++) {
                     const bk = breakpoints[i];
                     if (bk.enabled && bk.address == pc) {
-                        running = false;
+                        set_running(false);
                         setRegView();
                         triggeredBreakpoint(bk);
                     }
@@ -365,14 +375,14 @@ class Z80Machine {
 
 
         function step_cpu() {
-            running = true;
+            set_running(true);
 
             if (interval == null) {
                 /* Execute the CPU every 16ms */
                 interval = setInterval(instruction_loop, 16.666);
             }
         }
-        this.step_cpu = step_cpu;
+
 
         function step () {
             if (zpu.isHalted() || running) {
@@ -430,11 +440,11 @@ class Z80Machine {
             clearInterval(interval);
             interval = null;
             setRegView();
-            running = false;
+            set_running(false);
         }
 
         function restart(resetinterval=true) {
-            running = false;
+            set_running(false);
             zealcom.reset();
             terminal.clear();
             zealcom = new Zeal8bitComputer();
@@ -452,7 +462,7 @@ class Z80Machine {
         function destroy() {
             clearInterval(interval);
             interval = null;
-            running = false;
+            set_running(false);
         }
 
 
@@ -461,8 +471,10 @@ class Z80Machine {
         this.io_read = io_read;
         this.io_write = io_write;
 
+        this.is_running = () => { return running; }
         this.step_cpu = step_cpu;
         this.step = step;
+        this.step_cpu = step_cpu;
         this.step_over = step_over;
         this.cont = cont;
         this.stop = stop;

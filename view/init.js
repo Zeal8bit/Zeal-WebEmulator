@@ -35,6 +35,7 @@ terminal.open(document.getElementById('terminal'));
 
 // Init shortcut key
 document.addEventListener('keydown', function(event) {
+    var handled = false;
     const binding = {
         'F9': $(".cpuexec:not(.hidden)"),
         'F10': $("#step"),
@@ -42,6 +43,11 @@ document.addEventListener('keydown', function(event) {
     };
     if (binding[event.key]) {
         binding[event.key].click();
+        handled = true;
+    }
+
+    if (handled) {
+        event.preventDefault();
     }
 });
 
