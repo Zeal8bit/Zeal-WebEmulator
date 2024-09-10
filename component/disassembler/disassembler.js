@@ -297,7 +297,7 @@ function Disassembler() {
         if (typeof entry.address !== 'undefined')
             return entry.address;
 
-        console.assert(entry.offset);
+        console.assert(typeof entry.offset !== 'undefined');
         const offset = entry.offset + 2;
         const signed = offset >= 128 ? offset - 256 : offset;
         return pc + signed;
