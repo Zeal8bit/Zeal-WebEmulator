@@ -68,6 +68,11 @@ const getAll = async () => {
         stable: [],
     };
 
+    // mkdir if not exists
+    fs.mkdirSync('roms', {
+        recursive: true,
+    });
+
     console.log('\nLatest:');
     if (json.latest) {
         indexFile.latest = await getRom(json.latest).catch((err) => {

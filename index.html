@@ -283,10 +283,11 @@
         <div class="tab">Disassemble</div>
         <div id="memory-tab" class="tab">Memory view</div>
         <div id="uart-tab" class="tab active">Terminal (UART)</div>
+        <div class="tab">Gamepad</div>
       </section>
-      <section id="memdump" class="panel hidden">
+      <section id="memdump" class="panel">
       </section>
-      <section id="memview" class="panel hidden">
+      <section id="memview" class="panel">
         <section class="panel-toolbar">
           <input type="text" id="dumpaddr" placeholder="Hex address" />
           <input type="text" id="dumpsize" placeholder="Size" />
@@ -330,6 +331,13 @@
         </div>
         <div id="terminal"></div>
       </section>
+      <section id="gamepad" class="panel">
+        <div class="panel-toolbar">
+        </div>
+        <div id="gamepadview-start">Press a button on your controller to start</div>
+        <div id="gamepadview" class="empty">
+        </div>
+      </section>
     </section>
 
     <footer>
@@ -360,6 +368,8 @@
     <script src="hardemu/hostfs.js"></script>
     <script src="hardemu/machine.js"></script>
     <script src="hardemu/zeal8bitcomputer.js"></script>
+    <!-- Emulated User Port -->
+    <script src="hardemu/user-port/snes-adapter.js"></script>
     <!-- view scripts -->
     <script src="view/utils.js"></script>
     <script src="view/breakpoint.js"></script>
@@ -373,5 +383,6 @@
     <script src="view/tabs/disassemble.js"></script>
     <script src="view/tabs/memdump.js"></script>
     <script src="view/tabs/uart_terminal.js"></script>
+    <script src="view/tabs/gamepad.js"></script>
   </body>
 </html>
