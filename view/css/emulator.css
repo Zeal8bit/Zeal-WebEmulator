@@ -195,12 +195,34 @@ hr {
 }
 
 #bps li {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-start;
     margin-left: -1.2em;
     padding-left: 1.5em;
     line-height: 3em;
     font-family: monospace;
     width: 102%;
     user-select: none;
+
+    > span {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 24px;
+        height: 24px;
+        line-height: 1em;
+        color: white;
+        text-transform: lowercase;
+        margin-left: auto;
+
+        &:hover {
+            color: rgb(163, 49, 34);
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+    }
 }
 
 #bps li:hover {

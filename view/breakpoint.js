@@ -76,7 +76,12 @@ function addBreakpoint(addr, autodelete = false) {
 
     /* Only add the breakpoint to the list if it was manually added by the user, not if step over was clicked */
     if (! bkrobj?.autodelete) {
-        $("#bps").append(`<li data-addr="${addr}">${hex(addr)}</li>`);
+        $li = $(`<li data-addr="${addr}">${hex(addr)}</li>`);
+        $delete = $('<span>x</span>').on('click', () => {
+            deleteBreakpoint(addr);
+        })
+        $li.append($delete);
+        $("#bps").append($li);
         /* If the line is currently being disassembled, mark it as a breakpoint */
         $(`.dumpline[data-addr='${addr}']`).addClass("brk");
     }
@@ -92,6 +97,17 @@ function toggleBreakpoint(brkaddr) {
     /* Toggle enabled field in the breakpoint */
     if (bkrobj != undefined) {
         bkrobj.enabled ^= true;
+    }
+}
+
+function deleteBreakpoint(brkaddr) {
+    /* Find the breakpoint object in the breakpoint list */
+    const index = breakpoints.findIndex(element => element.address == brkaddr);
+
+    if(index >= 0) {
+        breakpoints.splice(index, 1);
+        $(`#bps li[data-addr='${brkaddr}']`).remove();
+        $(`.dumpline[data-addr='${brkaddr}']`).toggleClass("brk");
     }
 }
 
