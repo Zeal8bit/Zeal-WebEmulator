@@ -143,6 +143,10 @@ hr {
     width: 640px;
     height: 480px;
     image-rendering: pixelated;
+    &.no-pixels {
+        image-rendering: auto;
+        image-rendering: crisp-edges;
+    }
 }
 
 #rightpanel {
