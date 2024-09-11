@@ -16,13 +16,13 @@ $("#clean").on("click",    () => {
 
 
 function showPauseView() {
-    $("#continue").addClass("hidden");
-    $("#pause").removeClass("hidden");
+    $("#continue").hide();
+    $("#pause").show();
 }
 
 function showContinueView() {
-    $("#continue").removeClass("hidden");
-    $("#pause").addClass("hidden");
+    $("#continue").show();
+    $("#pause").hide();
 }
 
 
@@ -102,6 +102,9 @@ $('#web-serial-connect').on('click', (e) => {
 });
 
 jQuery(() => {
+    $('#continue').hide();
+    $('#pause').show();
+
     if(!navigator || !navigator.serial) {
         // disable web serial, only supported in latest Chrome, Edge and Opera
         $('#web-serial-settings').hide();
