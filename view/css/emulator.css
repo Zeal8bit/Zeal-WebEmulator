@@ -587,6 +587,7 @@ h3 {
     &.visible {
         padding-block: 0.5em;
         max-height: 300px;
+        overflow-y: auto;
         transition:
             max-height .125s ease-in,
             padding-block 0.125ms ease-in;

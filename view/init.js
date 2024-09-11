@@ -37,7 +37,7 @@ terminal.open(document.getElementById('terminal'));
 document.addEventListener('keydown', function(event) {
     var handled = false;
     const binding = {
-        'F9': $(".cpuexec:not(.hidden)"),
+        'F9': $(".cpuexec:visible"),
         'F10': $("#step"),
         'F11': $("#stepover")
     };
