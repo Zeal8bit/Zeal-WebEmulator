@@ -217,7 +217,7 @@ class Z80Machine {
         this.zpu = zpu;
         this.getCPUState = zpu.getState;
 
-        var get_physical_address = null;
+        var m_memorymapper = null;
         var m_alignment = 1;
         var m_mem_mapping = null;
         var m_io_mapping = null;
@@ -232,7 +232,7 @@ class Z80Machine {
          */
         function machine_initialize_memory(options) {
             if (options.translator) {
-                get_physical_address = options.translator;
+                m_memorymapper = options.translator;
             }
 
             /* Use a default alginment of 1KB for memory devices */
@@ -251,12 +251,12 @@ class Z80Machine {
         *  - read
         *  - size (in bytes)
         */
-        function machine_add_mem_device(phys_addr, region) {
+        function machine_add_mem_device(phys_addr, device) {
             console.assert((phys_addr & (m_alignment - 1)) == 0, "Incorrect alignment for device!");
             const dev_idx = Math.floor(phys_addr / m_alignment);
-            const count = Math.floor(region.size / m_alignment);
-            const new_region = { ...region };
-            new_region.from = phys_addr;
+            const size = device.mem_region_size;
+            const count = Math.floor(size / m_alignment);
+            const new_region = { from: phys_addr, device };
 
             for (var i = 0; i < count; i++)
                 m_mem_mapping[dev_idx + i] = new_region;
@@ -279,12 +279,12 @@ class Z80Machine {
 
 
         function mem_read(address) {
-            const phys_addr = get_physical_address ? get_physical_address(address) : address;
+            const phys_addr = m_memorymapper ? m_memorymapper.get_physical_addr(address) : address;
             const idx = Math.floor(phys_addr / m_alignment);
             const entry = m_mem_mapping[idx];
 
-            if (entry && entry.read) {
-                return entry.read(phys_addr - entry.from);
+            if (entry) {
+                return entry.device.mem_read(phys_addr - entry.from);
             } else {
                 console.log("No device replied to memory read: " + phys_addr);
                 return 0;
@@ -292,12 +292,12 @@ class Z80Machine {
         }
 
         function mem_write(address, value) {
-            const phys_addr = get_physical_address ? get_physical_address(address) : address;
+            const phys_addr = m_memorymapper ? m_memorymapper.get_physical_addr(address) : address;
             const idx = Math.floor(phys_addr / m_alignment);
             const entry = m_mem_mapping[idx];
 
-            if (entry && entry.write) {
-                return entry.write(phys_addr - entry.from, value);
+            if (entry) {
+                return entry.device.mem_write(phys_addr - entry.from, value);
             } else {
                 console.log("No device replied to memory write: " + phys_addr);
                 return 0;

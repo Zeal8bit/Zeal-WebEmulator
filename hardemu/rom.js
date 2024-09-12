@@ -190,13 +190,10 @@
 
     $("#dump-button").click(dumpToFile);
 
-    /* Memory region requird by the machine */
-    this.mem_region = {
-        /* Only accept writes if we are emulating the SST39 Flash */
-        write: emulate_sst39 ? mem_write : null,
-        read: mem_read,
-        size: size
-    };
+
+    this.mem_read = mem_read;
+    this.mem_write = emulate_sst39 ? mem_write : () => {};
+    this.mem_region_size = size;
 
     this.loadFile = loadFile;
     this.dumpToFile = dumpToFile;

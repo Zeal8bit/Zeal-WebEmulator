@@ -28,12 +28,9 @@ function RAM(size) {
         }
     }
 
-    /* Memory region required by the machine */
-    this.mem_region = {
-        write: mem_write,
-        read: mem_read,
-        size: size
-    };
+    this.mem_read = mem_read;
+    this.mem_write = mem_write;
+    this.mem_region_size = size;
 
     this.loadFile = loadFile;
 }

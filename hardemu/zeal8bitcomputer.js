@@ -34,17 +34,17 @@ class Zeal8bitComputer extends Z80Machine {
         const options = {
             physical_size: 4*KB*KB, // 22-bit addresses <=> 4MB address space
             alignment: 128*KB, // Devices are at least aligned on 128KB
-            translator: mmu.get_ext_addr
+            translator: mmu
         };
         this.machine_initialize_memory(options);
 
         /* On Zeal 8-bit Computer, the ROM is mirrored on 0x04_0000 when its size is 256KB */
-        this.machine_add_mem_device(0x00_0000, rom.mem_region);
-        if (rom.mem_region.size < 512*KB) {
-            this.machine_add_mem_device(0x04_0000, rom.mem_region);
+        this.machine_add_mem_device(0x00_0000, rom);
+        if (rom.mem_region_size < 512*KB) {
+            this.machine_add_mem_device(0x04_0000, rom);
         }
-        this.machine_add_mem_device(0x08_0000, ram.mem_region);
-        this.machine_add_mem_device(0x10_0000, vchip.mem_region);
+        this.machine_add_mem_device(0x08_0000, ram);
+        this.machine_add_mem_device(0x10_0000, vchip);
 
         /* Similarly for the I/O bus */
         this.machine_add_io_device(0x70, compactflash.io_region);

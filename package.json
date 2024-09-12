@@ -31,6 +31,7 @@
     "electron-config": "^2.0.0",
     "electron-squirrel-startup": "^1.0.1",
     "opn": "^6.0.0",
+    "tsc": "^2.0.4",
     "yargs": "^17.7.2"
   },
   "devDependencies": {
