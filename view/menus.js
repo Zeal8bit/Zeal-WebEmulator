@@ -103,7 +103,7 @@ $('#web-serial-connect').on('click', (e) => {
 
 $('#canvas-smooth-val').on('change', (e) => {
     const smooth = e.currentTarget.checked;
-    localStorage.setItem('canvas-smooth', smooth);
+    localStorage.setItem('canvas-smooth', JSON.stringify(smooth));
     console.log('smooth', smooth);
     if(smooth) {
         $('#screen').addClass('no-pixels');
@@ -116,7 +116,7 @@ jQuery(() => {
     $('#continue').hide();
     $('#pause').show();
 
-    const smooth = localStorage.getItem('canvas-smooth') ?? false;
+    const smooth = JSON.parse(localStorage.getItem('canvas-smooth') ?? false);
     $('#canvas-smooth-val').attr('checked', smooth).trigger('change');
 
     if(!navigator || !navigator.serial) {
