@@ -277,6 +277,8 @@ hr {
 .tabs {
     position: relative;
     height: fit-content;
+    display: flex;
+    gap: 0.75em;
 }
 
 .tab {
@@ -284,10 +286,13 @@ hr {
     position: relative;
     left: 1em;
     bottom: -0.2em;
-    display: inline-block;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding-inline: 3ch;
     min-width: 10em;
     line-height: 2.5em;
-    margin-right: 1em;
+    /* margin-right: 1em; */
     text-align: center;
     border-top: 2px black solid;
     border-left: 2px black solid;
@@ -296,6 +301,11 @@ hr {
     border-top-right-radius: 25px;
     color: #6d6d6d;
     background: linear-gradient(0deg, var(--second-bg-color), var(--first-bg-color) 30%);
+
+    .tab-status {
+        margin-left: auto;
+        font-size: 0.65rem;
+    }
 }
 
 .tab.active {

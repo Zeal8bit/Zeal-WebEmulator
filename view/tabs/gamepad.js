@@ -59,12 +59,14 @@
     const controller = new SNESAdapter(zealcom, zealcom.pio);
     controller.attach(index);
     userPort[index] = controller;
+    $('#gamepad-tab .tab-status').text('🟢')
     updateGamepadMap(gamepad);
   }
 
   function detachFromUserPort(gamepad) {
     const { index } = gamepad;
     console.log('detach', index, gamepad.id);
+    $('#gamepad-tab .tab-status').text('🔴')
     if(userPort && userPort[index]) {
       userPort[index].detatch();
       delete userPort[index];
