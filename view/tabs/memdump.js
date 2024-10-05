@@ -10,41 +10,53 @@ function setRAMView(virtaddr, size) {
     const physaddr = zealcom.mmu.get_ext_addr(virtaddr);
     const lines = size / byte_per_line;
     let dumptxt = "";
+
+    $("#current_memaddr").text(hex(virtaddr, true, 4));
+
+    dumptxt += '<section class="memline heading">' +
+        '<div class="memaddr">Physical Virt</div>' +
+        '<div class="membytes">';
+    for (var j = 0; j < byte_per_line; j++) {
+        dumptxt += `<div>${hex(j, true, 2)}</div>`;
+    }
+    dumptxt += '</div><div></div></section>';
+
     for (var i = 0; i < lines * byte_per_line; i += byte_per_line) {
         let ascii = [];
 
         dumptxt +=  '<section class="memline">' +
                       '<section class="memaddr">' +
-                        hex(virtaddr + i, true) + " (" + hex(physaddr + i, true, 6) + ")" +
+                      `(${hex(physaddr + i, true, 6)}) ${hex(virtaddr + i, true)}` +
                       '</section>' +
                     '<section class="membytes">';
 
         for (var j = 0; j < byte_per_line; j++) {
             const virt = virtaddr + i + j
             var byte = zealcom.mem_read(virt);
+
+            // /* Generate the ASCII dumptxt */
+            let c = '.';
             if (isPrintable(byte)) {
-                ascii.push(String.fromCharCode(byte));
+                c = String.fromCharCode(byte);
+                // ascii = ascii.map((c) => c == ' ' ? '&nbsp;' : c);
+                if(c == ' ') c = '&nbsp;';
             }
-            else {
-                ascii.push('.');
-            }
+            ascii.push(`<div class="asciichar" data-addr="${virt}">${c}</div>`);
+
             str = byte.toString(16);
             if (str.length == 1)
                 str = "0" + str;
-            dumptxt += '<div data-byte="' + byte + '" data-addr="' + virt + '">' + str + '</div>';
+            dumptxt += `<div contenteditable data-byte="${byte}" data-addr="${virt}">${str}</div>`;
         }
         dumptxt += '</section>';
-        /* Generate the ASCII dumptxt */
-        ascii = ascii.map(c => c == ' ' ? '&nbsp;' : c);
-        ascii = ascii.map(c => '<div class="asciichar">' + c + '</div>');
-        dumptxt += '<section class="asciichars">' + ascii.join('') + '</section>';
+        dumptxt += `<section class="asciichars">${ascii.join('')}</section>`;
         dumptxt += '</section>';
     }
 
     $("#dumpcontent").html(dumptxt);
 }
 
-const byte_per_line = 0x20;
+const byte_per_line = 0x10;
 var mousepressed = false;
 
 function setClassToASCIIChar(object, classname, add) {
@@ -75,6 +87,7 @@ function setClassToMemoryByte(object, classname, add) {
 
 function setMemoryByteAddress(object) {
     const str = parseInt(object.attr("data-addr"));
+    if(!str) return;
     const val = hex(str, true, 4);
     $("#current_memaddr").text(val);
 }
@@ -99,6 +112,12 @@ $("#dumpnow").on("click", function() {
     const virtaddr = parseInt($("#dumpaddr").val(), 16);
     const size = parseInt($("#dumpsize").val());
     setRAMView(virtaddr, size);
+});
+
+$('#dumpaddr, #dumpsize').on('keypress', (evt) => {
+    if(evt.keyCode == 13) {
+        $('#dumpnow').trigger('click');
+    }
 });
 
 $("#dumpcontent").on("mouseleave", ".membytes div", function() {
@@ -133,3 +152,69 @@ $("#memdump").on("click", ".dumpline", function() {
         toggleBreakpoint(brkaddr);
     }
 });
+
+
+$("#dumpcontent").on("focusin focusout keyup keydown", ".membytes div[contenteditable]", function(evt) {
+    var $this = $(this);
+    var value = $this.text();
+    switch(evt.type) {
+        case 'keyup':
+        case 'keydown':
+            if(evt.keyCode >= 8 && evt.keyCode <= 9) return; // Backspace, Tab
+            if(evt.keyCode == 13) { // ENTER
+                evt.preventDefault();
+                $this.blur();
+                return;
+            }
+
+            if(!/^[a-fA-F0-9]+$/.test(value)) {
+                // TODO: limit input to valid HEX values
+            }
+
+            if(value.length > 2) {
+                evt.preventDefault();
+                const t = $this.text().substr(2,1);
+                $this.text($this.text().substr(0,2));
+                $next = $this.next();
+                $next.text(t).trigger('focus');
+            }
+
+            break;
+        case 'focusin':
+            var sel, range;
+            range = document.createRange();
+            if(value.length == 2) {
+                range.selectNodeContents(evt.currentTarget);
+            } else {
+                range.setStart(evt.currentTarget, 1);
+                // range.setEnd(evt.currentTarget, 0);
+            }
+            sel = window.getSelection();
+            sel.removeAllRanges();
+            sel.addRange(range);
+            break;
+        case 'focusout':
+            var addr = $this.data('addr');
+            var previous = hex(parseInt($this.data('byte')), true, 2).toLowerCase();
+            var current = $this.text().toLowerCase();
+            if(current != previous) {
+                var new_value = parseInt(current, 16);
+                zealcom.mem_write(addr, new_value);
+
+                var c = String.fromCharCode(new_value);
+                // ascii = ascii.map((c) => c == ' ' ? '&nbsp;' : c);
+                if(c == ' ') c = '&nbsp;';
+
+                $this.closest('.memline').find(`.asciichars [data-addr=${addr}]`).html(c);
+            }
+            break;
+    }
+});
+
+// $(() => {
+//     $('#dumpaddr').val('4000');
+//     $('#dumpsize').val('128');
+//     setTimeout(() => {
+//         $('#dumpnow').trigger('click');
+//     }, 1200)
+// });
