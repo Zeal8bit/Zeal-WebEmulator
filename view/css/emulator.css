@@ -507,36 +507,60 @@ hr {
 .memaddr {
     display: inline-block;
     color: #268bd2;
+    text-align: right;
     font-weight: bold;
 
     grid-column: 1;
     grid-row: span 2;
 }
+#current_memaddr {
+}
 
 
-.membytes, .asciichars, .memline {
-    display: inline-block;
-    padding-left:1.5em;
+.memline.heading {
+    color: #268bd2;
+}
+
+
+.asciichars {
+    margin-left: 1ch;
+}
+
+.membytes, .asciichars, .memaddr {
+    user-select: text;
+}
+
+.asciichar {
+    width: 1ch;
+    text-align: right;
 }
 
 .memline {
     display: grid;
-    grid-template-columns: 14ch 1fr;
+    grid-template-columns: 14ch auto auto minmax(0, 1fr);
+    column-gap: 1.5ch;
+    line-height: 1.5em;
 }
 
 .membytes, .asciichars {
     display: flex;
     gap: 1ch;
-    line-height: 1.5em;
 }
 
-.membytes div:hover, .asciichars div:hover {
+/* .membytes, .asciichars, .memline {
+    display: inline-block;
+} */
+
+.memline:not(.heading) .membytes div:hover,
+.memline:not(.heading) .asciichars div:hover {
     background-color: var(--first-txt-color);
     color: var(--fourth-bg-color);
 }
 
-.membytes div.selected {
+.membytes div.selected,
+.membytes div:focus {
     background-color: var(--third-bg-color);
+    color: red;
 }
 
 
@@ -552,16 +576,6 @@ h3 {
 .regaddr {
     text-decoration: underline;
     cursor: pointer;
-}
-
-#current_memaddr {
-    margin-left: 9.3em;
-    padding: 0 0.37em 0 0.37em;
-}
-
-.asciichar {
-    width: 2ch;
-    text-align: right;
 }
 
 #controls {
