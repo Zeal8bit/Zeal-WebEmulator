@@ -167,9 +167,9 @@ $("#dumpcontent").on("focusin focusout keyup keydown", ".membytes div[contentedi
                 return;
             }
 
-            if(!/^[a-fA-F0-9]+$/.test(value)) {
-                // TODO: limit input to valid HEX values
-            }
+            // TODO: limit input to valid HEX values
+            // if(!/^[a-fA-F0-9]+$/.test(value)) {
+            // }
 
             if(value.length > 2) {
                 evt.preventDefault();
@@ -199,6 +199,10 @@ $("#dumpcontent").on("focusin focusout keyup keydown", ".membytes div[contentedi
             var current = $this.text().toLowerCase();
             if(current != previous) {
                 var new_value = parseInt(current, 16);
+                if(Number.isNaN(new_value)) {
+                    popout.error(`Invalid value: 0x${$(this).text().toUpperCase()}, converting to 0xFF`);
+                    new_value = 0xFF;
+                }
                 zealcom.mem_write(addr, new_value);
 
                 var c = String.fromCharCode(new_value);
