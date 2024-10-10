@@ -150,7 +150,10 @@ function processIndex(index) {
     }
     if(index.stable) {
         const stable  = index.stable.map((entry) => {
-            return to_option(entry, (params.r == entry.urls));
+            if(params.r == entry.urls) {
+                return to_option(entry, true);
+            }
+            return to_option(entry, false);
         });
         all_options.push(`<optgroup label="--- Stable ---"  data-type="stable">` + stable.join("") + `</optgroup>`);
     }
