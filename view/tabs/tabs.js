@@ -28,14 +28,12 @@ function setActiveTab(tab) {
 
 $(() => {
     if(params.tab) {
-        console.log('query tab', params.tab);
         setActiveTab(params.tab);
         return;
     }
 
     const lst = localStorage.getItem('tab');
     if(lst) {
-        console.log('storage tab', params.tab);
         setActiveTab(lst);
         return;
     }
