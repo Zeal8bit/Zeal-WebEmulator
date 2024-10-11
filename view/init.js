@@ -52,6 +52,8 @@ var zealcom = new Zeal8bitComputer();
 const disassembler = new Disassembler();
 const popout = new Popup();
 
+const params = parseQueryParams(window.location.search);
+
 if (typeof electronAPI != 'undefined') {
     $(electronAPI.loaded);
 }

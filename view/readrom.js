@@ -4,8 +4,6 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-const params = parseQueryParams(window.location.search);
-
 function loadToDevice(dev, loadfile_external_params=[], callback){
     let reader = new FileReader();
     $(reader).on('load', function(e) {
