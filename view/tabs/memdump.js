@@ -147,7 +147,7 @@ $("#memdump").on("click", ".dumpline", function() {
     /* If the address is not in the breakpoint list, add it */
     const brk = getBreakpoint(brkaddr);
     if (brk == null) {
-        addBreakpoint(brkaddr);
+        addBreakpoint({ address: brkaddr });
     } else {
         toggleBreakpoint(brkaddr);
     }

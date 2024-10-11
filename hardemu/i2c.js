@@ -256,7 +256,7 @@ function I2C_EEPROM(Zeal, I2C, content) {
     }
 
     function loadFile(binary) {
-        for (var i = 0; i < binary.length; i++)
+        for (var i = 0; i < binary.bytesLength; i++)
             data[i] = binary.charCodeAt(i);
     }
 

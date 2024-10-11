@@ -235,24 +235,56 @@ jQuery(() => {
          */
         $("#romload").hide();
         $("#romfile").show();
-    } else {
-        /**
-         * Manage the pre-built ROMs list. Available ROMs will be fetched from a remote JSON file that contains
-         * names and links to all of the available ROMs, the first one will always be the default.
-         */
-        const prebuilt_json_url_host = params.local ? '' : "https://zeal8bit.com";
-        const prebuilt_json_url_path = "/roms/index.json";
-        /* Fetch the remote JSON file, and pass the content to the previous function */
-        fetch(prebuilt_json_url_host + prebuilt_json_url_path)
+        return;
+    }
+
+    /**
+     * Manage the pre-built ROMs list. Available ROMs will be fetched from a remote JSON file that contains
+     * names and links to all of the available ROMs, the first one will always be the default.
+     */
+    const prebuilt_json_url_host = params.local ? '' : "https://zeal8bit.com";
+    const prebuilt_json_url_path = "/roms/index.json";
+    /* Fetch the remote JSON file, and pass the content to the previous function */
+    fetch(prebuilt_json_url_host + prebuilt_json_url_path)
+        .then(response => response.json())
+        .then(response => processIndex(response))
+        .catch(() => {
+            fetch(prebuilt_json_url_path)
             .then(response => response.json())
             .then(response => processIndex(response))
-            .catch(() => {
-                fetch(prebuilt_json_url_path)
-                .then(response => response.json())
-                .then(response => processIndex(response))
-                .catch(switchToAdvancedMode);
-            });
-    }
+            .catch(switchToAdvancedMode);
+        })
+        .then(() => {
+            const promises = [];
+            if(params.cf) {
+                promises.push(
+                    fetch(params.cf)
+                    .then((response) => response.blob())
+                    .then((blob) => {
+                        loadCf(blob);
+                    })
+                );
+            }
+            if(params.m) {
+                promises.push(
+                    fetch(params.m)
+                        .then((response) => response.blob())
+                        .then((blob) => {
+                            loadMap(blob);
+                        })
+                );
+            }
+            if(params.e) {
+                promises.push(
+                    fetch(params.e)
+                        .then((response) => response.blob())
+                        .then((blob) => {
+                            loadEEPROM(blob);
+                        })
+                );
+            }
+            return Promise.all(promises);
+        });
 });
 
 // electron

@@ -44,7 +44,7 @@ function newBreakpoint(value) {
     }
     /* Only add the breakpoint if not in the list */
     if (!getBreakpoint(result)) {
-        addBreakpoint(result);
+        addBreakpoint({ address: result});
     }
 }
 
@@ -61,30 +61,36 @@ $("#bpaddr").on('keydown', function(event) {
  * @param addr Virtual address to break on
  * @param autodelete Flag to mark whether the breakpoint should be auto deleted once triggered (false by default)
  */
-function addBreakpoint(addr, autodelete = false) {
+function addBreakpoint(options) {
+    const { address, enabled = true, autodelete = false } = options;
     /* Find the breakpoint object in the breakpoint list */
-    var bkrobj = breakpoints.find(element => element.address == addr);
+    var bkrobj = breakpoints.find(element => element.address == address);
 
     if (bkrobj != undefined) {
         /* This may be possible if the former breakpoint was "hidden" (auto-delete)
          * If it was clicked by the user, it will become a regular breakpoint, else, it won't change */
         bkrobj.autodelete = autodelete;
-    } else if (addr <= 0xFFFF) {
-        bkrobj = { address: addr, enabled: true, autodelete };
+    } else if (address <= 0xFFFF) {
+        bkrobj = { address, enabled, autodelete };
         breakpoints.push(bkrobj);
     }
 
     /* Only add the breakpoint to the list if it was manually added by the user, not if step over was clicked */
     if (! bkrobj?.autodelete) {
-        $li = $(`<li data-addr="${addr}">${hex(addr)}</li>`);
+        $li = $(`<li data-addr="${address}">${hex(address)}</li>`);
+        if(!enabled) {
+            $li.addClass('disabled');
+        }
         $delete = $('<span>x</span>').on('click', () => {
-            deleteBreakpoint(addr);
+            deleteBreakpoint(address);
         })
         $li.append($delete);
         $("#bps").append($li);
         /* If the line is currently being disassembled, mark it as a breakpoint */
-        $(`.dumpline[data-addr='${addr}']`).addClass("brk");
+        $(`.dumpline[data-addr='${address}']`).addClass("brk");
     }
+
+    localStorage.setItem('breakpoints', JSON.stringify(breakpoints));
 }
 
 function toggleBreakpoint(brkaddr) {
@@ -98,6 +104,7 @@ function toggleBreakpoint(brkaddr) {
     if (bkrobj != undefined) {
         bkrobj.enabled ^= true;
     }
+    localStorage.setItem('breakpoints', JSON.stringify(breakpoints));
 }
 
 function deleteBreakpoint(brkaddr) {
@@ -109,6 +116,7 @@ function deleteBreakpoint(brkaddr) {
         $(`#bps li[data-addr='${brkaddr}']`).remove();
         $(`.dumpline[data-addr='${brkaddr}']`).toggleClass("brk");
     }
+    localStorage.setItem('breakpoints', JSON.stringify(breakpoints));
 }
 
 function getBreakpoint(addr) {
@@ -130,6 +138,16 @@ function triggeredBreakpoint(bkrobj) {
 function enableBreakpoint(bkrobj) {
     bkrobj.enabled = true;
 }
+
+jQuery(() => {
+    const storage = localStorage.getItem('breakpoints');
+    if(storage) {
+        const points = JSON.parse(storage);
+        points.map((point) => {
+            addBreakpoint(point);
+        });
+    }
+})
 
 // electron
 if (typeof electronAPI != 'undefined') {
