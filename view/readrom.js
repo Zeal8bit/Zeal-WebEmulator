@@ -121,7 +121,7 @@ function processIndex(index) {
             attrs.selected = true;
         }
         const attributes = Object.keys(attrs).reduce((acc,key) => {
-            acc += `${key}`;
+            acc += ` ${key}`;
             if(!['selected', 'disabled'].includes(key) && attrs[key]) {
                 acc += `="${attrs[key]}" `;
             }
@@ -149,7 +149,9 @@ function processIndex(index) {
         all_options.push(`<optgroup label="--- Nightly ---"  data-type="nightly">` + nightly.join("") + `</optgroup>`);
     }
     if(index.stable) {
-        const stable  = index.stable.map((entry) => to_option(entry, false));
+        const stable  = index.stable.map((entry) => {
+            return to_option(entry, (params.r == entry.urls));
+        });
         all_options.push(`<optgroup label="--- Stable ---"  data-type="stable">` + stable.join("") + `</optgroup>`);
     }
 
@@ -198,7 +200,10 @@ async function switchRom() {
         return;
     }
     if(rom_chosen !== compare) {
-        window.history.pushState({}, undefined, `?r=${rom_chosen}`);
+        params.r = rom_chosen;
+        window.history.pushState({}, undefined, `?${Object.keys(params).reduce((a,k) => {
+            return a += `${k}=${params[k]}&`;
+        }, '').slice(0,-1)}`);
         if(reload) {
             window.location.reload();
             return;
@@ -210,7 +215,7 @@ async function switchRom() {
         /* Get the hash for the current binary */
         let hash = $(`#romchoice option[value="${rom_chosen}"]`).attr("hash");
         let data = await readBlobFromUrl(rom_chosen);
-        let hashcomp = await filehash(data, hash);
+        let hashcomp = params.local ? true : await filehash(data, hash);
         if (hashcomp == true) {
             loadRom(data);
         }
@@ -238,7 +243,7 @@ jQuery(() => {
          * Manage the pre-built ROMs list. Available ROMs will be fetched from a remote JSON file that contains
          * names and links to all of the available ROMs, the first one will always be the default.
          */
-        const prebuilt_json_url_host = "https://zeal8bit.com";
+        const prebuilt_json_url_host = params.local ? '' : "https://zeal8bit.com";
         const prebuilt_json_url_path = "/roms/index.json";
         /* Fetch the remote JSON file, and pass the content to the previous function */
         fetch(prebuilt_json_url_host + prebuilt_json_url_path)
