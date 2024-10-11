@@ -4,10 +4,6 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-// Init window
-const left_panel_height = $("#debug").height();
-$("#rightpanel").css('min-height', left_panel_height);
-
 const KB = 1024;
 /* 10MHz frequency */
 const CPUFREQ = 10000000;

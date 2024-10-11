@@ -419,7 +419,8 @@ function Disassembler() {
      */
     function loadSymbols(content)
     {
-        var lines = content.split("\n");
+        const decoder = new TextDecoder();
+        var lines = decoder.decode(content).split("\n");
         /* Filter the comments by removing the ones containing 'const' */
         lines = lines.filter(e => e.indexOf('; const') == -1);
 

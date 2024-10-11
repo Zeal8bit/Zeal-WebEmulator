@@ -9,8 +9,9 @@ const params = parseQueryParams(window.location.search);
 function loadToDevice(dev, loadfile_external_params=[], callback){
     let reader = new FileReader();
     $(reader).on('load', function(e) {
-        let binary = e.target.result;
-        let load_returns = dev.loadFile(binary, ...loadfile_external_params);
+        const binary = e.target.result;
+        const data = new Uint8Array(binary);
+        const load_returns = dev.loadFile(data, ...loadfile_external_params);
         callback(load_returns);
     });
     return reader;
@@ -18,50 +19,46 @@ function loadToDevice(dev, loadfile_external_params=[], callback){
 
 function loadRom(file_rom) {
     /* Read the rom file */
-    if (file_rom) {
-        loadToDevice(zealcom.rom, [], () => {
-            $("#romready").addClass("ready");
-        }).readAsBinaryString(file_rom);
-    }
+    if (!file_rom) return;
+    loadToDevice(zealcom.rom, [], () => {
+        $("#romready").addClass("ready");
+    }).readAsArrayBuffer(file_rom);
 }
 
 function loadMap(file_map) {
     /* If a dump/map file was provided, try to load it */
-    if (file_map) {
-        loadToDevice(disassembler, [], (success) => {
-            if (success) {
-                /* symbols are ready! */
-                $("#symready").addClass("ready");
-            }
-            else {
-                popup.error("Error while loading map file");
-            }
-        }).readAsText(file_map);
-    }
+    if (!file_map) return;
+    loadToDevice(disassembler, [], (success) => {
+        if (success) {
+            /* symbols are ready! */
+            $("#symready").addClass("ready");
+        }
+        else {
+            popup.error("Error while loading map file");
+        }
+    }).readAsArrayBuffer(file_map);
 }
 
 function loadEEPROM(file_eeprom) {
     /* Read the EEPROM image */
-    if (file_eeprom) {
-        loadToDevice(zealcom.eeprom, [], () => {
-            $("#eepromready").addClass("ready");
-        }).readAsBinaryString(file_eeprom);
-    }
+    if (!file_eeprom) return;
+    loadToDevice(zealcom.eeprom, [], () => {
+        $("#eepromready").addClass("ready");
+    }).readAsArrayBuffer(file_eeprom);
 }
 
 function loadCf(file_cf) {
     /** Read the Compact Flash image */
-    if (file_cf) {
-        loadToDevice(zealcom.compactflash, [], () => {
-            $("#cfready").addClass("ready");
-        }).readAsBinaryString(file_cf);
-    }
+    if (!file_cf) return;
+    loadToDevice(zealcom.compactflash, [], () => {
+        $("#cfready").addClass("ready");
+    }).readAsArrayBuffer(file_cf);
 }
 
 function loadRam(file_ram, offset) {
     /* Read the rom file */
     if (file_ram) {
-        loadToDevice(zealcom.ram, [offset], () => {}).readAsBinaryString(file_ram);
+        loadToDevice(zealcom.ram, [offset], () => {}).readAsArrayBuffer(file_ram);
     }
 }
 

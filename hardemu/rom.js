@@ -31,7 +31,7 @@
             for (var i = 0; i < binary.length; i++)
                 data[i] = binary.charCodeAt(i);
         } else {
-            for (var i = 0; i < binary.length; i++)
+            for (var i = 0; i < binary.byteLength; i++)
                 data[i] = binary[i];
         }
     }
