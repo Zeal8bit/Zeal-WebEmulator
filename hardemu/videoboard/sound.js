@@ -4,10 +4,27 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+// credit: https://noisehack.com/generate-noise-web-audio-api/
+function WhiteNoise(audio_ctx) {
+    var bufferSize = 2 * audio_ctx.sampleRate,
+    noiseBuffer = audio_ctx.createBuffer(1, bufferSize, audio_ctx.sampleRate),
+    output = noiseBuffer.getChannelData(0);
+    for (var i = 0; i < bufferSize; i++) {
+        output[i] = Math.random() * 2 - 1;
+    }
+
+    var whiteNoise = audio_ctx.createBufferSource();
+    whiteNoise.buffer = noiseBuffer;
+    whiteNoise.loop = true;
+    whiteNoise.start(0);
+    return whiteNoise;
+}
+
 function Sound() {
     /* We have 4 oscilaltors on the  real hardware */
     let audio_ctx  = null;
     let audio_gain = null;
+    let noise = null;
     let voices = [];
     const VOICES_COUNT = 4;
 
@@ -23,6 +40,7 @@ function Sound() {
 
     function initialize() {
         audio_ctx = new AudioContext();
+        noise = new WhiteNoise(audio_ctx);
 
         audio_gain = audio_ctx.createGain();
         audio_gain.gain.value = 0;
@@ -39,6 +57,7 @@ function Sound() {
                 freq_low: 0,
                 freq_high: 0,
                 wave: 0,
+                noise: false,
                 locgain: locgain,
             };
             locgain.gain.value = 1;
@@ -47,11 +66,18 @@ function Sound() {
         }
     }
 
+    this.reset = function() {
+        if(audio_ctx) {
+            audio_ctx.close();
+            audio_ctx = null;
+        }
+    }
+
     const WAVE_SQUARE   = 0;
     const WAVE_TRIANGLE = 1;
     const WAVE_SAWTOOTH = 2;
     const WAVE_NOISE    = 3;
-    const WAVE_STR      = ["square", "triangle", "sawtooth", "custom"];
+    const WAVE_STR      = ["square", "triangle", "sawtooth", "noise"];
 
     const REG_FREQ_LOW  = 0x0;
     const REG_FREQ_HIGH = 0x1;
@@ -65,10 +91,15 @@ function Sound() {
     let master_volume  = 0x80;
 
     function exec_active_voices(callback) {
+        let noises = 0;
         for (var i = 0; i < VOICES_COUNT; i++) {
             if (enabled_voices & (1 << i)) {
                 callback(voices[i]);
             }
+            if(voices[i].noise) noises++;
+        }
+        if(noises == 0) {
+            noise.disconnect();
         }
     }
 
@@ -142,7 +173,6 @@ function Sound() {
         buffer_source.start();
     }
 
-
     this.io_read = function (port) {
         switch (port) {
             case 1:
@@ -197,7 +227,15 @@ function Sound() {
             case REG_WAVEFORM:
                 exec_active_voices(function(entry) {
                     entry.wave = value & 3;
-                    entry.oscillator.type = WAVE_STR[entry.wave];
+                    switch(entry.wave) {
+                        case WAVE_NOISE:
+                            entry.noise = true;
+                            noise.connect(noise.context.destination);
+                            break;
+                        default:
+                            entry.noise = false;
+                            entry.oscillator.type = WAVE_STR[entry.wave];
+                    }
                 });
                 /* Special case for the sample table voice,
                  * Register 2 corresponds to the configuration */

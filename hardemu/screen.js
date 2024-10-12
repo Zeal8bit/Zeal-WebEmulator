@@ -104,7 +104,6 @@ function ColorPalette() {
     }
 }
 
-
 function Tileset(Palette, Tilemap) {
 
     /* The tilemap is necessary to get the palette used by a tile */
@@ -309,8 +308,6 @@ function Tileset(Palette, Tilemap) {
         tiles_updates = {};
     }
 }
-
-
 
 function Sprites(Tileset)
 {
@@ -660,6 +657,8 @@ function VideoChip(Zeal, PIO, scale) {
             update_screen: false
         };
         updateModeData(canvas, canvas_layer1, DEFAULT_MODE);
+
+        peri_sound.reset();
     }
 
 
