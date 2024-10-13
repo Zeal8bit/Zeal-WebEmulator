@@ -112,6 +112,7 @@ $("#dumpnow").on("click", function() {
     const virtaddr = parseInt($("#dumpaddr").val(), 16);
     const size = parseInt($("#dumpsize").val());
     setRAMView(virtaddr, size);
+    localStorage.setItem('dump', JSON.stringify({address:virtaddr.toString(16), size}));
 });
 
 $('#dumpaddr, #dumpsize').on('keypress', (evt) => {
@@ -147,7 +148,7 @@ $("#memdump").on("click", ".dumpline", function() {
     /* If the address is not in the breakpoint list, add it */
     const brk = getBreakpoint(brkaddr);
     if (brk == null) {
-        addBreakpoint(brkaddr);
+        addBreakpoint({ address: brkaddr });
     } else {
         toggleBreakpoint(brkaddr);
     }
@@ -215,10 +216,25 @@ $("#dumpcontent").on("focusin focusout keyup keydown", ".membytes div[contentedi
     }
 });
 
-// $(() => {
-//     $('#dumpaddr').val('4000');
-//     $('#dumpsize').val('128');
-//     setTimeout(() => {
-//         $('#dumpnow').trigger('click');
-//     }, 1200)
-// });
+function dumpMemory(options) {
+    const { address, size } = options;
+    $('#dumpaddr').val(address);
+    $('#dumpsize').val(size ?? 256);
+    setTimeout(() => {
+        $('#dumpnow').trigger('click');
+    }, 100);
+}
+
+$(() => {
+    if(params.dump) {
+        const [address,size = 256] = params.dump.split(',');
+        dumpMemory({address, size});
+        return;
+    }
+
+    const addr = localStorage.getItem('dump');
+    if(addr) {
+        dumpMemory(JSON.parse(addr));
+        return;
+    }
+});

@@ -414,7 +414,7 @@ class Z80Machine {
 
             var brk = getBreakpoint(next_pc);
             if (brk == null) {
-                addBreakpoint(next_pc, true);
+                addBreakpoint({ address: next_pc, autodelete: true});
             } else {
                 enableBreakpoint(brk);
             }
