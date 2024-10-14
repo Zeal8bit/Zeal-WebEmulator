@@ -112,6 +112,18 @@ $('#canvas-smooth-val').on('change', (e) => {
     }
 })
 
+$('#screen-capture').on('click', () => {
+    console.log('capture screen');
+    const canvas = document.getElementById('screen');
+    const image = canvas.toDataURL();
+    console.log('image', image);
+
+    const link = document.createElement('a');
+    link.href = image;
+    link.download = 'zeal-screenshot.png';
+    link.click();
+});
+
 jQuery(() => {
     $('#continue').hide();
     $('#pause').show();
