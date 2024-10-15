@@ -1321,7 +1321,10 @@ function VideoChip(Zeal, PIO, scale) {
             tilemap,
             tileset,
             palette,
-            font
+            font,
+            layer0: canvas,
+            layer1: canvas_layer1,
+            sprites,
         };
     }
 

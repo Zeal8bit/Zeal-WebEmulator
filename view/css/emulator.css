@@ -553,6 +553,12 @@ hr {
             cursor: help;
         }
     }
+
+    .layers {
+        > canvas {
+            max-width: 100%;
+        }
+    }
 }
 
 .dumpline::before {
