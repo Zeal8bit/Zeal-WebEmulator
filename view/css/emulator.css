@@ -350,6 +350,12 @@ hr {
     gap: 1ch;
 }
 
+.sub-panel {
+    padding: 2ch;
+    border-radius: 1ch;
+    background-color: var(--fourth-bg-color);
+}
+
 #terminal {
     flex-grow: 1;
 }
@@ -366,10 +372,6 @@ hr {
 }
 
 #gamepadview {
-    padding: 2ch;
-    border-radius: 1ch;
-    background-color: var(--fourth-bg-color);
-
     &.empty {
         display: none;
     }
@@ -472,6 +474,40 @@ hr {
         font-size: 0.8em;
         opacity: 0.7;
     } */
+}
+
+#video {
+    &.active {
+        display: flex;
+        flex-direction: column;
+        gap: 2em;
+    }
+
+    padding-inline: 3ch;
+    padding-bottom: 2em;
+
+    .palette {
+        display: grid;
+        gap: .5em;
+        grid-template-columns: repeat(auto-fit, 2ch);
+
+        > div {
+            min-width: 2ch;
+            aspect-ratio: 1/1;
+            cursor: help;
+        }
+    }
+
+    .tileset {
+        display: grid;
+        gap: .5em;
+        grid-template-columns: repeat(auto-fit, 64px);
+        > canvas {
+            width: 64px;
+            height: 64px;
+            cursor: help;
+        }
+    }
 }
 
 .dumpline::before {
