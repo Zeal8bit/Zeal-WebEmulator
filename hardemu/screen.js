@@ -102,6 +102,10 @@ function ColorPalette() {
     this.flushUpdates = function () {
         color_changed = {};
     }
+
+    this.getPalette = function() {
+        return palette888;
+    }
 }
 
 function Tileset(Palette, Tilemap) {
@@ -190,6 +194,10 @@ function Tileset(Palette, Tilemap) {
             /* TODO: Mark all the imaged as updated? */
         }
         mode8bit = mode8;
+    }
+
+    this.getColorMode8Bit = function() {
+        return mode8bit;
     }
 
 
@@ -306,6 +314,10 @@ function Tileset(Palette, Tilemap) {
 
     this.flushUpdates = function () {
         tiles_updates = {};
+    }
+
+    this.getTiles = function() {
+        return tiles;
     }
 }
 
@@ -1295,6 +1307,15 @@ function VideoChip(Zeal, PIO, scale) {
 
         /* Add the cursor if it needs to be visible */
         printCursor(visible_ctx);
+    }
+
+    this.dump = function() {
+        return {
+            tilemap,
+            tileset,
+            palette,
+            font
+        };
     }
 
 

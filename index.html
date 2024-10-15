@@ -287,6 +287,7 @@
         <div id="memory-tab" class="tab">Memory view</div>
         <div id="uart-tab" class="tab">Terminal (UART)</div>
         <div id="gamepad-tab" class="tab">Gamepad <span class="tab-status">🔴</span></div>
+        <div id="video-tab" class="tab">Video</div>
       </section>
       <section id="memdump" class="panel">
       </section>
@@ -338,7 +339,20 @@
         <div class="panel-toolbar">
         </div>
         <div id="gamepadview-start">Press a button on your controller to start</div>
-        <div id="gamepadview" class="empty">
+        <div id="gamepadview" class="sub-panel empty">
+        </div>
+      </section>
+      <section id="video" class="panel">
+        <div class="panel-toolbar">
+          <input type="button" id="video-dump" value="Dump" />
+        </div>
+        <div class="sub-panel">
+          <h2>Palette</h2>
+          <div class="palette"></div>
+        </div>
+        <div class="sub-panel">
+          <h2>Tileset</h2>
+          <div class="tileset"></div>
         </div>
       </section>
     </section>
@@ -387,5 +401,6 @@
     <script src="view/tabs/memdump.js"></script>
     <script src="view/tabs/uart_terminal.js"></script>
     <script src="view/tabs/gamepad.js"></script>
+    <script src="view/tabs/video.js"></script>
   </body>
 </html>
