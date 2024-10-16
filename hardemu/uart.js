@@ -179,7 +179,6 @@ function UART(Zeal, PIO) {
     this.opened = true;
     this.type = 'emulated';
     this.setActive = (state) => {
-        console.log(this.type, state);
         active = state;
         if(active) {
             /* Connect the TX pin to the PIO */

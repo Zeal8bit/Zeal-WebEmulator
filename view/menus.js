@@ -25,6 +25,14 @@ function showContinueView() {
     $("#pause").hide();
 }
 
+function saveMenuState() {
+    const menus = {};
+    $('.menu').each(function() {
+        const id = $(this).attr('id');
+        menus[id] = $(this).hasClass('visible');
+    });
+    localStorage.setItem('menus', JSON.stringify(menus));
+}
 
 /**
  * Events for all menus and their content: breakpoints, CPU control, etc...
@@ -36,22 +44,9 @@ function showContinueView() {
 $(".menutitle").on('click', function(e) {
     e.preventDefault();
     e.stopPropagation();
-    /* Check if the content is shown or hidden */
-    const content = $(this).next(".menucontent");
-    const title = $(this).children(".menuicon");
 
-    const visible = content.hasClass('visible');
-    var new_src = visible ? right_arrow_src : down_arrow_src;
-
-    title.fadeOut(120, function () {
-        title.attr('src', new_src);
-        title.fadeIn(160);
-    });
-    if(visible) {
-        content.removeClass('visible');
-    } else {
-        content.addClass('visible');
-    }
+    $(this).parent().toggleClass('visible');
+    saveMenuState();
 });
 
 $("#theme").on("change", function() {
@@ -104,13 +99,18 @@ $('#web-serial-connect').on('click', (e) => {
 $('#canvas-smooth-val').on('change', (e) => {
     const smooth = e.currentTarget.checked;
     localStorage.setItem('canvas-smooth', JSON.stringify(smooth));
-    console.log('smooth', smooth);
     if(smooth) {
         $('#screen').addClass('no-pixels');
     } else {
         $('#screen').removeClass('no-pixels');
     }
 })
+
+$('#t-state-logger-val').on('change', (e) => {
+    const tstate = e.currentTarget.checked;
+    localStorage.setItem('t-state-logger', tstate);
+    TStateLogger = tstate;
+});
 
 $('#screen-capture').on('click', () => {
     console.log('capture screen');
@@ -128,8 +128,18 @@ jQuery(() => {
     $('#continue').hide();
     $('#pause').show();
 
+    let menus = JSON.parse(localStorage.getItem('menus')) ?? {};
+    Object.entries(menus).map((entry) => {
+        const [k,v] = entry;
+        if(v) $(`#${k}`).addClass('visible');
+    });
+
+
     const smooth = JSON.parse(localStorage.getItem('canvas-smooth') ?? false);
     $('#canvas-smooth-val').attr('checked', smooth).trigger('change');
+
+    const tstate = JSON.parse(localStorage.getItem('t-state-logger') ?? false);
+    $('#t-state-logger-val').attr('checked', tstate).trigger('change');
 
     if(!navigator || !navigator.serial) {
         // disable web serial, only supported in latest Chrome, Edge and Opera
