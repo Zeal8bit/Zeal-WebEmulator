@@ -578,25 +578,16 @@ h3 {
     cursor: pointer;
 }
 
-#controls {
+#menu-controls {
     width: 100%;
     text-align: center;
 }
 
-#controls img {
+#menu-controls img {
     padding-top: 0.5em;
     padding-bottom: 0.5em;
     cursor: pointer;
     width: 2em;
-}
-
-.menutitle {
-    font-variant: small-caps;
-    font-weight: bolder;
-    cursor: pointer;
-    margin-top: 0.5em;
-    margin-bottom: 0.5em;
-    user-select: none;
 }
 
 .menu {
@@ -611,12 +602,29 @@ h3 {
     border-bottom: var(--first-txt-color) solid 1px;
 }
 
-.menuicon {
-    display: inline-block;
-    width: 1em;
-    text-align: middle;
-    vertical-align: middle;
-    padding: 0 0.25em 0.2em 0.25em;
+.menutitle {
+    font-variant: small-caps;
+    font-weight: bolder;
+    cursor: pointer;
+    margin-top: 0.5em;
+    margin-bottom: 0.5em;
+    user-select: none;
+
+    &::before {
+        /* <img class="menuicon" src="imgs/right-arrow.png" /> */
+        content: ' ';
+        width: 1em;
+        margin-inline: .5ch;
+        aspect-ratio: 1;
+        display: inline-block;
+        background-image: url('../../imgs/right-arrow.png');
+        background-position: center;
+        background-size: contain;
+
+    }
+    .visible &::before {
+        background-image: url('../../imgs/down-arrow.png');
+    }
 }
 
 .menucontent {
@@ -634,7 +642,7 @@ h3 {
         max-height 0.25s ease-out,
         padding-block 0.125ms ease-out 0.25s;
 
-    &.visible {
+    .visible & {
         padding-block: 0.5em;
         max-height: 300px;
         overflow-y: auto;

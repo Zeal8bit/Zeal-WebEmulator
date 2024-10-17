@@ -499,6 +499,8 @@ function Sprites(Tileset)
     }
 }
 
+var TStateLogger = false;
+
 function VideoChip(Zeal, PIO, scale) {
     const zeal = Zeal;
     const pio = PIO;
@@ -1097,7 +1099,7 @@ function VideoChip(Zeal, PIO, scale) {
                     const diff = current_states - tracked;
                     const micros = diff/10
                     const millis = micros/1000;
-                    console.log(`Elapsed T-states (${value}): ${diff} (${millis}ms)`);
+                    if(TStateLogger) console.log(`Elapsed T-states (${value}): ${diff} (${millis}ms)`);
                 } else {
                     previous_tstate[value] = current_states;
                 }

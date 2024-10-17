@@ -233,7 +233,7 @@
         </div>
 
         <section id="rightpanel">
-          <section class="menu" id="controls">
+          <section class="menu" id="menu-controls">
             <img id="continue" title="Continue (F9)" src="imgs/continue.png" class="cpuexec" alt="Continue" style="display: none;"/>
             <img id="pause" title="Pause (F9)" src="imgs/pause.png" alt="Pause" class="cpuexec hidden" />
             <img id="step" title="Step (F10)" src="imgs/step.png" alt="Step" />
@@ -242,10 +242,9 @@
             <img id="clean" title="Clean" src="imgs/clean.png" alt="Clean">
           </section>
 
-          <section class="menu">
-            <section class="menutitle">
-                <img class="menuicon" src="imgs/down-arrow.png" />Breakpoints</section>
-            <section class="menucontent visible">
+          <section class="menu" id="menu-breakpoints">
+            <section class="menutitle">Breakpoints</section>
+            <section class="menucontent">
                 <section id="newbp">
                     <input type="text" id="bpaddr" />
                     <button id="addbp">Add</button>
@@ -258,9 +257,8 @@
             </section>
           </section>
 
-          <section class="menu">
-            <section class="menutitle">
-                <img class="menuicon" src="imgs/right-arrow.png" />Settings</section>
+          <section class="menu" id="menu-settings">
+            <section class="menutitle">Settings</section>
             <section class="menucontent">
                 <label>
                   Switch theme:
@@ -269,9 +267,14 @@
                       <option value="light">Light</option>
                   </select>
                 </label>
-                <div id="canvas-smooth">
-                  <label>Canvas Smoothing <input type="checkbox" id="canvas-smooth-val" /></label>
-                </div>
+                <label>
+                  Canvas Smoothing
+                  <input type="checkbox" id="canvas-smooth-val" />
+                </label>
+                <label>
+                  T-State Logger
+                  <input type="checkbox" id="t-state-logger-val" />
+                </label>
                 <div id="web-serial-settings">
                   <label>Web Serial:</label>
                   <button id="web-serial-connect">Connect Serial</button>
