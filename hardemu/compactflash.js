@@ -192,7 +192,7 @@ function CompactFlash(Zeal) {
             for (var i = 0; i < binary.length; i++)
                 cf_data[i] = binary.charCodeAt(i);
         } else {
-            for (var i = 0; i < binary.length; i++)
+            for (var i = 0; i < binary.byteLength; i++)
                 cf_data[i] = binary[i];
         }
     }
