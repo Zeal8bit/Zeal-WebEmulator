@@ -23,8 +23,8 @@ function RAM(size) {
     }
 
     function loadFile(binary, offset) {
-        for (var i = 0; i < binary.length; i++) {
-            ram[offset + i] = binary.charCodeAt(i);
+        for (var i = 0; i < binary.byteLength; i++) {
+            ram[offset + i] = binary[i];
         }
     }
 

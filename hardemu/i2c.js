@@ -256,8 +256,8 @@ function I2C_EEPROM(Zeal, I2C, content) {
     }
 
     function loadFile(binary) {
-        for (var i = 0; i < binary.bytesLength; i++)
-            data[i] = binary.charCodeAt(i);
+        for (var i = 0; i < binary.byteLength; i++)
+            data[i] = binary[i];
     }
 
     /* Format the EEPROM to use ZealFS */
