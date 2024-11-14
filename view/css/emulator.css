@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-:root, :root.dark {
+ :root, :root.dark {
     --first-bg-color: #002b36;
     --second-bg-color: #093642;
     --third-bg-color: #0a4d5f;
@@ -80,6 +80,23 @@ input[type=text] {
     display: grid;
     grid-template-columns: 240px auto 240px;
     margin-bottom: 1em;
+
+    &.theater-mode {
+        grid-template-columns: 95%;
+        align-items: center;
+        justify-content: center;
+
+        > #debug, > #rightpanel {
+            display: none;
+        }
+
+        >#container {
+            width: 100%;
+            > canvas {
+                width: 100%;
+            }
+        }
+    }
 }
 
 #toppanel > * {
@@ -89,7 +106,7 @@ input[type=text] {
 #debug {
     background-color:var(--second-bg-color);
     box-shadow: 5px 0 10px -4px #040404;
-    width:15em;
+    width:100%;
     border-bottom-right-radius: 10px;
     border-bottom-left-radius: 10px;
 }
@@ -132,16 +149,44 @@ hr {
 
 #container {
     min-width: 640px;
+    margin-top: 3em;
+    position: relative;
+
+    .close {
+        display: none;
+        cursor: pointer;
+        position: absolute;
+        top: 1ch;
+        right: 1ch;
+        padding: 1ch;
+        font-size: .85rem;
+        color: var(--second-txt-color);
+        border: 1px solid var(--second-txt-color);
+        border-radius: 8px;
+        font-weight: bold;
+
+        &:hover {
+            background-color: var(--second-txt-color);
+            color: var(--first-bg-color);
+        }
+    }
+
+    .theater-mode &:hover {
+        .close {
+            display: block;
+        }
+
+    }
 }
 
 #container canvas {
     display: block;
     margin-inline: auto;
-    margin-top: 3em;
     background-color: black;
     /* transform-origin: top; */
     width: 640px;
-    height: 480px;
+    aspect-ratio: 4/3;
+    /* height: 480px; */
     image-rendering: pixelated;
     &.no-pixels {
         image-rendering: auto;
@@ -153,7 +198,7 @@ hr {
     background-color:var(--second-bg-color);
     color: var(--first-txt-color);
     box-shadow: -5px 0 5px -3px #040404;
-    width:15em;
+    width:100%;
     box-sizing: border-box;
     border-bottom-right-radius: 10px;
     border-bottom-left-radius: 10px;
