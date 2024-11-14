@@ -124,6 +124,16 @@ $('#screen-capture').on('click', () => {
     link.click();
 });
 
+$('#theater-mode').on('click', () => {
+    console.log('theater-mode', 'click');
+
+    $('#toppanel').toggleClass('theater-mode');
+});
+
+$('#container .close').on('click', () => {
+    $('#toppanel').toggleClass('theater-mode');
+})
+
 jQuery(() => {
     $('#continue').hide();
     $('#pause').show();
