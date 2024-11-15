@@ -1,4 +1,26 @@
 (() => {
+  var $tab = $('#video');
+  const _panels = localStorage.getItem('video-panels');
+  let panels;
+  const savePanels = () => {
+    localStorage.setItem('video-panels', JSON.stringify(panels));
+  }
+
+  if(!_panels) {
+    panels = {
+      "palette": { "open": true, "visible": true },
+      "tileset": { "open": true, "visible": true },
+      "tilemap": { "open": false, "visible": false }
+    }
+    savePanels();
+  } else {
+    panels = JSON.parse(_panels);
+  }
+
+  $("#video").on("active", () => {
+    $('#video-dump').trigger('click');
+  });
+
   $('#video-dump').on('click', () => {
     const { tileset, palette, layer0, layer1, sprites } = zealcom.vchip.dump();
 
@@ -27,7 +49,7 @@
       $tileset.append(canvas);
     };
 
-    const $layers = $('#video .layers').empty();
+    const $tilemap = $('#video .tilemap').empty();
     const canvas = document.createElement('canvas');
     canvas.width = 1280;
     canvas.height = 640;
@@ -37,10 +59,48 @@
     ctx.drawImage(layer0.offscreenCanvas, 0, 0, 1280, 640, 0, 0, 1280, 640);
     ctx.drawImage(layer1, 0, 0, 1280, 640, 0, 0, 1280, 640);
     sprites.drawSprites(canvas);
-    $layers.append(canvas);
+    $tilemap.append(canvas);
   });
 
-  $("#gamepad").on("active", () => {
-    $('#video-dump').trigger('click');
+  $('details', $tab).on('toggle', function() {
+    console.log('toggle', this);
+    const panel = $(this).attr('name');
+    panels[panel].open = this.open;
+    savePanels();
   });
+
+  const togglePanel = (panel, toggle) => {
+    const $panel = $(`.sub-panel[name=${panel}]`, $tab);
+    if(toggle) $panel.show();
+    else $panel.hide();
+
+    panels[panel] = {
+      visible: toggle,
+    };
+    savePanels();
+  }
+
+  $('input.toggle', $tab).on('change', function() {
+    var panel = $(this).attr('name');
+    var checked = $(this).is(':checked');
+    togglePanel(panel, checked);
+  });
+
+  for(k in panels) {
+    const {visible, open} = panels[k];
+    const $panel = $(`.sub-panel[name=${k}]`);
+    console.log('panel', { visible, open});
+    $(`input[name=${k}]`).prop('checked', visible);
+    if(visible) {
+      $panel.show();
+    } else {
+      $panel.hide();
+    }
+
+    if(open) {
+      $panel.attr('open', true);
+    } else {
+      $panel.attr('open', false);
+    }
+  }
 })();
