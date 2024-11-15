@@ -307,11 +307,13 @@
           <a id="dump-link" download="rom_dump.bin" style="display: none;">Dump ROM</a>
           <a id="dump-eeprom-link" download="eeprom_dump.bin" style="display: none;">Dump EEPROM</a>
         </section>
-        <section class="memline">
-            <section id="current_memaddr" class="memaddr"></section>
-        </section>
-        <section id="dumpcontent">
-        </section>
+        <div class="sub-panel">
+          <section class="memline">
+              <section id="current_memaddr" class="memaddr"></section>
+          </section>
+          <section id="dumpcontent">
+          </section>
+        </div>
       </section>
       <section id="uartview" class="panel">
         <div class="panel-toolbar">
@@ -342,7 +344,7 @@
         <div id="terminal"></div>
       </section>
       <section id="gamepad" class="panel">
-        <div class="panel-toolbar">
+        <div class="panel-toolbar hidden">
         </div>
         <div id="gamepadview-start">Press a button on your controller to start</div>
         <div id="gamepadview" class="sub-panel empty">
@@ -351,19 +353,32 @@
       <section id="video" class="panel">
         <div class="panel-toolbar">
           <input type="button" id="video-dump" value="Dump" />
+
+          <label>
+            <input type="checkbox" id="video-palette" class="toggle" name="palette" checked />
+            Show Palette
+          </label>
+          <label>
+            <input type="checkbox" id="video-tileset" class="toggle" name="tileset" checked />
+            Show Tileset
+          </label>
+          <label>
+            <input type="checkbox" id="video-tilemap" class="toggle" name="tilemap" checked />
+            Show Tilemap
+          </label>
         </div>
-        <div class="sub-panel">
-          <h2>Palette</h2>
+        <details class="sub-panel" name="palette" open>
+          <summary>Palette</summary>
           <div class="palette"></div>
-        </div>
-        <div class="sub-panel">
-          <h2>Tileset</h2>
+        </details>
+        <details class="sub-panel" name="tileset" open>
+          <summary>Tileset</summary>
           <div class="tileset"></div>
-        </div>
-        <div class="sub-panel">
-          <h2>Layers</h2>
-          <div class="layers"></div>
-        </div>
+        </details>
+        <details class="sub-panel" name="tilemap">
+          <summary>Tilemap</summary>
+          <div class="tilemap"></div>
+        </details>
       </section>
     </section>
 

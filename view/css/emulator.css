@@ -22,6 +22,9 @@
     --second-txt-color:#586e75;
 }
 
+*, *::before, *::after {
+    box-sizing: border-box;
+}
 
 body {
     padding: 0;
@@ -105,7 +108,7 @@ input[type=text] {
 
 #debug {
     background-color:var(--second-bg-color);
-    box-shadow: 5px 0 10px -4px #040404;
+    box-shadow: 5px 0 6px -4px #040404;
     width:100%;
     border-bottom-right-radius: 10px;
     border-bottom-left-radius: 10px;
@@ -197,9 +200,8 @@ hr {
 #rightpanel {
     background-color:var(--second-bg-color);
     color: var(--first-txt-color);
-    box-shadow: -5px 0 5px -3px #040404;
+    box-shadow: -5px 0 6px -4px #040404;
     width:100%;
-    box-sizing: border-box;
     border-bottom-right-radius: 10px;
     border-bottom-left-radius: 10px;
 }
@@ -231,7 +233,6 @@ hr {
 
 #breakpoints {
     width: 100%;
-    box-sizing: border-box;
     vertical-align: top;
     display: inline-block;
 }
@@ -370,10 +371,7 @@ hr {
     width: 100%;
     min-height:  34vh;
     background-color:var(--second-bg-color);
-    padding-top: 1em;
-    padding-left: 0.5em;
     overflow-y:scroll;
-    box-sizing: border-box;
     user-select: none;
     display: none;
 
@@ -386,8 +384,14 @@ hr {
     display: flex;
     padding-inline: 1ch;
     gap: 2ch;
-    margin-bottom: 1em;
+    border-bottom: 2px solid var(--fourth-bg-color);
+    padding-inline: 0.5em;
+    padding-block: 1em;
     align-items: center;
+
+    &.hidden {
+        display: none;
+    }
 }
 
 .panel .panel-toolbar label {
@@ -396,17 +400,48 @@ hr {
 }
 
 .sub-panel {
-    padding: 2ch;
-    border-radius: 1ch;
+    margin-inline-start: 1em;
+    margin-top: 1em;
+    padding: 1em;
+    border-radius: 8px;
     background-color: var(--fourth-bg-color);
+    position: relative;
+
+    summary {
+        font-size: 18px;
+        font-weight: 700;
+        font-family: monospace;
+        padding-block: 6px;
+        margin-block: -0.5em;
+        line-height: 24px;
+        list-style: none;
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        justify-content: flex-start;
+        cursor: pointer;
+        user-select: none;
+
+        &::marker {
+            display: none
+        }
+
+        &::before {
+            content: "+";
+            padding-right: 1ch;
+        }
+    }
+
+    &[open] > summary {
+        margin-bottom: 0.5em;
+        &::before {
+            content: "-";
+        }
+    }
 }
 
 #terminal {
     flex-grow: 1;
-}
-
-#gamepad {
-    padding-inline: 3ch;
 }
 
 #gamepadview-start {
@@ -414,6 +449,7 @@ hr {
     text-align: center;
     width: 50%;
     margin-inline: auto;
+    padding: 2em;
 }
 
 #gamepadview {
@@ -525,11 +561,7 @@ hr {
     &.active {
         display: flex;
         flex-direction: column;
-        gap: 2em;
     }
-
-    padding-inline: 3ch;
-    padding-bottom: 2em;
 
     .palette {
         display: grid;
@@ -679,7 +711,6 @@ h3 {
 
 .menu {
     width: 100%;
-    box-sizing: border-box;
 }
 
 .menu::after {
@@ -720,7 +751,6 @@ h3 {
     row-gap: 1ch;
     padding-inline: 0.5em;
     padding-block: 0;
-    box-sizing: border-box;
     width: 100%;
 
     max-height: 0;
@@ -819,7 +849,6 @@ footer {
     display: block;
     width: 100%;
     text-align: right;
-    box-sizing: border-box;
     font-size: 14pt;
 }
 
