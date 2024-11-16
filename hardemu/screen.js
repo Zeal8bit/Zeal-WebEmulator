@@ -569,89 +569,57 @@ function VideoChip(Zeal, PIO, scale) {
     const tileset = new Tileset(palette, this);
     const sprites = new Sprites(tileset);
 
+    function newVidCfg() {
+        return {
+            mode: 0,
+            is_text: true,
+            is_8bit: true,
+            /* Resolution, in pixels, associated to the current configuration */
+            width: 0,
+            height: 0,
+            /* The maximum resolution supported in the following */
+            max_width: 640,
+            max_height: 480,
+            base_scale: 1,
+            /* The following scale should be configurable */
+            view_scale: 1,
+            /* Object can be a text character or a tile */
+            obj_per_line: 0,
+            obj_per_col: 0,
+            obj_total: 0,
+            obj_width: 0,
+            obj_height: 0,
+            vblank: 0,
+            /* The running program can explicitly disabled or enable the screen */
+            screen_enabled: 1,
+            /* Enable after each emulated v-blank, marks whether we need to redraw the screen
+             * the screen or not. This will prevent redraw if the emulation is paused/stopped */
+            update_screen: false
+        };
+    }
+
     /* Video mode configuration */
-    let video_cfg = {
-        mode: 0,
-        is_text: true,
-        is_8bit: true,
-        /* Resolution, in pixels, associated to the current configuration */
-        width: 0,
-        height: 0,
-        /* The maximum resolution supported in the following */
-        max_width: 640,
-        max_height: 480,
-        base_scale: 1,
-        /* The following scale should be configurable */
-        view_scale: 1,
-        /* Object can be a text character or a tile */
-        obj_per_line: 0,
-        obj_per_col: 0,
-        obj_total: 0,
-        obj_width: 0,
-        obj_height: 0,
-        vblank: 0,
-        /* The running program can explicitly disabled or enable the screen */
-        screen_enabled: 1,
-        /* Enable after each emulated v-blank, marks whether we need to redraw the screen
-         * the screen or not. This will prevent redraw if the emulation is paused/stopped */
-        update_screen: false
-    };
+    let video_cfg = newVidCfg();
 
-    /* Text mode configuration */
-    let text_cfg = {
-        /* Index for the current color, both foreground and background */
-        fg_color: DEFAULT_FG_COLOR,
-        bg_color: DEFAULT_BG_COLOR,
-        scroll_x: 0,
-        scroll_y: 0,
-        cursor : {
-            x: 0,
-            y: 0,
-            /* Number of frames the cursor is shown/hidden */
-            blink: 255,
-            blink_state: 0,
-            blink_shown: false,
-            char: 0,
-            /* The cursor has inverted colors */
-            fg_color: DEFAULT_BG_COLOR,
-            bg_color: DEFAULT_FG_COLOR,
-            /* Backup used when savign/restoring the cursor */
-            dump_x: 0,
-            dump_y: 0
-        },
-        flags: {
-            auto_scroll_x: 0,
-            auto_scroll_y: 0,
-            eat_newline:   0,
-            scroll_y_occurred : 0,
-        }
-    };
-
-    /* Graphics mode configuration */
-    let gfx_cfg = {
-        scroll_x: 0,
-        scroll_y: 0,
-    };
-
-    const { canvas, ctx, canvas_layer1, ctx_layer1 } = initialize();
-
-    function reset() {
-        /* Reset button pressed! */
-        gfx_cfg = { scroll_x: 0, scroll_y: 0 };
-
-        text_cfg = {
+    function newTxtCfg() {
+        return {
+            /* Index for the current color, both foreground and background */
             fg_color: DEFAULT_FG_COLOR,
             bg_color: DEFAULT_BG_COLOR,
-            scroll_x: 0, scroll_y: 0,
+            scroll_x: 0,
+            scroll_y: 0,
             cursor : {
                 x: 0,
                 y: 0,
+                /* Number of frames the cursor is shown/hidden */
                 blink: 255,
                 blink_state: 0,
                 blink_shown: false,
                 char: 0,
+                /* The cursor has inverted colors */
                 fg_color: DEFAULT_BG_COLOR,
                 bg_color: DEFAULT_FG_COLOR,
+                /* Backup used when savign/restoring the cursor */
                 dump_x: 0,
                 dump_y: 0
             },
@@ -662,14 +630,54 @@ function VideoChip(Zeal, PIO, scale) {
                 scroll_y_occurred : 0,
             }
         };
+    }
 
-        video_cfg = {
-            max_width: 640, max_height: 480,
-            base_scale: 1, view_scale: 1,
-            vblank: 0,
-            screen_enabled: 1,
-            update_screen: false
+    const CTRL_BASE = {
+        VPOS_LOW:       0x10,
+        VPOS_HIGH:      0x11,
+        HPOS_LOW:       0x12,
+        HPOS_HIGH:      0x13,
+        L0_SCR_Y_LOW:   0x14,
+        L0_SCR_Y_HIGH:  0x15,
+        L0_SCR_X_LOW:   0x16,
+        L0_SCR_X_HIGH:  0x17,
+        L1_SCR_Y_LOW:   0x18,
+        L1_SCR_Y_HIGH:  0x19,
+        L1_SCR_X_LOW:   0x1a,
+        L1_SCR_X_HIGH:  0x1b,
+        VIDEO_MODE:     0x1c,
+        STATUS:         0x1d,
+    };
+
+    /* Text mode configuration */
+    let text_cfg = newTxtCfg();
+
+    function newGfxCfg() {
+        return {
+            vpos: 0,
+            hpos: 0,
+            scroll_l0_y: 0,
+            scroll_l0_x: 0,
+            scroll_l0_y_latch: 0,
+            scroll_l0_x_latch: 0,
+            scroll_l1_y: 0,
+            scroll_l1_x: 0,
+            scroll_l1_y_latch: 0,
+            scroll_l1_x_latch: 0,
+            scroll_l1_latch: 0,
         };
+    }
+
+    /* Graphics mode configuration */
+    let gfx_cfg = newGfxCfg();
+
+    const { canvas, ctx, canvas_layer1, ctx_layer1 } = initialize();
+
+    function reset() {
+        /* Reset button pressed! */
+        gfx_cfg = newGfxCfg();
+        text_cfg = newTxtCfg();
+        video_cfg = newVidCfg();
         updateModeData(canvas, canvas_layer1, DEFAULT_MODE);
 
         peri_sound.reset();
@@ -959,9 +967,9 @@ function VideoChip(Zeal, PIO, scale) {
     const CURSOR_CHAR   = 7;
     const CURSOR_COLOR  = 8;
     const CTRL_REG      = 9;
-        const CTRL_REG_SAVE_CURSOR    = 1 << 7;
-        const CTRL_REG_RESTORE_CURSOR = 1 << 6;
-        const CTRL_REG_NEWLINE        = 1 << 0;
+    const CTRL_REG_SAVE_CURSOR    = 1 << 7;
+    const CTRL_REG_RESTORE_CURSOR = 1 << 6;
+    const CTRL_REG_NEWLINE        = 1 << 0;
 
     /**
      * @brief I/O text component sees a write, address is relative to this space
@@ -1189,19 +1197,64 @@ function VideoChip(Zeal, PIO, scale) {
             vConfigWrite(port, value);
         } else if (port >= 0x10 && port <= 0x1f) {
             // TODO: Scrolling values
-            if (port == 0x1c)
-                updateModeData(canvas, canvas_layer1, value);
-            else if (port == 0x1d)
-                video_cfg.screen_enabled = (value >> 7) & 1;
+            switch(port) {
+                case CTRL_BASE.L0_SCR_Y_LOW: // zvb_ctrl_l0_scr_y_low\
+                    gfx_cfg.scroll_l0_y_latch = value;
+                    // gfx_cfg.scroll_l0_y &= 0xFF00;
+                    // gfx_cfg.scroll_l0_y += value;
+                    break;
+                case CTRL_BASE.L0_SCR_Y_HIGH: // zvb_ctrl_l0_scr_y_high
+                    // gfx_cfg.scroll_l0_y &= 0x00FF;
+                    gfx_cfg.scroll_l0_y = (value << 8) + gfx_cfg.scroll_l0_y_latch;
+                    break;
+                case CTRL_BASE.L0_SCR_X_LOW: // zvb_ctrl_l0_scr_x_low
+                    gfx_cfg.scroll_l0_x_latch = value;
+                    // gfx_cfg.scroll_l0_x &= 0xFF00;
+                    // gfx_cfg.scroll_l0_x += value;
+                    break;
+                case CTRL_BASE.L0_SCR_X_HIGH: // zvb_ctrl_l0_scr_x_high
+                    // gfx_cfg.scroll_l0_x &= 0x00FF;
+                    gfx_cfg.scroll_l0_x = (value << 8) + gfx_cfg.scroll_l0_x_latch;
+                    break;
+
+                case CTRL_BASE.L1_SCR_Y_LOW: // zvb_ctrl_l0_scr_y_low
+                    // gfx_cfg.scroll_l1_y &= 0xFF00;
+                    // gfx_cfg.scroll_l1_y += value;
+                    gfx_cfg.scroll_l1_y_latch = value;
+                    break;
+                case CTRL_BASE.L1_SCR_Y_HIGH: // zvb_ctrl_l0_scr_y_high
+                    // gfx_cfg.scroll_l1_y &= 0x00FF;
+                    gfx_cfg.scroll_l1_y = (value << 8) + gfx_cfg.scroll_l1_y_latch;
+                    break;
+                case CTRL_BASE.L1_SCR_X_LOW: // zvb_ctrl_l0_scr_x_low
+                    // gfx_cfg.scroll_l1_x &= 0xFF00;
+                    // gfx_cfg.scroll_l1_x += value;
+                    gfx_cfg.scroll_l1_x_latch = value;
+                    break;
+                case CTRL_BASE.L1_SCR_X_HIGH: // zvb_ctrl_l0_scr_x_high
+                    // gfx_cfg.scroll_l1_x &= 0x00FF;
+                    gfx_cfg.scroll_l1_x = (value << 8) + gfx_cfg.scroll_l1_x_latch;
+                    break;
+                case CTRL_BASE.VIDEO_MODE: // zvb_ctrl_video_mode
+                    updateModeData(canvas, canvas_layer1, value);
+                    break
+                case CTRL_BASE.STATUS: // zvb_ctrl_status
+                    video_cfg.screen_enabled = (value >> 7) & 1;
+                    break;
+            }
         } else if (port >= 0x20 && port <= 0x2f) {
             const subport = port - 0x20;
 
-            if (mapping.io_bank == IO_MAPPING_TEXT) {
-                textConfigWrite(subport, value);
-            } else if (mapping.io_bank == IO_MAPPING_CRC) {
-                peri_crc32.io_write(subport, value);
-            } else if (mapping.io_bank == IO_MAPPING_SOUND) {
-                peri_sound.io_write(subport, value);
+            switch(mapping.io_bank) {
+                case IO_MAPPING_TEXT:
+                    textConfigWrite(subport, value);
+                    break;
+                case IO_MAPPING_CRC:
+                    peri_crc32.io_write(subport, value);
+                    break;
+                case IO_MAPPING_SOUND:
+                    peri_sound.io_write(subport, value);
+                    break;
             }
         }
     }
@@ -1265,10 +1318,13 @@ function VideoChip(Zeal, PIO, scale) {
         /* Check if any tile has been updated while the tilemap was already written */
         checkAndUpdateTiles();
         /* Extract the visible part out of the offscreen canvas contex */
-        const visible_x = (video_cfg.is_text ? text_cfg.scroll_x * video_cfg.obj_width : gfx_cfg.scroll_x);
-        const visible_y = (video_cfg.is_text ? text_cfg.scroll_y * video_cfg.obj_height : gfx_cfg.scroll_y);
-        const visible_width  = Math.min(video_cfg.width, video_cfg.max_width - visible_x);
-        const visible_height = Math.min(video_cfg.height, video_cfg.max_height - visible_y);
+
+        const visible_l0_x = (video_cfg.is_text ? text_cfg.scroll_x * video_cfg.obj_width : gfx_cfg.scroll_l0_x);
+        const visible_l0_y = (video_cfg.is_text ? text_cfg.scroll_y * video_cfg.obj_height : gfx_cfg.scroll_l0_y);
+        const visible_l1_x = gfx_cfg.scroll_l1_x;
+        const visible_l1_y = gfx_cfg.scroll_l1_y;
+        const visible_width  = Math.min(video_cfg.width, video_cfg.max_width - visible_l0_x);
+        const visible_height = Math.min(video_cfg.height, video_cfg.max_height - visible_l0_y);
         /* Parameters:
          *  - Source canvas
          *  - (x,y) source coordinates
@@ -1277,13 +1333,13 @@ function VideoChip(Zeal, PIO, scale) {
          *  - Destination size
          */
         visible_ctx.drawImage(canvas.offscreenCanvas,
-                              visible_x, visible_y,
+                              visible_l0_x, visible_l0_y,
                               visible_width, visible_height,
                               0, 0,
                               visible_width, visible_height);
         if (!video_cfg.is_text && video_cfg.is_8bit) {
             visible_ctx.drawImage(canvas_layer1,
-                                  visible_x, visible_y,
+                                  visible_l1_x, visible_l1_y,
                                   visible_width, visible_height,
                                   0, 0,
                                   visible_width, visible_height);
@@ -1292,7 +1348,7 @@ function VideoChip(Zeal, PIO, scale) {
             /* Part of the screen should wrap, we need to copy the "left" part of the canvas */
             const remaining = video_cfg.width - visible_width;
             visible_ctx.drawImage(canvas.offscreenCanvas,
-                0, visible_y,
+                0, visible_l0_y,
                 remaining, visible_height,
                 visible_width, 0,
                 remaining, visible_height);
@@ -1301,7 +1357,7 @@ function VideoChip(Zeal, PIO, scale) {
             /* Similarly for Y */
             const remaining = video_cfg.height - visible_height;
             visible_ctx.drawImage(canvas.offscreenCanvas,
-                visible_x, 0,
+                visible_l0_x, 0,
                 visible_width, remaining,
                 0, visible_height,
                 visible_width, remaining);
