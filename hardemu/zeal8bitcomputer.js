@@ -68,6 +68,7 @@ class Zeal8bitComputer extends Z80Machine {
         this.ds1307 = ds1307;
         this.eeprom = eeprom;
         this.compactflash = compactflash;
+        this.hostfs = hostfs;
 
         this.set_serial = (type) => {
             this.uart.setActive(false);

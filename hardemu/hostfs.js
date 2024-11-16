@@ -10,7 +10,7 @@
  * The read and wrtie functions, provided as parameters will let this module read the
  * Z80 machine memory directly.
  */
- function HostFS(dma_read, dma_write) {
+function HostFS(dma_read, dma_write) {
     const ZOS_MAX_NAME_LENGTH = 16;
 
     const OPERATION_REG = 0xF;
@@ -134,6 +134,10 @@
      */
     async function check_root() {
         if (root_handle) return ZOS_SUCCESS;
+        return mount();
+    }
+
+    async function mount() {
         const opts = { id: 7777, mode: "readwrite"};
         const duration = 3000;
         const speed = 100;
@@ -141,11 +145,38 @@
         await new Promise(resolve => setTimeout(resolve, 1500));
         try {
             root_handle = await window.showDirectoryPicker(opts);
+            window.dispatchEvent(new CustomEvent("hostfs", {
+                detail: {
+                    mounted: true
+                }
+            }));
             return ZOS_SUCCESS;
         } catch (error) {
+            window.dispatchEvent(new CustomEvent("hostfs", {
+                detail: {
+                    mounted: false
+                }
+            }));
             return ZOS_FAILURE;
         }
     }
+
+    async function unmount() {
+        root_handle = null;
+        window.dispatchEvent(new CustomEvent("hostfs", {
+            detail: {
+                mounted: false
+            }
+        }));
+    }
+
+    function mounted() {
+        return !!root_handle;
+    }
+
+    this.mount = mount;
+    this.unmount = unmount;
+    this.mounted = mounted;
 
 
     /**
