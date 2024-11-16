@@ -125,9 +125,32 @@ $('#screen-capture').on('click', () => {
 });
 
 $('#theater-mode').on('click', () => {
-    console.log('theater-mode', 'click');
-
     $('#toppanel').toggleClass('theater-mode');
+});
+
+window.fullscreenMode = false;
+$('#fullscreen-mode').on('click', () => {
+    const canvas = document.querySelector('#container canvas');
+
+    if(document.fullscreenElement && document.exitFullscreen) {
+        document.exitFullscreen();
+    } else {
+        if(canvas && canvas.requestFullscreen) {
+            canvas.requestFullscreen({
+                navigationUI: "hide",
+            });
+        }
+    }
+});
+
+$('#hostfs-mount').on('click', () => {
+    if(zealcom.hostfs.mounted()) {
+        $('#hostfs-mount').text('Mount HostFS')
+        zealcom.hostfs.unmount();
+    } else {
+        $('#hostfs-mount').text('Unmount HostFS')
+        zealcom.hostfs.mount();
+    }
 });
 
 $('#container .close').on('click', () => {
@@ -155,4 +178,18 @@ jQuery(() => {
         // disable web serial, only supported in latest Chrome, Edge and Opera
         $('#web-serial-settings').hide();
     }
+
+    const canvas = document.querySelector('#container canvas');
+    if(canvas && canvas.requestFullscreen) {
+        $('#fullscreen-mode').show();
+    }
+
+    window.addEventListener("hostfs", (e) => {
+        const { mounted = false } = e.detail;
+        if(mounted) {
+            $('#hostfs-mount').text('Unmount HostFS')
+        } else {
+            $('#hostfs-mount').text('Mount HostFS')
+        }
+    });
 });

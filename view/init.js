@@ -34,6 +34,7 @@ document.addEventListener('keydown', function(event) {
     var handled = false;
     const binding = {
         'F4': $("#theater-mode"),
+        'F5': $("#fullscreen-mode"),
         'F9': $(".cpuexec:visible"),
         'F10': $("#step"),
         'F11': $("#stepover")
