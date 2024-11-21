@@ -583,6 +583,7 @@ hr {
             width: 64px;
             height: 64px;
             cursor: help;
+            image-rendering: pixelated;
         }
     }
 
