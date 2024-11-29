@@ -9,6 +9,7 @@
   if(!_panels) {
     panels = {
       "palette": { "open": true, "visible": true },
+      "fonts": { "open": true, "visible": false },
       "tileset": { "open": true, "visible": true },
       "tilemap": { "open": false, "visible": false }
     }
@@ -22,7 +23,7 @@
   });
 
   $('#video-dump').on('click', () => {
-    const { tileset, palette, layer0, layer1, sprites } = zealcom.vchip.dump();
+    const { tileset, palette, layer0, layer1, sprites, font } = zealcom.vchip.dump();
 
     const $palette = $('#video .palette').empty();
     const palette888 = palette.getPalette();
@@ -33,6 +34,18 @@
         <div class="color" style="background-color: #${hex}" title="Index ${i}"></div>
       `);
     });
+
+    const $font = $('#video .fonts').empty();
+    for(let i = 0; i < 256; i++) {
+      const img = font.getCharacterImg(i, [0,0,0], [255,255,255]);
+      const canvas = document.createElement('canvas');
+      $(canvas).attr('title', `Char ${i}`).css('background-color', `#${background}`);
+      canvas.width = 8;
+      canvas.height = 12;
+      var ctx = canvas.getContext('2d');
+      ctx.putImageData(img, 0, 0);
+      $font.append(canvas);
+    }
 
     const $tileset = $('#video .tileset').empty();
     const mode8bit = tileset.getColorMode8Bit();
