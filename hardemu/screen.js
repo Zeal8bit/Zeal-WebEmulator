@@ -1196,45 +1196,33 @@ function VideoChip(Zeal, PIO, scale) {
         if (port >= 0x0 && port <= 0xf) {
             vConfigWrite(port, value);
         } else if (port >= 0x10 && port <= 0x1f) {
-            // TODO: Scrolling values
             switch(port) {
                 case CTRL_BASE.L0_SCR_Y_LOW: // zvb_ctrl_l0_scr_y_low\
                     gfx_cfg.scroll_l0_y_latch = value;
-                    // gfx_cfg.scroll_l0_y &= 0xFF00;
-                    // gfx_cfg.scroll_l0_y += value;
                     break;
                 case CTRL_BASE.L0_SCR_Y_HIGH: // zvb_ctrl_l0_scr_y_high
-                    // gfx_cfg.scroll_l0_y &= 0x00FF;
                     gfx_cfg.scroll_l0_y = (value << 8) + gfx_cfg.scroll_l0_y_latch;
                     break;
                 case CTRL_BASE.L0_SCR_X_LOW: // zvb_ctrl_l0_scr_x_low
                     gfx_cfg.scroll_l0_x_latch = value;
-                    // gfx_cfg.scroll_l0_x &= 0xFF00;
-                    // gfx_cfg.scroll_l0_x += value;
                     break;
                 case CTRL_BASE.L0_SCR_X_HIGH: // zvb_ctrl_l0_scr_x_high
-                    // gfx_cfg.scroll_l0_x &= 0x00FF;
                     gfx_cfg.scroll_l0_x = (value << 8) + gfx_cfg.scroll_l0_x_latch;
                     break;
 
                 case CTRL_BASE.L1_SCR_Y_LOW: // zvb_ctrl_l0_scr_y_low
-                    // gfx_cfg.scroll_l1_y &= 0xFF00;
-                    // gfx_cfg.scroll_l1_y += value;
                     gfx_cfg.scroll_l1_y_latch = value;
                     break;
                 case CTRL_BASE.L1_SCR_Y_HIGH: // zvb_ctrl_l0_scr_y_high
-                    // gfx_cfg.scroll_l1_y &= 0x00FF;
                     gfx_cfg.scroll_l1_y = (value << 8) + gfx_cfg.scroll_l1_y_latch;
                     break;
                 case CTRL_BASE.L1_SCR_X_LOW: // zvb_ctrl_l0_scr_x_low
-                    // gfx_cfg.scroll_l1_x &= 0xFF00;
-                    // gfx_cfg.scroll_l1_x += value;
                     gfx_cfg.scroll_l1_x_latch = value;
                     break;
                 case CTRL_BASE.L1_SCR_X_HIGH: // zvb_ctrl_l0_scr_x_high
-                    // gfx_cfg.scroll_l1_x &= 0x00FF;
                     gfx_cfg.scroll_l1_x = (value << 8) + gfx_cfg.scroll_l1_x_latch;
                     break;
+
                 case CTRL_BASE.VIDEO_MODE: // zvb_ctrl_video_mode
                     updateModeData(canvas, canvas_layer1, value);
                     break
@@ -1263,9 +1251,29 @@ function VideoChip(Zeal, PIO, scale) {
         if (port >= 0x0 && port < 0x10) {
             return vConfigRead(port);
         } else if (port >= 0x10 && port < 0x20) {
-            // TODO: Scrolling values and video mode
-            if (port - 0x10 == 0xd) {
-                return video_cfg.vblank << 1;
+            switch(port) {
+                case CTRL_BASE.L0_SCR_Y_LOW:
+                    return gfx_cfg.scroll_l0_y & 0xFF;
+                case CTRL_BASE.L0_SCR_Y_HIGH:
+                    return gfx_cfg.scroll_l0_y >> 8;
+                case CTRL_BASE.L0_SCR_X_LOW:
+                    return gfx_cfg.scroll_l0_x & 0xFF;
+                case CTRL_BASE.L0_SCR_X_HIGH:
+                    return gfx_cfg.scroll_l0_x >> 8;
+
+                case CTRL_BASE.L1_SCR_Y_LOW:
+                    return gfx_cfg.scroll_l1_y & 0xFF;
+                case CTRL_BASE.L1_SCR_Y_HIGH:
+                    return gfx_cfg.scroll_l1_y >> 8;
+                case CTRL_BASE.L1_SCR_X_LOW:
+                    return gfx_cfg.scroll_l1_x & 0xFF;
+                case CTRL_BASE.L1_SCR_X_HIGH:
+                    return gfx_cfg.scroll_l1_x >> 8;
+
+                case CTRL_BASE.VIDEO_MODE:
+                    return video_cfg.mode;
+                case CTRL_BASE.STATUS:
+                    return video_cfg.vblank << 1;
             }
         } else if (port >= 0x20 && port < 0x30) {
             const subport = port - 0x20;
