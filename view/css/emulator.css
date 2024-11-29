@@ -575,15 +575,25 @@ hr {
         }
     }
 
+    .fonts,
     .tileset {
+        --gap: 1ch;
+        --column: 64px;
         display: grid;
-        gap: .5em;
-        grid-template-columns: repeat(auto-fit, 64px);
+        gap: var(--gap);
+        grid-template-columns: repeat(auto-fit, var(--column));
         > canvas {
-            width: 64px;
-            height: 64px;
+            width: var(--column);
+            aspect-ratio: 1;
             cursor: help;
             image-rendering: pixelated;
+        }
+    }
+
+    .fonts {
+        --column: 32px;
+        > canvas {
+            aspect-ratio: 8 / 12;
         }
     }
 
