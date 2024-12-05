@@ -215,7 +215,7 @@ function Sound() {
                     entry.freq_high = value;
                     const divider = (value << 8) | entry.freq_low;
                     /* Convert the divider back to a frequency */
-                    const freq = (divider * 65536) / 44100;
+                    const freq = (divider * 44100) / 65536;
                     entry.oscillator.frequency.value = freq;
                 });
                 /* Special case for the sample table voice,
