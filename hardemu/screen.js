@@ -509,6 +509,10 @@ function Sprites(Tileset)
             ctx.drawImage(sprite.canvas, x, y);
         }
     }
+
+    this.dump = function() {
+        return {attributes};
+    }
 }
 
 var TStateLogger = false;
@@ -1389,6 +1393,9 @@ function VideoChip(Zeal, PIO, scale) {
             layer0: canvas,
             layer1: canvas_layer1,
             sprites,
+            gfx_cfg,
+            text_cfg,
+            video_cfg,
         };
     }
 
