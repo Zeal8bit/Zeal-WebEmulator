@@ -93,11 +93,11 @@
     /** Sprites **/
     const $sprites = $('#video .sprites').empty();
     const { attributes: sprite_attrs } = sprites.dump();
-    console.log('sprites', sprite_attrs);
     const sprite_count = sprite_attrs.length
     const sprite_empty = panels['sprites']?.data?.['sprites-empty'] ?? true;
     const sprite_details = panels['sprites']?.data?.['sprites-details'] ?? false;
     if(sprite_details) $sprites.addClass('detailed');
+    else $sprites.removeClass('detailed');
     for(let i = 0; i < sprite_count; i++) {
       const sprite = sprite_attrs[i];
       if(sprite_empty && sprite.tile == 0) continue;
@@ -157,12 +157,14 @@ Palette: ${sprite.palette}</pre>`)
     if(data['tilemap-layer0']) ctx.drawImage(layer0.offscreenCanvas, 0, 0, 1280, 640, 0, 0, 1280, 640);
     if(data['tilemap-layer1']) ctx.drawImage(layer1, 0, 0, 1280, 640, 0, 0, 1280, 640);
     if(data['tilemap-sprites']) sprites.drawSprites(canvas);
+
+    const grid_color = panels['tilemap']?.data?.['tilemap-grid-color'] ?? '#ff0000';
+    $tilemap.css({
+      '--grid-color': `${grid_color}`
+    });
     $tilemap.append(canvas);
     if(show_cells) {
-      const grid_color = panels['tilemap']?.data?.['tilemap-grid-color'] ?? '#ff0000';
-      $tilemap.css({
-        '--grid-color': `${grid_color}`
-      });
+      $tilemap.addClass('grid');
       const $overlay = $('<div class="tilemap-overlay"></div>');
       $overlay.css({
         'width': 1280,
@@ -175,8 +177,9 @@ Palette: ${sprite.palette}</pre>`)
       for(let i = 0; i < cells; i++) {
         $overlay.append($('<div></div>'));
       }
+    } else {
+      $tilemap.removeClass('grid');
     }
-    console.log('configs', { gfx_cfg, text_cfg, video_cfg });
   });
 
   $('details', $tab).on('toggle', function() {
