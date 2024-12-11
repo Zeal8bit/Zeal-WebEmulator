@@ -369,7 +369,11 @@
             Show Tileset
           </label>
           <label>
-            <input type="checkbox" id="video-tilemap" class="toggle" name="tilemap" checked />
+            <input type="checkbox" id="video-sprites" class="toggle" name="sprites" />
+            Show Sprites
+          </label>
+          <label>
+            <input type="checkbox" id="video-tilemap" class="toggle" name="tilemap" />
             Show Tilemap
           </label>
         </div>
@@ -385,8 +389,44 @@
           <summary>Tileset</summary>
           <div class="tileset"></div>
         </details>
+        <details class="sub-panel" name="sprites" open>
+          <summary>Sprites</summary>
+          <div class="panel-toolbar">
+            <label>
+              <input type="checkbox" class="data" name="sprites-empty" />
+              Hide Empty
+            </label>
+            <label>
+              <input type="checkbox" class="data" name="sprites-details" />
+              Show Details
+            </label>
+          </div>
+          <div class="sprites"></div>
+        </details>
         <details class="sub-panel" name="tilemap">
           <summary>Tilemap</summary>
+          <div class="panel-toolbar">
+            <label>
+              <input type="checkbox" class="data" name="tilemap-layer0" />
+              Layer0
+            </label>
+            <label>
+              <input type="checkbox" class="data" name="tilemap-layer1" />
+              Layer1
+            </label>
+            <label>
+              <input type="checkbox" class="data" name="tilemap-sprites" />
+              Sprites
+            </label>
+            <label>
+              <input type="checkbox" class="data" name="tilemap-grid" />
+              Show Grid
+            </label>
+            <label>
+              <input type="color" class="data" name="tilemap-grid-color" value="#ff0000" />
+              Grid Color
+            </label>
+          </div>
           <div class="tilemap"></div>
         </details>
       </section>

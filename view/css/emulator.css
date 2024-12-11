@@ -396,11 +396,18 @@ hr {
 
 .panel .panel-toolbar label {
     display: flex;
+    align-items: center;
     gap: 1ch;
+
+    cursor: pointer;
+    &:hover {
+        color: var(--second-txt-color);
+        text-decoration: underline;
+    }
 }
 
 .sub-panel {
-    margin-inline-start: 1em;
+    margin-inline: 1em;
     margin-top: 1em;
     padding: 1em;
     border-radius: 8px;
@@ -430,6 +437,11 @@ hr {
             content: "+";
             padding-right: 1ch;
         }
+    }
+
+    .panel-toolbar {
+        padding-block: 0;
+        margin-bottom: 1em;
     }
 
     &[open] > summary {
@@ -563,6 +575,14 @@ hr {
         flex-direction: column;
     }
 
+    .sub-panel {
+        canvas {
+            max-width: 100%;
+            image-rendering: pixelated;
+        }
+        margin-bottom: 1em;
+    }
+
     .palette {
         display: grid;
         gap: .5em;
@@ -576,6 +596,7 @@ hr {
     }
 
     .fonts,
+    .sprites,
     .tileset {
         --gap: 1ch;
         --column: 64px;
@@ -586,7 +607,6 @@ hr {
             width: var(--column);
             aspect-ratio: 1;
             cursor: help;
-            image-rendering: pixelated;
         }
     }
 
@@ -597,9 +617,56 @@ hr {
         }
     }
 
-    .layers {
-        > canvas {
+    .tilemap {
+        position: relative;
+        overflow: hidden;
+        aspect-ratio: 1280 / 640;
+
+        --grid-color: transparent;
+        --grid-column-count: var(--columns, 4);
+        --grid-item--max-width: var(--grid-width, 320px);
+
+        /** the bottom cells overflow, so just assume full borders **/
+        border: 1px dashed var(--grid-color);
+
+        .tilemap-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
             max-width: 100%;
+            aspect-ratio: 1280 / 640;
+            display: grid;
+
+            --grid-item--max-width: calc(100% / var(--grid-column-count));
+            grid-gap: 0px;
+            grid-template-columns: repeat(auto-fill, minmax(max(100px, var(--grid-item--max-width)), 1fr));
+
+            > div {
+                aspect-ratio: 4 / 3;
+                border-right: 1px dashed var(--grid-color);
+                border-bottom: 1px dashed var(--grid-color);
+            }
+        }
+    }
+
+    .sprites.detailed {
+        grid-template-columns: repeat(auto-fit, 300px);
+        .details {
+            display: grid;
+            padding: .5em;
+            background-color: var(--second-bg-color);
+            border-radius: 8px;
+            align-items: center;
+            justify-content: center;
+            column-gap: 10px;
+            grid-template-columns: var(--column) 1fr;
+            > canvas {
+                width: var(--column);
+                aspect-ratio: 1;
+            }
+            > pre {
+                margin: 0px;
+            }
         }
     }
 }
