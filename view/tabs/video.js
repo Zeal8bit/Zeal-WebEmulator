@@ -24,6 +24,7 @@
         "visible": false,
         "data": {
           "sprites-empty": true,
+          "sprites-empty-index": 0,
         }
       },
       "tilemap": {
@@ -96,11 +97,12 @@
     const sprite_count = sprite_attrs.length
     const sprite_empty = panels['sprites']?.data?.['sprites-empty'] ?? true;
     const sprite_details = panels['sprites']?.data?.['sprites-details'] ?? false;
+    const sprite_empty_index = panels['sprites']?.data?.['sprites-empty-index'] ?? 0;
     if(sprite_details) $sprites.addClass('detailed');
     else $sprites.removeClass('detailed');
     for(let i = 0; i < sprite_count; i++) {
       const sprite = sprite_attrs[i];
-      if(sprite_empty && sprite.tile == 0) continue;
+      if(sprite_empty && sprite.tile == sprite_empty_index) continue;
       const canvas = document.createElement('canvas');
       $(canvas).attr('title', `Sprite ${i}`).css('background-color', `#${background}`);
       canvas.width = 16;
