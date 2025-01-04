@@ -238,6 +238,14 @@ function Keyboard(Zeal, PIO) {
     var shift_register = 0;
     var transfer_active = false;
 
+    /* On the real hardware, the active signal stays on for 19.7 microseconds */
+    const PS2_SCANCODE_DURATION = us_to_tstates(19.7);
+    /* We have a delay of 3.9ms between each scancode */
+    const PS2_KEY_TIMING = us_to_tstates(3900);
+    /* The release code happens 79ms after the first code is issued */
+    const PS2_RELEASE_DELAY = us_to_tstates(30000);
+    const ONE_MILLI = us_to_tstates(1000);
+
     /* Returns the PS/2 code of a Javascript keyboard key.
      * MAKE A COPY OF THE ARRAY OF KEYS TO AVOID MODIFICATIONS
      */
@@ -286,9 +294,6 @@ function Keyboard(Zeal, PIO) {
         /* Create a list where we add the BREAK scan code */
         /* PAUSE has no break code */
         if (keycode != KEYCODE_PAUSE) {
-            /* The release code happens 79ms after the first code is issued */
-            const PS2_RELEASE_DELAY = us_to_tstates(79000);
-
             var list_break = list;
             /* If the list starts with 0xE0, the break character shall be right after */
             if (list_break[0] == 0xE0) {
@@ -329,18 +334,13 @@ function Keyboard(Zeal, PIO) {
             zeal.registerTstateCallback(() => {
                 transfer_active = false;
                 send_next_keypress();
-            }, us_to_tstates(1000));
+            }, ONE_MILLI);
         }
     }
 
     /* Function to simulate a key press on the PS/2 bus. A key can be composed of several scancodes.
      * Take that scancode list as a parameter. */
     function ps2_send_byte_list(scancodes, delay, end_callback) {
-        /* On the real hardware, the active signal stays on for 19.7 microseconds */
-        const PS2_SCANCODE_DURATION = us_to_tstates(19.7);
-        /* We have a delay of 3.9ms between each scancode */
-        const PS2_KEY_TIMING = us_to_tstates(3900);
-
         for (var i = 0; i < scancodes.length; i++) {
             const index = i;
             zeal.registerTstateCallback(() => {
