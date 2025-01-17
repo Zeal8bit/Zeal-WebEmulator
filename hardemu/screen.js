@@ -582,8 +582,8 @@ function VideoChip(Zeal, PIO, scale) {
             width: 0,
             height: 0,
             /* The maximum resolution supported in the following */
-            max_width: 640,
-            max_height: 480,
+            max_width: 1280,
+            max_height: 640,
             base_scale: 1,
             /* The following scale should be configurable */
             view_scale: 1,
@@ -699,8 +699,8 @@ function VideoChip(Zeal, PIO, scale) {
 
         /* Off-screen canvas will always have the same size, it will ease scrolling
          * while rendering */
-        canvas.offscreenCanvas.width  = 640;
-        canvas.offscreenCanvas.height = 480;
+        canvas.offscreenCanvas.width  = 1280;
+        canvas.offscreenCanvas.height = 640;
         const ctx = canvas.offscreenCanvas.getContext("2d", {
             alpha: false,
             desynchronized: true,
@@ -768,6 +768,8 @@ function VideoChip(Zeal, PIO, scale) {
 
         /* TODO: update the screen with the already existing tiles? */
         if (!video_cfg.is_text) {
+            video_cfg.max_width = 1280;
+            video_cfg.max_height = 640;
             tileset.setColorMode8Bit(video_cfg.is_8bit);
             sprites.setColorMode8Bit(video_cfg.is_8bit);
 
@@ -779,6 +781,8 @@ function VideoChip(Zeal, PIO, scale) {
         } else {
             /* No layer 1 in text mode */
             canvas_layer1.style.opacity = 0.0;
+            video_cfg.max_width = 640;
+            video_cfg.max_height = 480;
         }
     }
 
