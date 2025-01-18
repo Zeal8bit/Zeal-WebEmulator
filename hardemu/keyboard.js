@@ -242,7 +242,7 @@ function Keyboard(Zeal, PIO) {
     const PS2_SCANCODE_DURATION = us_to_tstates(19.7);
     /* We have a delay of 3.9ms between each scancode */
     const PS2_KEY_TIMING = us_to_tstates(3900);
-    /* The release code happens 79ms after the first code is issued */
+    /* The release code happens 30ms after the first code is issued */
     const PS2_RELEASE_DELAY = us_to_tstates(30000);
     const ONE_MILLI = us_to_tstates(1000);
 
