@@ -510,6 +510,22 @@ function Sprites(Tileset)
         }
     }
 
+    this.update = function() {
+        for(var i = 0; i < attributes.length; i++) {
+            const sprite = attributes[i];
+
+            tileset.getTileCanvas(sprite.tile, sprite.img, true, sprite.palette);
+
+            if (sprite.flip_x)
+                flipX(sprite.img);
+
+            if (sprite.flip_y)
+                flipY(sprite.img);
+
+            sprite.ctx.putImageData(sprite.img, 0, 0);
+        }
+    }
+
     this.dump = function() {
         return {attributes};
     }
@@ -1178,20 +1194,23 @@ function VideoChip(Zeal, PIO, scale) {
 
     function mem_write(address, value) {
         // TODO: Fix hardcoded values
-        if (address < 0xc80)
+        if (address < 0xc80) {
             tilemap.layer0.mem_write(address, value);
-        else if (address >= 0xe00 && address < 0x1000)
+        } else if (address >= 0xe00 && address < 0x1000) {
             // TODO: Update all the tiles since the color may have changed
             palette.mem_write(address - 0xe00, value);
-        else if (address >= 0x1000 && address < 0x1c80)
+            checkAndUpdateTiles();
+            sprites.update();
+        } else if (address >= 0x1000 && address < 0x1c80) {
             tilemap.layer1.mem_write(address - 0x1000, value);
-        else if (address >= 0x2800 && address < 0x2c00)
+        } else if (address >= 0x2800 && address < 0x2c00) {
             sprites.mem_write(address - 0x2800, value);
-        else if (address >= 0x3000 && address < 0x3000 + 3072)
+        } else if (address >= 0x3000 && address < 0x3000 + 3072) {
             // TODO: Update all the tiles since the pixels may have changed
             font.mem_write(address - 0x3000, value);
-        else if (address >= 0x10000 && address < 0x20000)
+        } else if (address >= 0x10000 && address < 0x20000) {
             tileset.mem_write(address - 0x10000, value);
+        }
     }
 
     function mem_read(address) {
@@ -1331,10 +1350,10 @@ function VideoChip(Zeal, PIO, scale) {
             return;
         }
 
-        /* Check if any tile has been updated while the tilemap was already written */
-        checkAndUpdateTiles();
-        /* Extract the visible part out of the offscreen canvas contex */
+        // /* Check if any tile has been updated while the tilemap was already written */
+        // checkAndUpdateTiles();
 
+        /* Extract the visible part out of the offscreen canvas contex */
         const visible_l0_x = (video_cfg.is_text ? text_cfg.scroll_x * video_cfg.obj_width : gfx_cfg.scroll_l0_x);
         const visible_l0_y = (video_cfg.is_text ? text_cfg.scroll_y * video_cfg.obj_height : gfx_cfg.scroll_l0_y);
         const visible_l1_x = gfx_cfg.scroll_l1_x;
