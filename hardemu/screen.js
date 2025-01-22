@@ -1350,8 +1350,8 @@ function VideoChip(Zeal, PIO, scale) {
             return;
         }
 
-        // /* Check if any tile has been updated while the tilemap was already written */
-        // checkAndUpdateTiles();
+        /* Check if any tile has been updated while the tilemap was already written */
+        checkAndUpdateTiles();
 
         /* Extract the visible part out of the offscreen canvas contex */
         const visible_l0_x = (video_cfg.is_text ? text_cfg.scroll_x * video_cfg.obj_width : gfx_cfg.scroll_l0_x);
