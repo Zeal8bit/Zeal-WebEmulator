@@ -345,10 +345,12 @@ function Sprites(Tileset)
             tile: 0,
             flip_x: 0,
             flip_y: 0,
+            behind_fg: 0,
             palette: 0,
             updates: {
                 flip_x: false,
                 flip_y: false,
+                behind_fg: false,
                 tile: true,
             },
             img: new ImageData(TILE_WIDTH, TILE_HEIGHT),
@@ -385,6 +387,10 @@ function Sprites(Tileset)
                 attribute.updates.tile = attribute.updates.tile || (attribute.tile_msb != new_tile_msb);
                 attribute.tile_msb = new_tile_msb;
 
+                const new_behind_fg = (data >> 1) & 1;
+                attribute.updates.behind_fg = (attribute.behind_fg != new_behind_fg);
+                attribute.behind_fg = new_behind_fg;
+
                 const new_flip_y = (data >> 2) & 1;
                 attribute.updates.flip_y = (attribute.flip_y != new_flip_y);
                 attribute.flip_y         = new_flip_y;
@@ -416,7 +422,7 @@ function Sprites(Tileset)
      */
     function hasUpdates(sprite) {
         const updates = sprite.updates;
-        return updates.flip_x || updates.flip_y || updates.tile;
+        return updates.behind_fg || updates.flip_x || updates.flip_y || updates.tile;
     }
 
 
@@ -455,11 +461,17 @@ function Sprites(Tileset)
      *
      * @param index Index of the tile to retrieve, 0-255 in 8-bit mode, 0-511 in 4-bit mode
      */
-    this.drawSprites = function(canvas) {
+    this.drawSprites = function(canvas, options={}) {
         const ctx = canvas.getContext("2d");
+        const behind_fg = options?.behind_fg ?? false;
 
         for (var i = 0; i < attributes.length; i++) {
             const sprite = attributes[i];
+
+            /* if sprite does not match layer, skip */
+            if(behind_fg != !!sprite.behind_fg)
+                continue;
+
             /* If the sprite is not shown, go to the next one */
             if (sprite.x == 0 || sprite.y == 0 || sprite.x >= canvas.width + 16 || sprite.y >= canvas.height + 16)
                 continue;
@@ -1367,11 +1379,20 @@ function VideoChip(Zeal, PIO, scale) {
          *  - (x,y) destination coordinates
          *  - Destination size
          */
+
+        // render layer0
         visible_ctx.drawImage(canvas.offscreenCanvas,
                               visible_l0_x, visible_l0_y,
                               visible_width, visible_height,
                               0, 0,
                               visible_width, visible_height);
+
+        // render SPRITE_BEHIND_FG sprites
+        if (!video_cfg.is_text) {
+            sprites.drawSprites(canvas, { behind_fg: true });
+        }
+
+        // render layer1
         if (!video_cfg.is_text && video_cfg.is_8bit) {
             visible_ctx.drawImage(canvas_layer1,
                                   visible_l1_x, visible_l1_y,
@@ -1379,6 +1400,13 @@ function VideoChip(Zeal, PIO, scale) {
                                   0, 0,
                                   visible_width, visible_height);
         }
+        // render remaining sprites
+        if (!video_cfg.is_text) {
+            sprites.drawSprites(canvas, { behind_fg: false });
+        }
+
+
+        // text mode scroll wrap
         if (visible_width != video_cfg.width) {
             /* Part of the screen should wrap, we need to copy the "left" part of the canvas */
             const remaining = video_cfg.width - visible_width;

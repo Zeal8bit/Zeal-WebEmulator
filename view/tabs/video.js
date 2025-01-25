@@ -117,7 +117,7 @@
         $details.append(`<pre>Index: ${i} Tile: ${sprite.tile}
 X: ${sprite.x}, Y: ${sprite.y}
 Flip X: ${sprite.flip_x}, Flip Y: ${sprite.flip_y}
-Palette: ${sprite.palette}</pre>`)
+Palette: ${sprite.palette}, BehindFG: ${sprite.behind_fg}</pre>`)
         $sprites.append($details);
       }
     }
@@ -157,6 +157,7 @@ Palette: ${sprite.palette}</pre>`)
     });
     ctx = canvas.getContext('2d');
     if(data['tilemap-layer0']) ctx.drawImage(layer0.offscreenCanvas, 0, 0, 1280, 640, 0, 0, 1280, 640);
+    if(data['tilemap-sprites']) sprites.drawSprites(canvas, { behind_fg: true });
     if(data['tilemap-layer1']) ctx.drawImage(layer1, 0, 0, 1280, 640, 0, 0, 1280, 640);
     if(data['tilemap-sprites']) sprites.drawSprites(canvas);
 
