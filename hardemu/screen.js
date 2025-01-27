@@ -986,6 +986,7 @@ function VideoChip(Zeal, PIO, scale) {
             }
         }
 
+        sprites.update();
         tileset.flushUpdates();
     }
 
@@ -1211,8 +1212,6 @@ function VideoChip(Zeal, PIO, scale) {
         } else if (address >= 0xe00 && address < 0x1000) {
             // TODO: Update all the tiles since the color may have changed
             palette.mem_write(address - 0xe00, value);
-            checkAndUpdateTiles();
-            sprites.update();
         } else if (address >= 0x1000 && address < 0x1c80) {
             tilemap.layer1.mem_write(address - 0x1000, value);
         } else if (address >= 0x2800 && address < 0x2c00) {
