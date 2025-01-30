@@ -371,6 +371,11 @@ class Z80Machine {
 
             /* Render the screen now */
             outer_this.gfx_update();
+            if(breakpointOnVBlank) {
+                set_running(false);
+                setRegView();
+                $('#video-dump').trigger('click');
+            }
         }
 
 
