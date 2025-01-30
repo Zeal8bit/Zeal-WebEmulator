@@ -976,13 +976,21 @@ function VideoChip(Zeal, PIO, scale) {
             return;
         }
 
-        // FIXME: Implement layer1 too
         const layer0 = tilemap.layer0.data;
         const layer0_length = layer0.length;
         for (var i = 0; i < layer0_length; i++) {
             if (tileset.tileUpdated(layer0[i])) {
                 /* Simulate a write to the layer to force the update */
                 layerWritten(0, i, layer0[i]);
+            }
+        }
+
+        const layer1 = tilemap.layer1.data;
+        const layer1_length = layer1.length;
+        for (var i = 0; i < layer1_length; i++) {
+            if (tileset.tileUpdated(layer1[i])) {
+                /* Simulate a write to the layer to force the update */
+                layerWritten(1, i, layer1[i]);
             }
         }
 
