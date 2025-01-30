@@ -729,6 +729,10 @@ function VideoChip(Zeal, PIO, scale) {
          * while rendering */
         canvas.offscreenCanvas.width  = 1280;
         canvas.offscreenCanvas.height = 640;
+        canvas_layer1.width = 1280;
+        canvas_layer1.height = 640;
+
+
         const ctx = canvas.offscreenCanvas.getContext("2d", {
             alpha: false,
             desynchronized: true,
@@ -791,8 +795,6 @@ function VideoChip(Zeal, PIO, scale) {
         /* Update the visible canvas */
         canvas.width = video_cfg.width;
         canvas.height = video_cfg.height;
-        canvas_layer1.width = video_cfg.width;
-        canvas_layer1.height = video_cfg.height;
 
         /* TODO: update the screen with the already existing tiles? */
         if (!video_cfg.is_text) {
@@ -1377,8 +1379,10 @@ function VideoChip(Zeal, PIO, scale) {
         const visible_l0_y = (video_cfg.is_text ? text_cfg.scroll_y * video_cfg.obj_height : gfx_cfg.scroll_l0_y);
         const visible_l1_x = gfx_cfg.scroll_l1_x;
         const visible_l1_y = gfx_cfg.scroll_l1_y;
-        const visible_width  = Math.min(video_cfg.width, video_cfg.max_width - visible_l0_x);
-        const visible_height = Math.min(video_cfg.height, video_cfg.max_height - visible_l0_y);
+        const visible_l0_width  = Math.min(video_cfg.width, video_cfg.max_width - visible_l0_x);
+        const visible_l0_height = Math.min(video_cfg.height, video_cfg.max_height - visible_l0_y);
+        const visible_l1_width  = Math.min(video_cfg.width, video_cfg.max_width - visible_l1_x);
+        const visible_l1_height = Math.min(video_cfg.height, video_cfg.max_height - visible_l1_y);
         /* Parameters:
          *  - Source canvas
          *  - (x,y) source coordinates
@@ -1390,9 +1394,9 @@ function VideoChip(Zeal, PIO, scale) {
         // render layer0
         visible_ctx.drawImage(canvas.offscreenCanvas,
                               visible_l0_x, visible_l0_y,
-                              visible_width, visible_height,
+                              visible_l0_width, visible_l0_height,
                               0, 0,
-                              visible_width, visible_height);
+                              visible_l0_width, visible_l0_height);
 
         // render SPRITE_BEHIND_FG sprites
         if (!video_cfg.is_text) {
@@ -1403,9 +1407,9 @@ function VideoChip(Zeal, PIO, scale) {
         if (!video_cfg.is_text && video_cfg.is_8bit) {
             visible_ctx.drawImage(canvas_layer1,
                                   visible_l1_x, visible_l1_y,
-                                  visible_width, visible_height,
+                                  visible_l1_width, visible_l1_height,
                                   0, 0,
-                                  visible_width, visible_height);
+                                  visible_l1_width, visible_l1_height);
         }
         // render remaining sprites
         if (!video_cfg.is_text) {
@@ -1414,23 +1418,23 @@ function VideoChip(Zeal, PIO, scale) {
 
 
         // text mode scroll wrap
-        if (visible_width != video_cfg.width) {
+        if (visible_l0_width != video_cfg.width) {
             /* Part of the screen should wrap, we need to copy the "left" part of the canvas */
-            const remaining = video_cfg.width - visible_width;
+            const remaining = video_cfg.width - visible_l0_width;
             visible_ctx.drawImage(canvas.offscreenCanvas,
                 0, visible_l0_y,
-                remaining, visible_height,
-                visible_width, 0,
-                remaining, visible_height);
+                remaining, visible_l0_height,
+                visible_l0_width, 0,
+                remaining, visible_l0_height);
         }
-        if (visible_height != video_cfg.height) {
+        if (visible_l0_height != video_cfg.height) {
             /* Similarly for Y */
-            const remaining = video_cfg.height - visible_height;
+            const remaining = video_cfg.height - visible_l0_height;
             visible_ctx.drawImage(canvas.offscreenCanvas,
                 visible_l0_x, 0,
-                visible_width, remaining,
-                0, visible_height,
-                visible_width, remaining);
+                visible_l0_width, remaining,
+                0, visible_l0_height,
+                visible_l0_width, remaining);
         }
 
         /* Draw the sprites on screen */
