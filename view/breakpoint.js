@@ -5,6 +5,7 @@
  */
 
 var breakpoints = [];
+var breakpointOnVBlank = false;
 
 $("#bps").on("click", "li", function() {
     /* Get the breakpoint address */
@@ -138,6 +139,14 @@ function triggeredBreakpoint(bkrobj) {
 function enableBreakpoint(bkrobj) {
     bkrobj.enabled = true;
 }
+
+function enableBreakOnVBlank(doBreak) {
+    breakpointOnVBlank = doBreak;
+}
+
+$('#breakpoint-vblank').on('change', function(e) {
+    enableBreakOnVBlank($(this).prop('checked'));
+});
 
 jQuery(() => {
     const storage = localStorage.getItem('breakpoints');
