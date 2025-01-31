@@ -462,9 +462,17 @@ hr {
     width: 50%;
     margin-inline: auto;
     padding: 2em;
+
+    button {
+        padding-inline: 1em;
+    }
 }
 
 #gamepadview {
+    display: flex;
+    flex-direction: column;
+    row-gap: 2em;
+    margin-bottom: 1em;
     &.empty {
         display: none;
     }
@@ -472,6 +480,11 @@ hr {
     .controller {
         display: grid;
         grid-template-columns: repeat(2, 1fr);
+        padding-bottom: 1em;
+
+        &:not(:last-child) {
+            border-bottom: 1px solid var(--third-bg-color);
+        }
     }
 
     .toolbar {

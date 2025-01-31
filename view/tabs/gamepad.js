@@ -7,24 +7,25 @@
 (() => {
   const haveEvents = "GamepadEvent" in window;
   const haveWebkitEvents = "WebKitGamepadEvent" in window;
+  let adapter = null; // new SNESAdapter(zealcom, zealcom.pio);
 
   const Buttons = {
-    B: 0,
-    Y: 1,
-    Select: 2,
-    Start: 3,
-    Up: 4,
-    Down: 5,
-    Left: 6,
-    Right: 7,
-    A: 8,
-    X: 9,
-    L: 10,
-    R: 11,
-    Unused1: 13,
-    Unused2: 12,
-    Unused3: 14,
-    Unused4: 15,
+    B: -1,
+    Y: -1,
+    Select: -1,
+    Start: -1,
+    Up: -1,
+    Down: -1,
+    Left: -1,
+    Right: -1,
+    A: -1,
+    X: -1,
+    L: -1,
+    R: -1,
+    Unused1: -1,
+    Unused2: -1,
+    Unused3: -1,
+    Unused4: -1,
   }
 
   if (haveEvents) {
@@ -49,38 +50,47 @@
     active = false;
   });
 
+  $('#gamepadview-start .gamepad-clear-data').on('click', () => {
+    console.log('clearing gamepad data');
+    for(k of Object.keys(localStorage)) {
+      try {
+        const o = JSON.parse(localStorage.getItem(k));
+        if(o.buttons?.B) {
+          console.log('removing', k);
+          localStorage.removeItem(k);
+        }
+      } catch(e) {}
+    }
+  })
+
   const gamePads = {};
   const mappings = {};
   const userPort = {};
 
   function attachToUserPort(gamepad) {
     const { index } = gamepad;
-    console.log('attach', index, gamepad.id);
-    const controller = new SNESAdapter(zealcom, zealcom.pio);
-    controller.attach(index);
-    userPort[index] = controller;
+    if(!adapter) adapter = new SNESAdapter(zealcom, zealcom.pio);
+    if(!adapter.attached()) adapter.attach();
+
+    console.log('connect', index, gamepad.id);
+    adapter.connect(index, mappings[gamepad.id]);
     $('#gamepad-tab .tab-status').text('🟢')
     updateGamepadMap(gamepad);
   }
 
   function detachFromUserPort(gamepad) {
     const { index } = gamepad;
+    if(!adapter || !adapter.attached()) return;
+
     console.log('detach', index, gamepad.id);
     $('#gamepad-tab .tab-status').text('🔴')
-    if(userPort && userPort[index]) {
-      userPort[index].detatch();
-      delete userPort[index];
-      console.log('userPort', userPort);
-    }
+    adapter.disconnect(index);
   }
 
   function updateGamepadMap(gamepad) {
     const { index } = gamepad;
-    const map = mappings[gamepad.id] ?? Buttons;
-    if(userPort[index]) {
-      Object.assign(userPort[index].buttons, map.buttons);
-      console.log(userPort[index].buttons);
-    }
+    if(!adapter || !adapter.attached()) return;
+    adapter.update(index, mappings);
   }
 
   function makeControllerButton(gamepad, container, buttonIndex) {
@@ -119,7 +129,9 @@
     // get stored or create default mapping
     mappings[gamepad.id] = (() => {
       const map = JSON.parse(localStorage.getItem(gamepad.id) ?? 'null');
+      if(map && map.port === undefined) map.port = 0;
       return map ?? Object.assign({}, {
+        port: 0,
         attach: false,
         buttons: Buttons
       });
@@ -133,9 +145,7 @@
 
     // div.toolbar
     const toolbar = document.createElement("div");
-    $(toolbar).attr({
-      id,
-    }).addClass('toolbar');
+    $(toolbar).addClass('toolbar');
     $(details).append(toolbar);
 
     // button attach()
@@ -189,6 +199,23 @@
     });
     $(autoAttachLabel).append(autoAttachCheckbox);
     $(toolbar).append(autoAttachLabel);
+
+    // input.number portNumber
+    const portNumberLabel = document.createElement('label');
+    $(portNumberLabel).text('Port');
+    const portNumberInput = document.createElement('input');
+    $(portNumberInput).attr({
+      type: 'number',
+      min: 0,
+      max: 1,
+      value: mappings[gamepad.id].port ?? gamepad.index,
+    }).on('change', (e) => {
+      if(mappings[gamepad.id]) {
+        mappings[gamepad.id].port = parseInt($(e.currentTarget).val());
+      }
+    });
+    $(portNumberLabel).append(portNumberInput);
+    $(toolbar).append(portNumberLabel);
 
     // h1
     const title = document.createElement("h1");
@@ -268,8 +295,9 @@
       const $d = $(`#controller${j}`);
       if(!$d.length) continue;
 
+      const $controller = $(`#controller${j}`);
       for (let i = 0; i < gamepad.buttons.length; i++) {
-        const $button = $(`.buttons .button[button-index=${i}]`);
+        const $button = $(`.buttons .button[button-index=${i}]`, $controller);
         let val = gamepad.buttons[i];
         let pressed = val == 1.0;
         let touched = false;
