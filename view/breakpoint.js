@@ -153,7 +153,9 @@ jQuery(() => {
     if(storage) {
         const points = JSON.parse(storage);
         points.map((point) => {
-            addBreakpoint(point);
+            // Sanitize the address before adding the breakpoint
+            const sanitizedAddress = $('<div>').text(point.address).html();
+            addBreakpoint({ ...point, address: sanitizedAddress });
         });
     }
 })
@@ -166,4 +168,3 @@ if (typeof electronAPI != 'undefined') {
         }
     });
 }
-

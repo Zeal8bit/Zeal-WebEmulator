@@ -5,7 +5,8 @@ const prebuilt_json_url = "https://zeal8bit.com/roms/index.json";
 
 const getRom = async (rom, remote = null) => {
     // rename files to match "unique" name, to avoid conflicts
-    const romPath = `roms/${rom.name}.img`
+    const safeRomName = rom.name.replace(/[^a-zA-Z0-9-_]/g, '_'); // Sanitize the rom name
+    const romPath = `roms/${safeRomName}.img`
 
     if (fs.existsSync(romPath)) {
         console.log(`Exists ${romPath}`);
