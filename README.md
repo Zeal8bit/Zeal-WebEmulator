@@ -1,4 +1,13 @@
-<h1 align="center">Zeal 8-bit Computer emulator</h1>
+<h1 align="center">Zeal 8-bit Computer Web Emulator</h1>
+
+> [!WARNING]
+> **Deprecated Project**
+>
+> Zeal Web Emulator is no longer maintained and has been replaced by the **[Zeal Native Emulator](https://github.com/Zeal8bit/Zeal-NativeEmulator)**.
+>
+> No new features or behavior changes will be added to this project.
+> Please migrate to the new emulator for improved performance, active development, and WebAssembly support.
+
 <p align=center>
     <img src="imgs/screenshot.png" alt="screenshot" />
     <a href="https://opensource.org/licenses/Apache-2.0">
