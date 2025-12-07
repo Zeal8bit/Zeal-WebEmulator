@@ -54,6 +54,10 @@ var zealcom = new Zeal8bitComputer();
 const disassembler = new Disassembler();
 const popout = new Popup();
 
+popout.warn("Zeal Web Emulator is now deprecated in favor of <a href=\"https://github.com/Zeal8bit/Zeal-NativeEmulator\">Zeal Native Emulator</a>.<br/>"
+            + "No more features will be added here.<br/>Please switch to the new emulator for better performance and features.",
+            5000);
+
 const params = parseQueryParams(window.location.search);
 
 if (typeof electronAPI != 'undefined') {

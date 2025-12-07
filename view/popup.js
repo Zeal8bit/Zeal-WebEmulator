@@ -5,8 +5,14 @@
  */
 
 /* Add a listener on the popup that will close it on click */
-$("#popup-message").on("click", function() {
-    $(this).fadeOut(500);
+$("#popup-message").on("click", function(e) {
+    if ($(e.target).closest("a").length === 0) {
+        $(this).fadeOut(500);
+    }
+});
+
+$("#popup-message").on("click", "a", function (e) {
+    e.stopPropagation();
 });
 
 /**
