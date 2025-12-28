@@ -118,7 +118,7 @@ function processIndex(index) {
         const attributes = Object.keys(attrs).reduce((acc,key) => {
             acc += ` ${key}`;
             if(!['selected', 'disabled'].includes(key) && attrs[key]) {
-                acc += `="${attrs[key]}" `;
+                acc += `="${encodeURIComponent(attrs[key])}" `;
             }
             return acc;
         }, '');
