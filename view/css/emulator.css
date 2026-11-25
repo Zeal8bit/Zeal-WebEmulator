@@ -965,3 +965,7 @@ footer li {
 footer li a:hover {
     color: var(--first-txt-color);
 }
+#menu-controls[inert],
+#menu-controls [aria-disabled="true"] {
+    opacity: 0.5;
+}

@@ -9,6 +9,13 @@ const loadImagesButton = document.getElementById('read-button');
 let loadedChoice = '';
 let loadingImages = false;
 
+function resetImageSelection() {
+    loadedChoice = '';
+    romChoice.value = '';
+    document.querySelectorAll('#romfile input[type=file]').forEach(input => { input.value = ''; });
+    $('#romready, #eepromready, #symready').removeClass('ready');
+}
+
 function showImageError(message, error) {
     console.error(error);
     popout.error(message);

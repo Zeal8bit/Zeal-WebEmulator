@@ -4,9 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-function setRegView() {
-    const tstates = zealcom.getTstates();
-    let regs = zealcom.getCPUState();
+function setRegView({ tstates, registers: regs }) {
     $("#rega").text(hex8(regs.a));
     $("#regb").text(hex8(regs.b));
     $("#regc").text(hex8(regs.c));
@@ -22,20 +20,9 @@ function setRegView() {
     $("#regpc").text(hex(regs.pc));
     $("#regsp").text(hex(regs.sp));
     $("#tstates").text(tstates);
-    /* Special treatment for the flags */
-    var flags = (regs.flags.S == 1 ? "S" : "") +
-                (regs.flags.Z == 1 ? "Z" : "") +
-                (regs.flags.Y == 1 ? "Y" : "") +
-                (regs.flags.H == 1 ? "H" : "") +
-                (regs.flags.X == 1 ? "X" : "") +
-                (regs.flags.P == 1 ? "P" : "") +
-                (regs.flags.N == 1 ? "N" : "") +
-                (regs.flags.C == 1 ? "C" : "");
-
-    $("#flags").text(flags);
-
-    /* Disassemble the current code and show the instructions */
-    disassembleAndShow();
+    const flagNames = 'SZYHXPNC';
+    const flags = Array.from(flagNames).filter((_, index) => regs.f & (0x80 >> index));
+    $("#flags").text(flags.join(''));
 }
 
 
@@ -49,13 +36,3 @@ function clearRegView() {
         $(reg).text("");
     }
 }
-
-
-$(".regaddr").click(function() {
-    const virtaddr = parseInt($(this).text(), 16);
-    if (virtaddr || virtaddr == 0) {
-        const size = 256;
-        setRAMView(virtaddr, size);
-        $("#memory-tab").click();
-    }
-});

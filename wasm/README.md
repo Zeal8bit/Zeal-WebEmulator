@@ -1,11 +1,11 @@
 # Native WASM runtime
 
-These browser assets were built from [Zeal-NativeEmulator 5bd04f4](https://github.com/Zeal8bit/Zeal-NativeEmulator/tree/5bd04f447ab2d4fa9d5ddebd1dbda3c4adf899ac) using Emscripten 7.0.0.
+These browser assets were built from [Zeal-NativeEmulator 76dc588](https://github.com/Zeal8bit/Zeal-NativeEmulator/tree/76dc588564f3055905fdbd803f4a5b26701ae641) using Emscripten 7.0.0.
 
 Build from that revision with:
 
 ```sh
-meson setup build-wasm --cross-file frontend/wasm/wasm-cross.build -Dwasm_template=minimal
+meson setup build-wasm --cross-file frontend/wasm/wasm-cross.build -Dwasm_template=minimal -Denable_debugger=true
 meson compile -C build-wasm
 ```
 

@@ -14,6 +14,61 @@
         r: 11,
     });
 
+    class DebuggerSession extends EventTarget {
+        constructor(emulator) {
+            super();
+            this.emulator = emulator;
+            this.state = null;
+            this.queue = Promise.resolve();
+            this.pending = null;
+        }
+
+        update(state) {
+            this.state = state;
+            this.dispatchEvent(new CustomEvent('statechange', {detail: state}));
+        }
+
+        complete(error) {
+            const pending = this.pending;
+            this.pending = null;
+            if (error) pending?.reject(new Error(`Debugger command failed (errno ${error})`));
+            else pending?.resolve();
+        }
+
+        disconnect(error) {
+            this.pending?.reject(error);
+            this.pending = null;
+            this.update(null);
+        }
+
+        request(command) {
+            const { module } = this.emulator;
+            const operation = this.queue.then(() => {
+                if (!module || module !== this.emulator.module || !this.emulator.runtimeReady ||
+                    this.emulator.runtimeError) {
+                    throw new Error('The debugger session is unavailable');
+                }
+                return new Promise((resolve, reject) => {
+                    this.pending = {resolve, reject};
+                    try {
+                        if (module._zeal_debug_request_web(command)) return;
+                        throw new Error('The emulator could not accept the debugger command');
+                    } catch (error) {
+                        this.pending = null;
+                        reject(error);
+                    }
+                });
+            });
+            this.queue = operation.catch(() => {});
+            return operation;
+        }
+
+        pause() { return this.request(1); }
+        continue() { return this.request(2); }
+        step() { return this.request(3); }
+        reset() { return this.request(4); }
+    }
+
     class ZealNative {
         constructor({
             canvas,
@@ -26,6 +81,7 @@
             userProgramPath = '/roms/user.bin',
             eepromPath = '/roms/eeprom.img',
             tfPath = '/roms/tf.img',
+            debugger: enableDebugger = false,
             imageStorage = 'opfs',
             storageNamespace,
             diskImages = {},
@@ -44,6 +100,7 @@
             }
 
             this.canvas = canvas;
+            this.debugger = enableDebugger ? new DebuggerSession(this) : null;
             this.moduleFactory = moduleFactory;
             this.romdisk = romdisk;
             this.userProgram = userProgram;
@@ -162,6 +219,13 @@
                 const moduleOptions = {
                     imagePaths,
                     imageStorage: this.imageStorage,
+                    debuggerEnabled: Boolean(this.debugger),
+                    onDebugState(state) {
+                        owner.debugger?.update(state);
+                    },
+                    onDebugComplete(error) {
+                        owner.debugger?.complete(error);
+                    },
                     hostfsBackend: this.hostfs,
                     print: this.print,
                     printErr: this.printErr,
@@ -186,6 +250,7 @@
                     onAbort(reason) {
                         const error = new Error(`Emulator aborted: ${reason}`);
                         owner.runtimeError = error;
+                        owner.debugger?.disconnect(error);
                         rejectReady(error);
                         owner.storageRequest?.reject(error);
                         owner.storageRequest = null;
@@ -201,6 +266,7 @@
                             owner.module = null;
                             owner.exitPromise = null;
                             owner.runtimeReady = false;
+                            owner.debugger?.disconnect(new Error('The emulator exited'));
                             owner.startupError = null;
                         }
                         owner.onExit?.(exitCode);
@@ -210,6 +276,9 @@
                 trackRuntime(await this.moduleFactory(moduleOptions));
                 await ready;
                 if (stopped) throw new Error('Emulator exited during startup');
+                if (this.debugger && typeof instance._zeal_debug_request_web !== 'function') {
+                    throw new Error('This Native WASM build does not support debugging');
+                }
                 this.hostfs?.bindModule(instance);
                 this.canvas.setAttribute('tabindex', '0');
                 this.canvas.focus();
