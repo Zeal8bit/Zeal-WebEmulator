@@ -1,7 +1,7 @@
 #blackbg {
     display: none;
     position: fixed;
-    background-color: #000000b5;
+    background-color: var(--theme-scrim);
     z-index: 19;
     width: 100vw;
     height: 100vh;
@@ -15,11 +15,10 @@
     top: 3vh;
     padding: 0.5em 1em 1em 1em;
     margin-bottom: 10em;
-    border-radius: 10px;
-    color:#3f3f3f;
+    color: var(--theme-text);
     z-index: 20;
-    background:#ffffff;
-    border: 1px solid black;
+    background-color: var(--theme-surface);
+    border: 1px solid var(--theme-border);
     font-size:13pt;
     overflow-y: scroll;
     max-height: 89vh;

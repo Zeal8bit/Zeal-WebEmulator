@@ -41,6 +41,13 @@ In Settings, select **Mount HostFS** to share a folder with a HostFS-enabled ROM
 
 For desktop debugging, use Zeal-NativeEmulator. For the browser runtime's source revision and build commands, see [the WASM runtime notes](wasm/README.md).
 
+## Theme
+
+The browser theme tokens are in [theme.css](view/css/theme.css). Dark and light
+use the Native SDL/FLTK palette, and BigBlue Terminal 437TT is the default font
+throughout the web interface. To add a theme, define a `[data-theme]` variant in
+`theme.css` and add its value to the Settings theme selector. [Font attribution and license](view/fonts/README.md)
+
 ## Publish the web emulator
 
 Set the repository's Pages build source to **GitHub Actions**. The **Publish Web Emulator** workflow refreshes the release catalog and deploys the static site on pushes to `main`, nightly, and on manual dispatch. Only published releases that provide an emulator ZIP are available in the picker.

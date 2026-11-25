@@ -22,9 +22,8 @@ $(".menutitle").on('click', function(e) {
 });
 
 $("#theme").on("change", function() {
-    $(":root").removeClass();
-    $(":root").addClass($(this).val());
-})
+    document.documentElement.dataset.theme = this.value;
+});
 
 $('#canvas-smooth-val').on('change', (e) => {
     const smooth = e.currentTarget.checked;

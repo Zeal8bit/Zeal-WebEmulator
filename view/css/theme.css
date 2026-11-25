@@ -1,0 +1,66 @@
+/**
+ * SPDX-FileCopyrightText: 2026 Zeal 8-bit Computer <contact@zeal8bit.com>
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+@font-face {
+    font-family: 'BigBlue Terminal 437TT';
+    src: url('../fonts/BigBlue_Terminal_437TT.TTF') format('truetype');
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
+}
+
+/* Palette from Zeal-NativeEmulator's SDL/FLTK theme.cpp at 7ff5348. */
+:root {
+    color-scheme: dark;
+
+    --theme-font: 'BigBlue Terminal 437TT', monospace;
+    --theme-font-data-size: 16px;
+
+    --theme-background: #111215;
+    --theme-surface: #181a1f;
+    --theme-raised: #20232a;
+    --theme-border: #2e323b;
+    --theme-hover: #262a33;
+    --theme-text: #d7dae0;
+    --theme-dim: #5e6575;
+    --theme-amber: #ffb454;
+    --theme-cyan: #5ccfe6;
+    --theme-green: #95e06c;
+    --theme-pc: #2a3320;
+    --theme-select: #1f3a57;
+    --theme-break: #ff5f57;
+    --theme-changed: #ff8fd0;
+    --theme-match: #3d3320;
+    --theme-break-row: #5d2e2f;
+    --theme-selection: #2c5a8a;
+    --theme-inactive: #555a66;
+
+    --theme-screen: #000;
+    --theme-scrim: rgb(0 0 0 / 72%);
+}
+
+:root[data-theme="light"] {
+    color-scheme: light;
+
+    --theme-background: #eff2f5;
+    --theme-surface: #fff;
+    --theme-raised: #e8edf1;
+    --theme-border: #a4b2bf;
+    --theme-hover: #e1e8ef;
+    --theme-text: #17232f;
+    --theme-dim: #4f5c69;
+    --theme-amber: #794300;
+    --theme-cyan: #00546b;
+    --theme-green: #285b23;
+    --theme-pc: #e3f1d9;
+    --theme-select: #c7ddf3;
+    --theme-break: #b3261e;
+    --theme-changed: #822b63;
+    --theme-match: #f3dda6;
+    --theme-break-row: #f0d4d2;
+    --theme-selection: #c7ddf3;
+    --theme-inactive: #596673;
+}

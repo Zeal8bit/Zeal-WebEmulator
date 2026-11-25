@@ -4,24 +4,6 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
- :root, :root.dark {
-    --first-bg-color: #002b36;
-    --second-bg-color: #093642;
-    --third-bg-color: #0a4d5f;
-    --fourth-bg-color: #042d38;
-    --first-txt-color: #93a1a1;
-    --second-txt-color: #c7c7c7;
-}
-
-:root.light {
-    --first-bg-color: #fdf6e3;
-    --second-bg-color: #eee8d5;
-    --third-bg-color: #c8c6bc;
-    --fourth-bg-color:#fff7dd;
-    --first-txt-color: #657b83;
-    --second-txt-color:#586e75;
-}
-
 *, *::before, *::after {
     box-sizing: border-box;
 }
@@ -29,25 +11,24 @@
 body {
     padding: 0;
     margin: 0;
-    font-family: Calibri;
-    background-color: var(--first-bg-color);
-    color: var(--first-txt-color);
+    font-family: var(--theme-font);
+    background-color: var(--theme-background);
+    color: var(--theme-text);
     display: flex;
     flex-direction: column;
     min-height: 100vh;
 }
 
 a {
-    color: var(--first-txt-color);
+    color: var(--theme-text);
     cursor: pointer;
     text-decoration: underline;
 }
 
 button, input[type=button] {
-    border: var(--second-txt-color) solid 1px;
-    border-radius: 5px;
-    background: var(--second-bg-color);
-    color: var(--second-txt-color);
+    border: var(--theme-border) solid 1px;
+    background: var(--theme-raised);
+    color: var(--theme-text);
     padding: 0.25em;
     min-width: 10em;
     height: 2em;
@@ -56,27 +37,64 @@ button, input[type=button] {
 }
 
 button:not([disabled]):hover, input[type=button]:not([disabled]):hover {
-    background: var(--fourth-bg-color);
+    background: var(--theme-hover);
 }
 
 
 button:not([disabled]):active, input[type=button]:not([disabled]):active {
-    background:#9b9b9b;
-    color: var(--second-bg-color);
+    background: var(--theme-select);
 }
 
 
+:where(button, input, select),
+::file-selector-button {
+    border-radius: 0;
+}
+
+:where(button, input, select, textarea, code, pre, kbd, samp) {
+    font-family: inherit;
+}
+
+:where(button, input, select) {
+    accent-color: var(--theme-amber);
+}
+
+::file-selector-button {
+    font-family: inherit;
+    color: var(--theme-text);
+    background-color: var(--theme-raised);
+    border-color: var(--theme-border);
+}
+
+:where(button, input, select, [contenteditable]):focus-visible {
+    outline: 1px solid var(--theme-amber);
+}
+
+input[type=text],
+input[type=number],
+select {
+    border: var(--theme-border) solid 1px;
+    background-color: var(--theme-background);
+    color: var(--theme-text);
+}
+
+input[type=text],
+input[type=number] {
+    caret-color: var(--theme-amber);
+}
+
 input[type=text] {
-    border: var(--first-txt-color) solid 1px;
-    border-radius: 5px;
-    outline: none;
     height: 1.7em;
+}
+
+::selection {
+    background-color: var(--theme-selection);
+    color: var(--theme-text);
 }
 
 .short {
     max-width: 6ch;
     text-align: right;
-    font-family: monospace;
 }
 
 #toppanel {
@@ -107,18 +125,17 @@ input[type=text] {
 }
 
 #debug {
-    background-color:var(--second-bg-color);
-    box-shadow: 5px 0 6px -4px #040404;
+    background-color:var(--theme-surface);
+    box-shadow: 5px 0 6px -4px var(--theme-border);
     width:100%;
-    border-bottom-right-radius: 10px;
-    border-bottom-left-radius: 10px;
 }
 
 
 #debug table {
+    font-size: var(--theme-font-data-size);
+    line-height: 22px;
     table-layout: fixed;
     width: 100%;
-    font-size:14pt;
     border: 0;
     border-collapse:collapse;
 }
@@ -126,7 +143,7 @@ input[type=text] {
 hr {
     content: " ";
     display: block;
-    background: #939f8f;
+    background: var(--theme-border);
     height: 1px;
     margin: 2em auto;
     border: none;
@@ -135,6 +152,7 @@ hr {
 #debug table td:nth-child(1) {
     padding-left: 0.5em;
     width: 30%;
+    white-space: nowrap;
 }
 
 #debug table td:nth-child(2) {
@@ -143,11 +161,11 @@ hr {
 }
 
 #debug table tr:nth-child(2n) {
-    background-color: var(--fourth-bg-color);
+    background-color: var(--theme-raised);
 }
 
 #debug table tr:hover {
-    background-color: var(--third-bg-color);
+    background-color: var(--theme-hover);
 }
 
 #container {
@@ -163,14 +181,13 @@ hr {
         right: 1ch;
         padding: 1ch;
         font-size: .85rem;
-        color: var(--second-txt-color);
-        border: 1px solid var(--second-txt-color);
-        border-radius: 8px;
+        color: var(--theme-text);
+        border: 1px solid var(--theme-border);
         font-weight: bold;
 
         &:hover {
-            background-color: var(--second-txt-color);
-            color: var(--first-bg-color);
+            background-color: var(--theme-text);
+            color: var(--theme-background);
         }
     }
 
@@ -185,7 +202,7 @@ hr {
 #container canvas {
     display: block;
     margin-inline: auto;
-    background-color: black;
+    background-color: var(--theme-screen);
     /* transform-origin: top; */
     width: 640px;
     aspect-ratio: 4/3;
@@ -198,12 +215,10 @@ hr {
 }
 
 #rightpanel {
-    background-color:var(--second-bg-color);
-    color: var(--first-txt-color);
-    box-shadow: -5px 0 6px -4px #040404;
+    background-color:var(--theme-surface);
+    color: var(--theme-text);
+    box-shadow: -5px 0 6px -4px var(--theme-border);
     width:100%;
-    border-bottom-right-radius: 10px;
-    border-bottom-left-radius: 10px;
 }
 
 #romchoice {
@@ -252,7 +267,6 @@ hr {
     margin-left: -1.2em;
     padding-left: 1.5em;
     line-height: 3em;
-    font-family: monospace;
     width: 102%;
     user-select: none;
 
@@ -265,7 +279,7 @@ hr {
         height: 24px;
         padding: 0;
         line-height: 1em;
-        color: var(--first-txt-color);
+        color: var(--theme-text);
         background: none;
         border: 0;
         cursor: pointer;
@@ -273,7 +287,7 @@ hr {
         margin-left: auto;
 
         &:hover {
-            color: rgb(163, 49, 34);
+            color: var(--theme-break);
             font-weight: bold;
             text-transform: uppercase;
         }
@@ -281,7 +295,7 @@ hr {
 }
 
 #bps li:hover {
-    background-color: var(--third-bg-color);
+    background-color: var(--theme-hover);
     cursor: pointer;
 }
 
@@ -291,7 +305,7 @@ hr {
     content: "⬤";
     width: 1.5em;
     padding-right: 1em;
-    color: rgb(163, 49, 34);
+    color: var(--theme-break);
 }
 
 #bps li.disabled::before {
@@ -299,7 +313,7 @@ hr {
     display: inline-block;
     content: "•";
     width: 1.5em;
-    color: grey;
+    color: var(--theme-dim);
 }
 
 .status:not(.ready)::before {
@@ -307,7 +321,7 @@ hr {
     display: inline-block;
     content: "•";
     width: 1.5em;
-    color: grey;
+    color: var(--theme-dim);
 }
 
 .status.ready::before {
@@ -315,7 +329,7 @@ hr {
     display: inline-block;
     content: "✓";
     width: 1.5em;
-    color: rgb(93, 199, 63);
+    color: var(--theme-green);
 }
 
 .bottompanel {
@@ -345,13 +359,11 @@ hr {
     line-height: 2.5em;
     /* margin-right: 1em; */
     text-align: center;
-    border-top: 2px black solid;
-    border-left: 2px black solid;
-    border-right: 2px black solid;
-    border-top-left-radius: 25px;
-    border-top-right-radius: 25px;
-    color: #6d6d6d;
-    background: linear-gradient(0deg, var(--second-bg-color), var(--first-bg-color) 30%);
+    border-top: 2px var(--theme-border) solid;
+    border-left: 2px var(--theme-border) solid;
+    border-right: 2px var(--theme-border) solid;
+    color: var(--theme-text);
+    background-color: var(--theme-raised);
 
     .tab-status {
         margin-left: auto;
@@ -360,22 +372,20 @@ hr {
 }
 
 .tab.active {
-    color: var(--first-txt-color);
-    background: inherit;
-    background-color: var(--second-bg-color) !important;
+    color: var(--theme-text);
+    background-color: var(--theme-surface);
 }
 
 .panel {
     position: relative;
-    border-top: 2px black solid;
-    font-family: monospace;
+    border-top: 2px var(--theme-border) solid;
     font-size: 11pt;
     display: flex;
     flex-direction: column;
     flex-grow: 1;
     width: 100%;
     min-height:  34vh;
-    background-color:var(--second-bg-color);
+    background-color:var(--theme-surface);
     overflow-y:scroll;
     user-select: none;
     display: none;
@@ -389,7 +399,7 @@ hr {
     display: flex;
     padding-inline: 1ch;
     gap: 2ch;
-    border-bottom: 2px solid var(--fourth-bg-color);
+    border-bottom: 2px solid var(--theme-border);
     padding-inline: 0.5em;
     padding-block: 1em;
     align-items: center;
@@ -406,7 +416,7 @@ hr {
 
     cursor: pointer;
     &:hover {
-        color: var(--second-txt-color);
+        color: var(--theme-text);
         text-decoration: underline;
     }
 }
@@ -415,14 +425,13 @@ hr {
     margin-inline: 1em;
     margin-top: 1em;
     padding: 1em;
-    border-radius: 8px;
-    background-color: var(--fourth-bg-color);
+    background-color: var(--theme-raised);
     position: relative;
 
     summary {
+        color: var(--theme-amber);
         font-size: 18px;
         font-weight: 700;
-        font-family: monospace;
         padding-block: 6px;
         margin-block: -0.5em;
         line-height: 24px;
@@ -518,8 +527,7 @@ hr {
         .details {
             display: grid;
             padding: .5em;
-            background-color: var(--second-bg-color);
-            border-radius: 8px;
+            background-color: var(--theme-surface);
             align-items: center;
             justify-content: center;
             column-gap: 10px;
@@ -536,7 +544,7 @@ hr {
 }
 
 .dumpline::before {
-    color: rgb(207 49 28);
+    color: var(--theme-break);
     display: inline-block;
     width: 1.5em;
     content: " ";
@@ -550,24 +558,38 @@ hr {
 }
 
 .dumpline, .labelline {
+    font-size: var(--theme-font-data-size);
+    line-height: 17px;
     white-space: pre;
-    border-radius: 10px;
     cursor: pointer;
 }
 
-.dumpline.activeline, .activefield {
-    background-color: var(--first-txt-color);
-    color: var(--fourth-bg-color);
+.labelline {
+    color: var(--theme-amber);
+}
+
+.dumpline.activeline {
+    background-color: var(--theme-pc);
+    color: var(--theme-green);
+}
+
+.dumpline.activeline.brk {
+    background-color: var(--theme-break-row);
+}
+
+.activefield {
+    background-color: var(--theme-select);
+    color: var(--theme-text);
 }
 
 .dumpline:not(.activeline):hover {
-    background-color: var(--fourth-bg-color);
-    color: var(--first-txt-color);
+    background-color: var(--theme-hover);
+    color: var(--theme-text);
 }
 
 .memaddr {
     display: inline-block;
-    color: #268bd2;
+    color: var(--theme-cyan);
     text-align: right;
     font-weight: bold;
 
@@ -579,7 +601,7 @@ hr {
 
 
 .memline.heading {
-    color: #268bd2;
+    color: var(--theme-cyan);
 }
 
 
@@ -614,14 +636,14 @@ hr {
 
 .memline:not(.heading) .membytes div:hover,
 .memline:not(.heading) .asciichars div:hover {
-    background-color: var(--first-txt-color);
-    color: var(--fourth-bg-color);
+    background-color: var(--theme-select);
+    color: var(--theme-text);
 }
 
 .membytes div.selected,
 .membytes div:focus {
-    background-color: var(--third-bg-color);
-    color: red;
+    background-color: var(--theme-select);
+    color: var(--theme-changed);
 }
 
 
@@ -635,6 +657,7 @@ h3 {
 }
 
 .regaddr {
+    color: var(--theme-cyan);
     text-decoration: underline;
     cursor: pointer;
 }
@@ -659,10 +682,11 @@ h3 {
     content:'';
     width: 100%;
     display: block;
-    border-bottom: var(--first-txt-color) solid 1px;
+    border-bottom: var(--theme-border) solid 1px;
 }
 
 .menutitle {
+    color: var(--theme-amber);
     font-variant: small-caps;
     font-weight: bolder;
     cursor: pointer;
@@ -677,13 +701,12 @@ h3 {
         margin-inline: .5ch;
         aspect-ratio: 1;
         display: inline-block;
-        background-image: url('../../imgs/right-arrow.png');
-        background-position: center;
-        background-size: contain;
+        background-color: var(--theme-amber);
+        mask: url('../../imgs/right-arrow.png') center / contain no-repeat;
 
     }
     .visible &::before {
-        background-image: url('../../imgs/down-arrow.png');
+        mask-image: url('../../imgs/down-arrow.png');
     }
 }
 
@@ -717,30 +740,18 @@ h3 {
 
 #bpaddr {
     width: 90%;
-    border: var(--first-txt-color) solid 1px;
-    border-radius: 5px;
-}
-
-button {
-    border: 1px solid black;
-}
-
-#bpaddr:focus {
-    outline: none;
-    border: rgb(217 68 49) solid 1px;
+    border: var(--theme-border) solid 1px;
 }
 
 .help {
     cursor: pointer;
     display: inline-block;
-    color:#fff;
-    background-color:#699de1;
+    color: var(--theme-cyan);
+    background-color: var(--theme-select);
     width: 1.2em;
     vertical-align: middle;
-    border-radius:100%;
     font-size:7pt;
     text-align:center;
-    box-shadow: inset -1px -1px 1px 0px rgba(0,0,0,0.25);
 }
 
 #popup-message {
@@ -750,7 +761,6 @@ button {
     left: calc(50% - 17.5em);
     top: 0.5em;
     line-height: 2em;
-    border-radius: 10px;
     text-align: center;
     width: 35em;
     margin-left: auto;
@@ -760,21 +770,21 @@ button {
 }
 
 .poperror {
-    color:#6d0000;
-    background:#ffecec;
-    border: 1px solid #fc695d;
+    color: var(--theme-break);
+    background-color: var(--theme-surface);
+    border: 1px solid var(--theme-break);
 }
 
 .popwarn {
-    color: #e19032;
-    background: #eee8d5;
-    border: 1px solid #ffca38;
+    color: var(--theme-amber);
+    background-color: var(--theme-match);
+    border: 1px solid var(--theme-amber);
 }
 
 .poplog {
-    color: #074670;
-    background: #7ca7e0;
-    border: 1px solid #0071bf;
+    color: var(--theme-cyan);
+    background-color: var(--theme-select);
+    border: 1px solid var(--theme-cyan);
 }
 
 #loading_img {
@@ -785,7 +795,7 @@ button {
 
 
 footer {
-    color: var(--second-txt-color);
+    color: var(--theme-text);
     position: relative;
     margin-top: auto;
     display: block;
@@ -795,7 +805,7 @@ footer {
 }
 
 footer a {
-    color: var(--second-txt-color);
+    color: var(--theme-text);
 }
 
 footer ul {
@@ -813,7 +823,7 @@ footer li {
 }
 
 footer li a:hover {
-    color: var(--first-txt-color);
+    color: var(--theme-cyan);
 }
 #menu-controls[inert],
 #menu-controls [aria-disabled="true"] {
@@ -823,5 +833,6 @@ footer li a:hover {
 .tab[aria-disabled="true"],
 button:disabled,
 input[type=button]:disabled {
+    color: var(--theme-inactive);
     cursor: not-allowed;
 }
