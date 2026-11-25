@@ -9,6 +9,7 @@
 <html>
   <head>
     <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Zeal 8-bit Computer Emulator</title>
     <link rel="icon" href="imgs/zeal.png" sizes="16x16">
     <link rel="stylesheet" type="text/css" href="view/css/theme.css" media="screen" />
@@ -70,27 +71,8 @@
 
     <section id="toppanel">
         <section id="debug">
-            <table>
-                <tr><td>A</td><td id="rega"></td></tr>
-                <tr><td>B</td><td id="regb"></td></tr>
-                <tr><td>C</td><td id="regc"></td></tr>
-                <tr><td>D</td><td id="regd"></td></tr>
-                <tr><td>E</td><td id="rege"></td></tr>
-                <tr><td>H</td><td id="regh"></td></tr>
-                <tr><td>L</td><td id="regl"></td></tr>
-                <tr><td>IX</td><td id="regix" class="regaddr"></td></tr>
-                <tr><td>IY</td><td id="regiy" class="regaddr"></td></tr>
-                <tr><td>BC</td><td id="regbc" class="regaddr"></td></tr>
-                <tr><td>DE</td><td id="regde" class="regaddr"></td></tr>
-                <tr><td>HL</td><td id="reghl" class="regaddr"></td></tr>
-                <tr><td>PC</td><td id="regpc" class="regaddr"></td></tr>
-                <tr><td>SP</td><td id="regsp" class="regaddr"></td></tr>
-                <tr><td>Flags</td><td id="flags"></td></tr>
-                <tr><td>T-States</td><td id="tstates"></td></tr>
-            </table>
-
             <section id="romload">
-                <label for="romchoice">Choose a pre-built ROM:</label>
+                <label for="romchoice">System ROM</label>
                 <img src="imgs/loading.gif" id="loading_img" alt="loading..." />
                 <select name="romchoice" id="romchoice">
                     <option value="">Loading...</option>
@@ -124,33 +106,52 @@
                 </div>
                 <pre id="file-contents"></pre>
             </section>
+
+            <dl class="registers" aria-label="CPU registers">
+                <div><dt>A</dt><dd id="rega"></dd></div>
+                <div><dt>B</dt><dd id="regb"></dd></div>
+                <div><dt>C</dt><dd id="regc"></dd></div>
+                <div><dt>D</dt><dd id="regd"></dd></div>
+                <div><dt>E</dt><dd id="rege"></dd></div>
+                <div><dt>H</dt><dd id="regh"></dd></div>
+                <div><dt>L</dt><dd id="regl"></dd></div>
+                <div><dt>IX</dt><dd id="regix" class="regaddr"></dd></div>
+                <div><dt>IY</dt><dd id="regiy" class="regaddr"></dd></div>
+                <div><dt>BC</dt><dd id="regbc" class="regaddr"></dd></div>
+                <div><dt>DE</dt><dd id="regde" class="regaddr"></dd></div>
+                <div><dt>HL</dt><dd id="reghl" class="regaddr"></dd></div>
+                <div><dt>PC</dt><dd id="regpc" class="regaddr"></dd></div>
+                <div><dt>SP</dt><dd id="regsp" class="regaddr"></dd></div>
+                <div class="register-wide"><dt>Flags</dt><dd id="flags"></dd></div>
+                <div class="register-wide"><dt>T-States</dt><dd id="tstates"></dd></div>
+            </dl>
         </section>
 
         <div id="container">
-            <div class="close">X</div>
-            <canvas id="zeal-screen" tabindex="1" style="outline: none;"></canvas>
+            <button type="button" class="close" aria-label="Exit theater mode">×</button>
+            <canvas id="zeal-screen" tabindex="0" aria-label="Emulated screen"></canvas>
         </div>
 
         <section id="rightpanel">
           <section class="menu" id="menu-controls" inert>
-            <img id="continue" title="Continue (F9)" src="imgs/continue.png" class="cpuexec" alt="Continue" style="display: none;"/>
-            <img id="pause" title="Pause (F9)" src="imgs/pause.png" alt="Pause" class="cpuexec hidden" />
-            <img id="step" title="Step (F10)" src="imgs/step.png" alt="Step" />
-            <img id="stepover" aria-disabled="true" title="Step Over (F11)" src="imgs/stepover.png" alt="Step over" />
-            <img id="reset" title="Reset" src="imgs/restart.png" alt="Reset">
-            <img id="clean" title="Clean" src="imgs/clean.png" alt="Clean">
+            <button type="button" id="continue" title="Continue (F9)" aria-label="Continue" class="cpuexec" style="display: none;"><img src="imgs/continue.png" alt=""></button>
+            <button type="button" id="pause" title="Pause (F9)" aria-label="Pause" class="cpuexec hidden"><img src="imgs/pause.png" alt=""></button>
+            <button type="button" id="step" title="Step (F10)" aria-label="Step"><img src="imgs/step.png" alt=""></button>
+            <button type="button" id="stepover" aria-disabled="true" title="Step Over (F11)" aria-label="Step over"><img src="imgs/stepover.png" alt=""></button>
+            <button type="button" id="reset" title="Reset" aria-label="Reset"><img src="imgs/restart.png" alt=""></button>
+            <button type="button" id="clean" title="Clean" aria-label="Clean"><img src="imgs/clean.png" alt=""></button>
           </section>
 
           <section class="menu" id="menu-breakpoints" inert>
-            <section class="menutitle">Breakpoints</section>
-            <section class="menucontent">
+            <button type="button" class="menutitle" aria-expanded="false" aria-controls="breakpoints-settings">Breakpoints</button>
+            <section class="menucontent" id="breakpoints-settings">
                 <label>
                   Break on VBlank
                   <input type="checkbox" id="breakpoint-vblank" disabled />
                 </label>
                 <section id="newbp">
-                    <input type="text" id="bpaddr" />
-                    <button id="addbp">Add</button>
+                    <input type="text" id="bpaddr" aria-label="Breakpoint address or symbol" />
+                    <button type="button" id="addbp">Add</button>
                 </section>
 
                 <section id="breakpoints">
@@ -161,8 +162,8 @@
           </section>
 
           <section class="menu" id="menu-settings">
-            <section class="menutitle">Settings</section>
-            <section class="menucontent">
+            <button type="button" class="menutitle" aria-expanded="false" aria-controls="settings-settings">Settings</button>
+            <section class="menucontent" id="settings-settings">
                 <label>
                   Switch theme:
                   <select id="theme" name="theme">
@@ -194,23 +195,23 @@
 
     <section class="bottompanel">
       <section class="tabs">
-        <div id="disassemble-tab" class="tab" aria-controls="memdump">Disassemble</div>
-        <div id="memory-tab" class="tab" aria-controls="memview">Memory view</div>
-        <div id="uart-tab" class="tab" aria-disabled="true" title="UART is unavailable in this WASM build">Terminal (UART)</div>
-        <div id="gamepad-tab" class="tab" aria-disabled="true" title="The WASM canvas uses SDL gamepad mappings">Gamepad</div>
-        <div id="video-tab" class="tab" aria-controls="video">Video</div>
+        <button type="button" id="disassemble-tab" class="tab" aria-controls="memdump">Disassemble</button>
+        <button type="button" id="memory-tab" class="tab" aria-controls="memview">Memory view</button>
+        <button type="button" id="uart-tab" class="tab" disabled title="UART is unavailable in this WASM build">Terminal (UART)</button>
+        <button type="button" id="gamepad-tab" class="tab" disabled title="The WASM canvas uses SDL gamepad mappings">Gamepad</button>
+        <button type="button" id="video-tab" class="tab" aria-controls="video">Video</button>
       </section>
-      <section id="memdump" class="panel">
+      <section id="memdump" class="panel" tabindex="0" aria-label="Disassembly">
       </section>
       <section id="memview" class="panel" inert>
         <section class="panel-toolbar">
-          <input type="text" id="dumpaddr" placeholder="Hex address" />
-          <input type="text" id="dumpsize" placeholder="Size" value="256" />
+          <input type="text" id="dumpaddr" aria-label="Hex address" placeholder="Hex address" />
+          <input type="text" id="dumpsize" aria-label="Dump size in bytes" placeholder="Size" value="256" />
           <input type="button" id="dumpnow" value="Dump" />
           <input type="button" id="dump-button" value="Dump ROM" title="ROM export is unavailable in this WASM build" disabled />
           <input type="button" id="dump-eeprom-button" value="Dump EEPROM" title="EEPROM export is unavailable in this WASM build" disabled />
         </section>
-        <div class="sub-panel">
+        <div class="sub-panel memory-scroll" tabindex="0" aria-label="Memory dump">
           <section class="memline">
               <section id="current_memaddr" class="memaddr"></section>
           </section>

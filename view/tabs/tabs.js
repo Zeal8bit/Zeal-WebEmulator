@@ -6,6 +6,7 @@ function setActiveTab(id) {
         const selected = tab === active;
         const panel = document.getElementById(tab.getAttribute('aria-controls'));
         tab.classList.toggle('active', selected);
+        tab.setAttribute('aria-pressed', String(selected));
         if (panel.classList.toggle('active', selected)) $(panel).trigger('active');
     }
     localStorage.setItem('tab', active.id);

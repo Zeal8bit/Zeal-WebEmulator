@@ -31,7 +31,7 @@ async function disassembleAndShow() {
             line.classList.toggle('activeline', row.address === pc);
             line.classList.toggle('brk', isBreakpointEnabled(row.address));
             const bytes = Array.from(row.bytes, byte => hex8(byte, true).toLowerCase()).join(' ');
-            const instruction = (' '.repeat(20) + (row.instruction || 'db ' + bytes)).padEnd(60);
+            const instruction = (row.instruction || 'db ' + bytes).padEnd(40);
             line.textContent = `${instruction}; [${hex(row.address, true).toLowerCase()}] ${bytes} `;
             content.append(line);
         }

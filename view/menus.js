@@ -13,11 +13,14 @@ function saveMenuState() {
     localStorage.setItem('menus', JSON.stringify(menus));
 }
 
-$(".menutitle").on('click', function(e) {
-    e.preventDefault();
-    e.stopPropagation();
+function setMenuExpanded(menu, expanded) {
+    menu.classList.toggle('visible', expanded);
+    menu.querySelector('.menutitle')?.setAttribute('aria-expanded', String(expanded));
+}
 
-    $(this).parent().toggleClass('visible');
+$('.menutitle').on('click', function() {
+    const menu = this.parentElement;
+    setMenuExpanded(menu, !menu.classList.contains('visible'));
     saveMenuState();
 });
 
@@ -91,7 +94,7 @@ jQuery(() => {
         const menus = JSON.parse(localStorage.getItem('menus') ?? '{}') ?? {};
         for (const [id, visible] of Object.entries(menus)) {
             const menu = document.getElementById(id);
-            if (visible && menu?.classList.contains('menu')) menu.classList.add('visible');
+            if (visible && menu?.classList.contains('menu')) setMenuExpanded(menu, true);
         }
     } catch (error) {
         console.warn('Could not restore menu preferences', error);

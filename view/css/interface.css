@@ -3,28 +3,29 @@
     position: fixed;
     background-color: var(--theme-scrim);
     z-index: 19;
-    width: 100vw;
-    height: 100vh;
+    inset: 0;
 }
 
 .popup {
     display: none;
-    position: absolute;
-    left: calc(50% - 40vw);
-    width: 80vw;
-    top: 3vh;
-    padding: 0.5em 1em 1em 1em;
-    margin-bottom: 10em;
+    position: fixed;
+    inset-inline: var(--page-gutter);
+    top: var(--page-gutter);
+    max-inline-size: 65rem;
+    margin-inline: auto;
+    padding: var(--panel-padding);
     color: var(--theme-text);
     z-index: 20;
     background-color: var(--theme-surface);
     border: 1px solid var(--theme-border);
     font-size:13pt;
-    overflow-y: scroll;
-    max-height: 89vh;
+    overflow: auto;
+    overflow-wrap: anywhere;
+    max-block-size: calc(100dvh - 2 * var(--page-gutter));
 }
 
 .popup figure {
+    margin-inline: 0;
     text-align: center;
 }
 
@@ -36,31 +37,4 @@
 .popup figcaption {
     text-align: center;
     font-style:italic;
-}
-
-#tstates-container {
-    margin-top: 0.5em;
-    width: 100%;
-    font-size: 14pt;
-    padding-left: 0.5em;
-    padding-right: 0.5em;
-    box-sizing: border-box;
-}
-
-#tstates-container div {
-    display: inline-block;
-}
-
-#tstates-lab {
-    width: 30%;
-}
-
-#tstates {
-    text-align: right;
-    width: 70%;
-}
-
-#sending {
-    display: inline-block;
-    visibility: hidden;
 }
