@@ -15,6 +15,7 @@ function renderDebugState(state) {
     if (state?.paused) setRegView(state);
     else clearRegView();
     disassembleAndShow();
+    syncMemoryState(state);
 }
 
 function runDebugCommand(command) {

@@ -116,6 +116,26 @@
             return this.request(10, 0, 0, data);
         }
 
+        inspectMemory(address, count) {
+            this.validateAddress(address);
+            if (!Number.isInteger(count) || count < 0 || count > 0x10000) {
+                throw new RangeError('Expected a memory length between 0 and 65536');
+            }
+            return this.request(11, address, count);
+        }
+
+        async readMemory(address, count) {
+            return (await this.inspectMemory(address, count)).bytes;
+        }
+
+        writeMemory(address, data) {
+            this.validateAddress(address);
+            if (!(data instanceof Uint8Array) || !data.length || data.length > 0x10000) {
+                throw new RangeError('Expected 1 to 65536 bytes as a Uint8Array');
+            }
+            return this.request(12, address, 0, data.slice());
+        }
+
         validateAddress(address) {
             if (!Number.isInteger(address) || address < 0 || address > 0xffff) {
                 throw new RangeError('Expected a 16-bit logical address');

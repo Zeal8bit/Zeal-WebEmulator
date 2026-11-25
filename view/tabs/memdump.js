@@ -1,240 +1,180 @@
 /**
- * SPDX-FileCopyrightText: 2022-2023 Zeal 8-bit Computer <contact@zeal8bit.com>
+ * SPDX-FileCopyrightText: 2022-2026 Zeal 8-bit Computer <contact@zeal8bit.com>
  *
  * SPDX-License-Identifier: Apache-2.0
  */
 
-/* Memdump related */
-function setRAMView(virtaddr, size) {
-    // TODO: Add the addr to a watchlist that will be updates after a breakpoint is reached
-    const physaddr = zealcom.mmu.get_ext_addr(virtaddr);
-    const lines = size / byte_per_line;
-    let dumptxt = "";
+const bytesPerRow = 16;
+const memoryPanel = document.getElementById('memview');
+const dumpContent = document.getElementById('dumpcontent');
+const dumpAddress = document.getElementById('dumpaddr');
+const dumpSize = document.getElementById('dumpsize');
+let memoryRequest = 0;
 
-    $("#current_memaddr").text(hex(virtaddr, true, 4));
+function displayAddress(address) {
+    return hex(address, true, 4);
+}
 
-    dumptxt += '<section class="memline heading">' +
-        '<div class="memaddr">Physical Virt</div>' +
-        '<div class="membytes">';
-    for (var j = 0; j < byte_per_line; j++) {
-        dumptxt += `<div>${hex(j, true, 2)}</div>`;
+function displayByte(byte) {
+    return hex8(byte, true).toLowerCase();
+}
+
+function displayCharacter(byte) {
+    return byte === 32 ? '\u00a0' : isPrintable(byte) ? String.fromCharCode(byte) : '.';
+}
+
+function memoryElement(tag, className, text = '') {
+    const element = document.createElement(tag);
+    element.className = className;
+    element.textContent = text;
+    return element;
+}
+
+function renderMemory(address, bytes, mmu, editable) {
+    const content = document.createDocumentFragment();
+    const heading = memoryElement('section', 'memline heading');
+    const offsets = memoryElement('div', 'membytes');
+    for (let index = 0; index < bytesPerRow; index++) {
+        offsets.append(memoryElement('div', '', displayByte(index)));
     }
-    dumptxt += '</div><div></div></section>';
+    heading.append(memoryElement('div', 'memaddr', 'Physical Virt'), offsets, document.createElement('div'));
+    content.append(heading);
 
-    for (var i = 0; i < lines * byte_per_line; i += byte_per_line) {
-        let ascii = [];
+    for (let offset = 0; offset < bytes.length; offset += bytesPerRow) {
+        const logical = (address + offset) & 0xffff;
+        const page = mmu[logical >>> 14];
+        const physical = page.physical + logical - page.logical;
+        const row = memoryElement('section', 'memline');
+        const label = memoryElement('section', 'memaddr', `(${hex(physical, true, 6)}) ${displayAddress(logical)}`);
+        label.title = page.device ?? 'Unmapped';
+        const values = memoryElement('section', 'membytes');
+        const chars = memoryElement('section', 'asciichars');
 
-        dumptxt +=  '<section class="memline">' +
-                      '<section class="memaddr">' +
-                      `(${hex(physaddr + i, true, 6)}) ${hex(virtaddr + i, true)}` +
-                      '</section>' +
-                    '<section class="membytes">';
-
-        for (var j = 0; j < byte_per_line; j++) {
-            const virt = virtaddr + i + j
-            var byte = zealcom.mem_read(virt);
-
-            // /* Generate the ASCII dumptxt */
-            let c = '.';
-            if (isPrintable(byte)) {
-                c = String.fromCharCode(byte);
-                // ascii = ascii.map((c) => c == ' ' ? '&nbsp;' : c);
-                if(c == ' ') c = '&nbsp;';
-            }
-            ascii.push(`<div class="asciichar" data-addr="${virt}">${c}</div>`);
-
-            str = byte.toString(16);
-            if (str.length == 1)
-                str = "0" + str;
-            dumptxt += `<div contenteditable data-byte="${byte}" data-addr="${virt}">${str}</div>`;
+        for (let index = offset; index < Math.min(offset + bytesPerRow, bytes.length); index++) {
+            const byteAddress = (address + index) & 0xffff;
+            const value = memoryElement('div', '', displayByte(bytes[index]));
+            const char = memoryElement('div', 'asciichar', displayCharacter(bytes[index]));
+            value.dataset.addr = char.dataset.addr = byteAddress;
+            value.dataset.byte = bytes[index];
+            value.contentEditable = editable ? 'plaintext-only' : 'false';
+            value.setAttribute('aria-label', `Memory at ${hex(byteAddress)}`);
+            values.append(value);
+            chars.append(char);
         }
-        dumptxt += '</section>';
-        dumptxt += `<section class="asciichars">${ascii.join('')}</section>`;
-        dumptxt += '</section>';
+        row.append(label, values, chars);
+        content.append(row);
     }
 
-    $("#dumpcontent").html(dumptxt);
+    document.getElementById('current_memaddr').textContent = displayAddress(address);
+    dumpContent.replaceChildren(content);
 }
 
-const byte_per_line = 0x10;
-var mousepressed = false;
-
-function setClassToASCIIChar(object, classname, add) {
-    const index = object.index();
-    /* Add/Remove classname to the ascii cahracter corresponding to the current address */
-    const asciiline = object.parent().next();
-    /* ascii line is made out of divs, get the children */
-    if (add) {
-        asciiline.children().eq(index).addClass(classname);
-    } else {
-        asciiline.children().eq(index).removeClass(classname);
-    }
-}
-
-function setClassToMemoryByte(object, classname, add) {
-    const index = object.index();
-    /* Add/Remove classname to the ascii cahracter corresponding to the current address */
-    const memoryline = object.parent().prev();
-    /* Memory bytes is made out of divs, get the children */
-    const child = memoryline.children().eq(index);
-    if (add) {
-        child.addClass(classname);
-        setMemoryByteAddress(child);
-    } else {
-        child.removeClass(classname);
+async function setRAMView(address, size, save = false) {
+    const session = emulator?.debugger;
+    if (!session?.state || !emulator.runtimeReady) return;
+    const sequence = ++memoryRequest;
+    try {
+        const {bytes, mmu} = await session.inspectMemory(address, size);
+        if (session !== emulator?.debugger || sequence !== memoryRequest) return;
+        renderMemory(address, bytes, mmu, session.state.paused);
+        if (save) localStorage.setItem('dump', JSON.stringify({address: displayAddress(address), size}));
+    } catch (error) {
+        if (session === emulator?.debugger && sequence === memoryRequest) {
+            console.error(error);
+            popout.error('Could not read emulator memory.');
+        }
     }
 }
 
-function setMemoryByteAddress(object) {
-    const str = parseInt(object.attr("data-addr"));
-    if(!str) return;
-    const val = hex(str, true, 4);
-    $("#current_memaddr").text(val);
+function dumpSelectedMemory(save = false) {
+    const rawAddress = dumpAddress.value.trim();
+    const rawSize = dumpSize.value.trim();
+    const address = /^(?:0x)?[a-f0-9]{1,4}$/i.test(rawAddress) ? Number.parseInt(rawAddress, 16) : NaN;
+    const size = /^\d+$/.test(rawSize) ? Number(rawSize) : NaN;
+    if (!Number.isInteger(address) || !Number.isInteger(size) || size < 1 || size > 0x10000) {
+        if (save) popout.warn('Enter a 16-bit hex address and a size from 1 to 65536 bytes.');
+        return;
+    }
+    setRAMView(address, size, save);
 }
 
-$(".membytes").on("mousedown", "div", function() {
-    mousepressed = true;
-    $(".membytes .selected").removeClass("selected");
-    $(this).toggleClass("selected");
-});
-
-$(".membytes").on("mouseup", "div", function() {
-    mousepressed = false;
-});
-
-$(".membytes").on("mouseenter", "div", function() {
-    if (mousepressed) {
-        $(this).toggleClass("selected");
+function syncMemoryState(state) {
+    memoryPanel.inert = !state || !emulator?.runtimeReady;
+    if (memoryPanel.inert) {
+        memoryRequest++;
+        dumpContent.replaceChildren();
+    } else if (!state.paused) {
+        dumpContent.querySelectorAll('[contenteditable]').forEach(cell => { cell.contentEditable = 'false'; });
+    } else if (memoryPanel.classList.contains('active')) {
+        dumpSelectedMemory();
     }
-});
-
-$("#dumpnow").on("click", function() {
-    const virtaddr = parseInt($("#dumpaddr").val(), 16);
-    const size = parseInt($("#dumpsize").val());
-    setRAMView(virtaddr, size);
-    localStorage.setItem('dump', JSON.stringify({address:virtaddr.toString(16), size}));
-});
-
-$('#dumpaddr, #dumpsize').on('keypress', (evt) => {
-    if(evt.keyCode == 13) {
-        $('#dumpnow').trigger('click');
-    }
-});
-
-$("#dumpcontent").on("mouseleave", ".membytes div", function() {
-    setClassToASCIIChar($(this), "activefield", false);
-});
-
-$("#dumpcontent").on("mouseenter", ".membytes div", function() {
-    setClassToASCIIChar($(this), "activefield", true);
-    setMemoryByteAddress($(this));
-});
-
-$("#dumpcontent").on("mouseleave", ".asciichars div", function() {
-    setClassToMemoryByte($(this), "activefield", false);
-});
-
-$("#dumpcontent").on("mouseenter", ".asciichars div", function() {
-    setClassToMemoryByte($(this), "activefield", true);
-});
-
-/**
- * Add a listener on each disassembled line. On click, we can toggle the breakpoints.
- * Because these dumplines are geenrated at runtime, we must install the listener on the
- * parent element.
- */
-$("#memdump").on("click", ".dumpline", function() {
-    const brkaddr = $(this).data("addr");
-    /* If the address is not in the breakpoint list, add it */
-    const brk = getBreakpoint(brkaddr);
-    if (brk == null) {
-        addBreakpoint({ address: brkaddr });
-    } else {
-        toggleBreakpoint(brkaddr);
-    }
-});
-
-
-$("#dumpcontent").on("focusin focusout keyup keydown", ".membytes div[contenteditable]", function(evt) {
-    var $this = $(this);
-    var value = $this.text();
-    switch(evt.type) {
-        case 'keyup':
-        case 'keydown':
-            if(evt.keyCode >= 8 && evt.keyCode <= 9) return; // Backspace, Tab
-            if(evt.keyCode == 13) { // ENTER
-                evt.preventDefault();
-                $this.blur();
-                return;
-            }
-
-            // TODO: limit input to valid HEX values
-            // if(!/^[a-fA-F0-9]+$/.test(value)) {
-            // }
-
-            if(value.length > 2) {
-                evt.preventDefault();
-                const t = $this.text().substr(2,1);
-                $this.text($this.text().substr(0,2));
-                $next = $this.next();
-                $next.text(t).trigger('focus');
-            }
-
-            break;
-        case 'focusin':
-            var sel, range;
-            range = document.createRange();
-            if(value.length == 2) {
-                range.selectNodeContents(evt.currentTarget);
-            } else {
-                range.setStart(evt.currentTarget, 1);
-                // range.setEnd(evt.currentTarget, 0);
-            }
-            sel = window.getSelection();
-            sel.removeAllRanges();
-            sel.addRange(range);
-            break;
-        case 'focusout':
-            var addr = $this.data('addr');
-            var previous = hex(parseInt($this.data('byte')), true, 2).toLowerCase();
-            var current = $this.text().toLowerCase();
-            if(current != previous) {
-                var new_value = parseInt(current, 16);
-                if(Number.isNaN(new_value)) {
-                    popout.error(`Invalid value: 0x${$(this).text().toUpperCase()}, converting to 0xFF`);
-                    new_value = 0xFF;
-                }
-                zealcom.mem_write(addr, new_value);
-
-                var c = String.fromCharCode(new_value);
-                // ascii = ascii.map((c) => c == ' ' ? '&nbsp;' : c);
-                if(c == ' ') c = '&nbsp;';
-
-                $this.closest('.memline').find(`.asciichars [data-addr=${addr}]`).html(c);
-            }
-            break;
-    }
-});
-
-function dumpMemory(options) {
-    const { address, size } = options;
-    $('#dumpaddr').val(address);
-    $('#dumpsize').val(size ?? 256);
-    setTimeout(() => {
-        $('#dumpnow').trigger('click');
-    }, 100);
 }
 
-$(() => {
-    if(params.dump) {
-        const [address,size = 256] = params.dump.split(',');
-        dumpMemory({address, size});
+$('#dumpnow').on('click', () => dumpSelectedMemory(true));
+$('#dumpaddr, #dumpsize').on('keydown', event => {
+    if (event.key === 'Enter') dumpSelectedMemory(true);
+});
+$('#memview').on('active', () => dumpSelectedMemory());
+
+$('.regaddr').on('click', function() {
+    if (!this.textContent) return;
+    dumpAddress.value = displayAddress(Number.parseInt(this.textContent, 16));
+    dumpSize.value = '256';
+    setActiveTab('memory-tab');
+    localStorage.setItem('dump', JSON.stringify({address: dumpAddress.value, size: 256}));
+});
+
+$('#dumpcontent').on('mouseenter focusin', '[data-addr]', function() {
+    const elements = this.closest('.memline').querySelectorAll(`[data-addr="${this.dataset.addr}"]`);
+    elements.forEach(cell => cell.classList.add('activefield'));
+    document.getElementById('current_memaddr').textContent = displayAddress(Number(this.dataset.addr));
+});
+
+$('#dumpcontent').on('mouseleave focusout', '[data-addr]', function() {
+    this.closest('.memline').querySelectorAll('.activefield').forEach(cell => cell.classList.remove('activefield'));
+});
+
+$('#dumpcontent').on('keydown', '[contenteditable]', function(event) {
+    if (event.key === 'Enter') {
+        event.preventDefault();
+        this.blur();
+    }
+});
+
+$('#dumpcontent').on('focusout', '[contenteditable]', async function() {
+    const session = emulator?.debugger;
+    const previous = Number(this.dataset.byte);
+    const text = this.textContent.trim();
+    if (text.toLowerCase() === displayByte(previous)) return;
+    if (!session?.state?.paused || !/^[0-9a-f]{1,2}$/i.test(text)) {
+        this.textContent = displayByte(previous);
+        if (session?.state?.paused) popout.warn('Enter a hex byte from 00 to FF.');
         return;
     }
 
-    const addr = localStorage.getItem('dump');
-    if(addr) {
-        dumpMemory(JSON.parse(addr));
-        return;
+    const address = Number(this.dataset.addr);
+    const value = Number.parseInt(text, 16);
+    try {
+        const [actual] = await session.writeMemory(address, Uint8Array.of(value));
+        if (!this.isConnected || session !== emulator?.debugger) return;
+        disassembleAndShow();
+        this.dataset.byte = actual;
+        this.textContent = displayByte(actual);
+        this.closest('.memline').querySelector(`.asciichar[data-addr="${address}"]`).textContent = displayCharacter(actual);
+        if (actual !== value) popout.warn('The mapped device did not accept the write.');
+    } catch (error) {
+        if (!this.isConnected || session !== emulator?.debugger) return;
+        this.textContent = displayByte(previous);
+        console.error(error);
+        popout.error('Could not write emulator memory.');
     }
 });
+
+try {
+    const saved = JSON.parse(localStorage.getItem('dump') ?? 'null');
+    dumpAddress.value = saved?.address ?? '0000';
+    dumpSize.value = saved?.size ?? 256;
+} catch {
+    dumpAddress.value = '0000';
+    dumpSize.value = '256';
+}
