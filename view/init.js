@@ -43,6 +43,7 @@ async function bootEmulator(romdisk, eeprom, symbols) {
         await next.start();
         if (symbols) await next.debugger.loadSymbols(symbols);
         await restoreBreakpoints(next.debugger);
+        if (vblankControl.checked) await next.debugger.setBreakOnVBlank(true);
         await next.debugger.continue();
     } catch (error) {
         await next.exit().catch(console.error);

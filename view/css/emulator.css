@@ -633,37 +633,12 @@ hr {
         }
     }
 
-    .tilemap {
-        position: relative;
-        overflow: hidden;
-        aspect-ratio: 1280 / 640;
+    .tilemap figure {
+        margin: 0 0 1em;
+    }
 
-        --grid-color: transparent;
-        --grid-column-count: var(--columns, 4);
-        --grid-item--max-width: var(--grid-width, 320px);
-
-        /** the bottom cells overflow, so just assume full borders **/
-        &.grid {
-            border: 1px dashed var(--grid-color);
-            .tilemap-overlay {
-                position: absolute;
-                top: 0;
-                left: 0;
-                max-width: 100%;
-                aspect-ratio: 1280 / 640;
-                display: grid;
-
-                --grid-item--max-width: calc(100% / var(--grid-column-count));
-                grid-gap: 0px;
-                grid-template-columns: repeat(auto-fill, minmax(max(100px, var(--grid-item--max-width)), 1fr));
-
-                > div {
-                    aspect-ratio: 4 / 3;
-                    border-right: 1px dashed var(--grid-color);
-                    border-bottom: 1px dashed var(--grid-color);
-                }
-            }
-        }
+    .sprites > canvas {
+        aspect-ratio: auto;
     }
 
     .sprites.detailed {

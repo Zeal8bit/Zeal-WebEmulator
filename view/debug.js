@@ -16,6 +16,7 @@ function renderDebugState(state) {
     else clearRegView();
     disassembleAndShow();
     syncMemoryState(state);
+    syncVideoState(state);
 }
 
 function runDebugCommand(command) {

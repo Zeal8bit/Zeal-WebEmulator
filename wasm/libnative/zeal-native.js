@@ -136,6 +136,16 @@
             return this.request(12, address, 0, data.slice());
         }
 
+        setBreakOnVBlank(enabled) {
+            return this.request(13, 0, enabled ? 1 : 0);
+        }
+
+        inspectVideo(view) {
+            const index = ['layer0', 'layer1', 'tileset', 'palette', 'font', 'sprites'].indexOf(view);
+            if (index < 0) throw new RangeError('Unknown video inspection view');
+            return this.request(14, index);
+        }
+
         validateAddress(address) {
             if (!Number.isInteger(address) || address < 0 || address > 0xffff) {
                 throw new RangeError('Expected a 16-bit logical address');
