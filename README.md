@@ -1,4 +1,4 @@
-<h1 align="center">Zeal 8-bit Computer Web Emulator (deprecated)</h1>
+<h1 align="center">Zeal 8-bit Computer Web Emulator</h1>
 
 > [!WARNING]
 >
@@ -48,8 +48,7 @@ Writing a native emulator in **C** (w/ SDL) would cover the requirement of a ful
 Several choices are offered to you:
 
 * Use the live version of the emulator: [live version of the emulator](https://zeal8bit.github.io/Zeal-WebEmulator/). This will let you use the emulator without the need to install anything
-* Clone this repository and open the `index.html` page with a web browser: Chrome or Opera preferred.
-* For local development, run `npm install` and `npm run dev` from the repository root.
+* For local development, run `npm install` and `npm run dev` from the repository root. Open the localhost URL in Chrome.
 * For a desktop emulator, use [Zeal-NativeEmulator](https://github.com/Zeal8bit/Zeal-NativeEmulator).
 
 ## Supported Features

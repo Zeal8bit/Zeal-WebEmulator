@@ -18,7 +18,7 @@ function setActiveTab(tab) {
     $inactiveTab.removeClass("active");
     $inactivePanel.removeClass("active").trigger('inactive');
 
-    const $activeTab = $(`#${tab}`);
+    const $activeTab = $(document.getElementById(tab) ?? document.getElementById('disassemble-tab'));
     const $activePanel = $(".bottompanel .panel").eq($activeTab.index());
     $activeTab.addClass("active");
     $activePanel.addClass("active").trigger('active');
@@ -38,5 +38,5 @@ $(() => {
         return;
     }
 
-    setActiveTab('uart');
+    setActiveTab('disassemble-tab');
 });

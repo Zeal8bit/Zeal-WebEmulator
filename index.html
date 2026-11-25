@@ -17,18 +17,8 @@
     <!-- jQuery -->
     <script src="component/jquery/jquery-3.6.0.min.js"></script>
     <script src="component/jquery/extend.js"></script>
-    <!-- Xterm -->
-    <script src="component/xterm/xterm.js"></script>
-    <link rel="stylesheet" href="component/xterm/xterm.css" />
     <!-- Hash value -->
     <script src="component/crypto/sha256.js"></script>
-    <!-- Disassembler-related -->
-    <script src="component/disassembler/disassembler.js"></script>
-    <script src="component/disassembler/opcodes_cb.js"></script>
-    <script src="component/disassembler/opcodes_ed.js"></script>
-    <script src="component/disassembler/opcodes_ixiy.js"></script>
-    <!-- Debug related -->
-    <script src="component/debug/vcd.js"></script>
   </head>
 
   <body>
@@ -213,16 +203,12 @@
                 <label for="file-eeprom">EEPROM image:</label>
                 <div class="help" title="Binary file to load into the emulated 64KB I2C EEPROM">?</div>
                 <input type="file" id="file-eeprom" placeholder="EEPROM image" />
-                <label for="file-cf">CompactFlash image:</label>
-                <div class="help" title="Binary file to load into the emulated CompactFlash">?</div>
-                <input type="file" id="file-cf" placeholder="CompactFlash image" />
                 <button id="read-button">Read file(s)</button>
                 <div id="statuspan">
                 <h4>Ready?</h4>
                 <div id="romready" class="status">System image</div>
                 <div id="symready" class="status">Symbols</div>
                 <div id="eepromready" class="status">EEPROM image</div>
-                <div id="cfready" class="status">CompactFlash image</div>
                 </div>
                 <pre id="file-contents"></pre>
             </section>
@@ -230,11 +216,11 @@
 
         <div id="container">
             <div class="close">X</div>
-            <canvas id="screen" tabindex="1" style="outline: none;"></canvas>
+            <canvas id="zeal-screen" tabindex="1" style="outline: none;"></canvas>
         </div>
 
         <section id="rightpanel">
-          <section class="menu" id="menu-controls">
+          <section class="menu" id="menu-controls" inert>
             <img id="continue" title="Continue (F9)" src="imgs/continue.png" class="cpuexec" alt="Continue" style="display: none;"/>
             <img id="pause" title="Pause (F9)" src="imgs/pause.png" alt="Pause" class="cpuexec hidden" />
             <img id="step" title="Step (F10)" src="imgs/step.png" alt="Step" />
@@ -243,7 +229,7 @@
             <img id="clean" title="Clean" src="imgs/clean.png" alt="Clean">
           </section>
 
-          <section class="menu" id="menu-breakpoints">
+          <section class="menu" id="menu-breakpoints" inert>
             <section class="menutitle">Breakpoints</section>
             <section class="menucontent">
                 <label>
@@ -276,30 +262,18 @@
                   Canvas Smoothing
                   <input type="checkbox" id="canvas-smooth-val" />
                 </label>
-                <label>
-                  T-State Logger
-                  <input type="checkbox" id="t-state-logger-val" />
-                </label>
-                <div id="web-serial-settings">
-                  <label>Web Serial:</label>
-                  <button id="web-serial-connect">Connect Serial</button>
-                </div>
                 <button id="screen-capture">Capture Screen</button>
                 <button id="theater-mode">Theater Mode</button>
                 <button id="fullscreen-mode" style="display: none;">Full Screen</button>
-                <button id="hostfs-mount">Mount HostFS</button>
-                <button id="console-paste">Paste to Console</button>
             </section>
           </section>
         </section>
     </section>
 
-    <section class="bottompanel">
+    <section class="bottompanel" inert>
       <section class="tabs">
         <div id="disassemble-tab" class="tab">Disassemble</div>
         <div id="memory-tab" class="tab">Memory view</div>
-        <div id="uart-tab" class="tab">Terminal (UART)</div>
-        <div id="gamepad-tab" class="tab">Gamepad <span class="tab-status">🔴</span></div>
         <div id="video-tab" class="tab">Video</div>
       </section>
       <section id="memdump" class="panel">
@@ -320,44 +294,6 @@
           </section>
           <section id="dumpcontent">
           </section>
-        </div>
-      </section>
-      <section id="uartview" class="panel">
-        <div class="panel-toolbar">
-          <input type="button" id="clearterm" value="Clear" />
-          <label>
-            Baudrate:
-            <select id="baudrate">
-              <option value="57600">57600</option>
-              <option value="38400">38400 </option>
-              <option value="19200">19200</option>
-              <option value="9600">9600</option>
-            </select>
-          </label>
-          <label>
-            File:
-            <input type="file" id="uart-file" placeholder="Send a file through UART" />
-          </label>
-          <button id="uart-file-send">Send</button>
-          <input type="number" id="uart-char" value="21" class="short" />
-          <input type="button" id="uart-char-send" value="Send Byte" />
-          <label>
-            Cols: <input type="number" value="80" style="width: 5ch;" id="uart-cols" />
-          </label>
-          <label>
-            Rows: <input type="number" value="24" style="width: 5ch;" id="uart-rows" />
-          </label>
-        </div>
-        <div id="terminal"></div>
-      </section>
-      <section id="gamepad" class="panel">
-        <div class="panel-toolbar hidden">
-        </div>
-        <div id="gamepadview-start">
-          Press a button on your controller to start
-          <button class="button gamepad-clear-data">Clear Gamepad Data</button>
-        </div>
-        <div id="gamepadview" class="sub-panel empty">
         </div>
       </section>
       <section id="video" class="panel">
@@ -453,41 +389,15 @@
         </ul>
     </footer>
 
-    <!-- Emulation-related -->
-    <script src="hardemu/characters.js"></script>
-    <script src="hardemu/rom.js"></script>
-    <script src="hardemu/pio.js"></script>
-    <script src="hardemu/uart.js"></script>
-    <script src="hardemu/uart-web-serial.js"></script>
-    <script src="hardemu/keyboard.js"></script>
-    <script src="hardemu/i2c.js"></script>
-    <script src="hardemu/ram.js"></script>
-    <script src="hardemu/mmu.js"></script>
-    <script src="hardemu/compactflash.js"></script>
-    <script src="hardemu/Z80.js"></script>
-    <script src="view/popup.js"></script>
-    <script src="hardemu/videoboard/crc32.js"></script>
-    <script src="hardemu/videoboard/sound.js"></script>
-    <script src="hardemu/screen.js"></script>
-    <script src="hardemu/hostfs.js"></script>
-    <script src="hardemu/machine.js"></script>
-    <script src="hardemu/zeal8bitcomputer.js"></script>
-    <!-- Emulated User Port -->
-    <script src="hardemu/user-port/snes-adapter.js"></script>
-    <!-- view scripts -->
+    <script src="wasm/zeal.elf.js"></script>
+    <script src="wasm/libnative/disk-images.js"></script>
+    <script src="wasm/libnative/hostfs.js"></script>
+    <script src="wasm/libnative/zeal-native.js"></script>
     <script src="view/utils.js"></script>
-    <script src="view/breakpoint.js"></script>
-    <script src="view/menus.js"></script>
-    <script src="view/screen.js"></script>
-    <script src="view/regs_panel.js"></script>
-    <script src="view/readrom.js"></script>
+    <script src="view/popup.js"></script>
     <script src="view/init.js"></script>
-    <!-- Tabs -->
+    <script src="view/menus.js"></script>
+    <script src="view/readrom.js"></script>
     <script src="view/tabs/tabs.js"></script>
-    <script src="view/tabs/disassemble.js"></script>
-    <script src="view/tabs/memdump.js"></script>
-    <script src="view/tabs/uart_terminal.js"></script>
-    <script src="view/tabs/gamepad.js"></script>
-    <script src="view/tabs/video.js"></script>
   </body>
 </html>

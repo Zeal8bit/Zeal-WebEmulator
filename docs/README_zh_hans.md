@@ -43,8 +43,7 @@
 ## 🎯如何使用模拟器？
 有几种使用模拟器的方法：
 * 使用在线模拟器：[在线模拟器](https://zeal8bit.github.io/Zeal-WebEmulator/)。您无需安装任何其他东西就可以使用模拟器。
-* 克隆这个存储库，并使用网络浏览器打开 `index.html`（首选 Google Chrome 或 Opera）。
-* 本地开发时，在仓库根目录运行 `npm install` 和 `npm run dev`。
+* 本地开发时，在仓库根目录运行 `npm install` 和 `npm run dev`，然后在 Chrome 中打开本地地址。
 * 桌面版模拟器请使用 [Zeal-NativeEmulator](https://github.com/Zeal8bit/Zeal-NativeEmulator)。
 
 ## ✅目前支持的功能
