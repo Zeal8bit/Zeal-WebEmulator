@@ -12,6 +12,7 @@ function renderDebugState(state) {
     $('#pause').toggle(Boolean(state && !state.paused));
     $('#step, #stepover').attr('aria-disabled', String(!state?.paused));
     $('#menu-breakpoints').prop('inert', debugControls.inert);
+    $('#screen-capture').prop('disabled', debugControls.inert);
     if (state?.paused) setRegView(state);
     else clearRegView();
     disassembleAndShow();

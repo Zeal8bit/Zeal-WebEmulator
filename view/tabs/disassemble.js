@@ -22,16 +22,17 @@ async function disassembleAndShow() {
             if (row.label) {
                 const label = document.createElement('div');
                 label.className = 'labelline';
-                label.textContent = row.label;
+                label.textContent = row.label + ':';
                 content.append(label);
             }
             const line = document.createElement('div');
             line.dataset.addr = row.address;
             line.className = 'dumpline';
             line.classList.toggle('activeline', row.address === pc);
-            line.classList.toggle('brk', userBreakpoints.get(row.address) === true);
-            const bytes = Array.from(row.bytes, byte => hex8(byte, true)).join(' ');
-            line.textContent = `${hex(row.address)}  ${bytes.padEnd(11)}  ${row.instruction || 'DB ' + bytes}`;
+            line.classList.toggle('brk', isBreakpointEnabled(row.address));
+            const bytes = Array.from(row.bytes, byte => hex8(byte, true).toLowerCase()).join(' ');
+            const instruction = (' '.repeat(20) + (row.instruction || 'db ' + bytes)).padEnd(60);
+            line.textContent = `${instruction}; [${hex(row.address, true).toLowerCase()}] ${bytes} `;
             content.append(line);
         }
         panel.replaceChildren(content);

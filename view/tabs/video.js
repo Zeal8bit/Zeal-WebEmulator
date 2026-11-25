@@ -28,7 +28,10 @@ try {
     for (const [name, current] of Object.entries(videoPreferences)) {
         if (typeof saved?.[name]?.open === 'boolean') current.open = saved[name].open;
         if (typeof saved?.[name]?.visible === 'boolean') current.visible = saved[name].visible;
-        if (current.data) Object.assign(current.data, saved?.[name]?.data);
+        for (const key of Object.keys(current.data ?? {})) {
+            const value = saved?.[name]?.data?.[key];
+            if (value !== undefined) current.data[key] = value;
+        }
     }
 } catch (error) {
     console.warn('Could not restore video panel preferences', error);

@@ -146,6 +146,10 @@
             return this.request(14, index);
         }
 
+        captureScreen() {
+            return this.request(15);
+        }
+
         validateAddress(address) {
             if (!Number.isInteger(address) || address < 0 || address > 0xffff) {
                 throw new RangeError('Expected a 16-bit logical address');

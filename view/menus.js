@@ -13,13 +13,6 @@ function saveMenuState() {
     localStorage.setItem('menus', JSON.stringify(menus));
 }
 
-/**
- * Events for all menus and their content: breakpoints, CPU control, etc...
- */
- const right_arrow_src = "imgs/right-arrow.png";
- const down_arrow_src = "imgs/down-arrow.png";
-
-
 $(".menutitle").on('click', function(e) {
     e.preventDefault();
     e.stopPropagation();
@@ -36,30 +29,46 @@ $("#theme").on("change", function() {
 $('#canvas-smooth-val').on('change', (e) => {
     const smooth = e.currentTarget.checked;
     localStorage.setItem('canvas-smooth', JSON.stringify(smooth));
-    if(smooth) {
-        $('#zeal-screen').addClass('no-pixels');
-    } else {
-        $('#zeal-screen').removeClass('no-pixels');
-    }
+    $('#zeal-screen').toggleClass('no-pixels', smooth);
 })
 
-$('#screen-capture').on('click', () => {
-    console.log('capture screen');
-    const canvas = document.getElementById('zeal-screen');
-    const image = canvas.toDataURL();
-    console.log('image', image);
+$('#screen-capture').on('click', async () => {
+    const session = emulator?.debugger;
+    if (!session?.state) return;
+    try {
+        const { pixels, width, height, stride } = await session.captureScreen();
+        if (session !== emulator?.debugger) return;
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        const image = ctx.createImageData(width, height);
+        for (let y = 0; y < height; y++) {
+            for (let x = 0; x < width; x++) {
+                const pixel = pixels[y * stride + x];
+                const offset = (y * width + x) * 4;
+                image.data[offset] = (pixel >>> 11) * 255 / 31;
+                image.data[offset + 1] = ((pixel >>> 5) & 63) * 255 / 63;
+                image.data[offset + 2] = (pixel & 31) * 255 / 31;
+                image.data[offset + 3] = 255;
+            }
+        }
+        ctx.putImageData(image, 0, 0);
 
-    const link = document.createElement('a');
-    link.href = image;
-    link.download = 'zeal-screenshot.png';
-    link.click();
+        const link = document.createElement('a');
+        link.href = canvas.toDataURL('image/png');
+        link.download = 'zeal-screenshot.png';
+        link.click();
+    } catch (error) {
+        console.error(error);
+        popout.error('Could not capture the emulator screen.');
+    }
 });
 
 $('#theater-mode').on('click', () => {
     $('#toppanel').toggleClass('theater-mode');
 });
 
-window.fullscreenMode = false;
 $('#fullscreen-mode').on('click', () => {
     const canvas = document.querySelector('#container canvas');
 
@@ -79,19 +88,18 @@ $('#container .close').on('click', () => {
 })
 
 jQuery(() => {
-    let menus = JSON.parse(localStorage.getItem('menus')) ?? {};
-    Object.entries(menus).map((entry) => {
-        const [k,v] = entry;
-        if(v) $(`#${k}`).addClass('visible');
-    });
-
-
-    const smooth = JSON.parse(localStorage.getItem('canvas-smooth') ?? false);
-    $('#canvas-smooth-val').attr('checked', smooth).trigger('change');
-
-    const canvas = document.querySelector('#container canvas');
-    if(canvas && canvas.requestFullscreen) {
-        $('#fullscreen-mode').show();
+    try {
+        const menus = JSON.parse(localStorage.getItem('menus') ?? '{}') ?? {};
+        for (const [id, visible] of Object.entries(menus)) {
+            const menu = document.getElementById(id);
+            if (visible && menu?.classList.contains('menu')) menu.classList.add('visible');
+        }
+    } catch (error) {
+        console.warn('Could not restore menu preferences', error);
     }
 
+    const smooth = localStorage.getItem('canvas-smooth') === 'true';
+    $('#canvas-smooth-val').prop('checked', smooth).trigger('change');
+
+    if (screenCanvas.requestFullscreen) $('#fullscreen-mode').show();
 });

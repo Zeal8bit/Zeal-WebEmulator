@@ -1,42 +1,18 @@
-$(".tab").on("click", function(){
-    setActiveTab($(this).attr('id'));
-    // const $inactiveTab = $('.tab.active');
-    // const $inactivePanel = $(".bottompanel .panel").eq($inactiveTab.index());
-    // const $activeTab = $(this);
-    // const $activePanel = $(".bottompanel .panel").eq($activeTab.index());
+const tabs = Array.from(document.querySelectorAll('.tabs > .tab[aria-controls]'));
 
-    // $inactiveTab.removeClass("active");
-    // $inactivePanel.removeClass("active").trigger('inactive');
-
-    // $activeTab.addClass("active");
-    // $activePanel.addClass("active").trigger('active');
-});
-
-function setActiveTab(tab) {
-    const $inactiveTab = $('.tab.active');
-    const $inactivePanel = $(".bottompanel .panel").eq($inactiveTab.index());
-    $inactiveTab.removeClass("active");
-    $inactivePanel.removeClass("active").trigger('inactive');
-
-    const $activeTab = $(document.getElementById(tab) ?? document.getElementById('disassemble-tab'));
-    const $activePanel = $(".bottompanel .panel").eq($activeTab.index());
-    $activeTab.addClass("active");
-    $activePanel.addClass("active").trigger('active');
-
-    localStorage.setItem('tab', tab);
+function setActiveTab(id) {
+    const active = tabs.find(tab => tab.id === id) ?? tabs[0];
+    for (const tab of tabs) {
+        const selected = tab === active;
+        const panel = document.getElementById(tab.getAttribute('aria-controls'));
+        tab.classList.toggle('active', selected);
+        if (panel.classList.toggle('active', selected)) $(panel).trigger('active');
+    }
+    localStorage.setItem('tab', active.id);
 }
 
-$(() => {
-    if(params.tab) {
-        setActiveTab(params.tab);
-        return;
-    }
+for (const tab of tabs) {
+    tab.addEventListener('click', () => setActiveTab(tab.id));
+}
 
-    const lst = localStorage.getItem('tab');
-    if(lst) {
-        setActiveTab(lst);
-        return;
-    }
-
-    setActiveTab('disassemble-tab');
-});
+setActiveTab(params.tab ?? localStorage.getItem('tab'));

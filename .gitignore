@@ -7,8 +7,6 @@ yarn-error.log
 *.lock
 
 # User publish:
-out
 build
-zealemu-*
 roms/
 roms/*

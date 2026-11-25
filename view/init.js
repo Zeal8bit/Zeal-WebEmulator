@@ -57,16 +57,23 @@ screenCanvas.addEventListener('pointerdown', () => {
     emulator?.resumeAudio().catch(console.error);
 });
 
-document.addEventListener('keydown', event => {
-    const binding = {
-        F4: '#theater-mode',
-        F5: '#fullscreen-mode',
-        F9: '.cpuexec:visible',
-        F10: '#step',
-        F11: '#stepover',
-    }[event.key];
-    if (binding) {
-        event.preventDefault();
+const shortcuts = {
+    F4: '#theater-mode',
+    F5: '#fullscreen-mode',
+    F9: '.cpuexec:visible',
+    F10: '#step',
+    F11: '#stepover',
+};
+
+function handleShortcut(event) {
+    const binding = shortcuts[event.key];
+    if (!binding) return;
+    event.preventDefault();
+    event.stopPropagation();
+    if (event.type === 'keydown' && !event.repeat) {
         $(binding).not('[aria-disabled=true]').click();
     }
-});
+}
+
+document.addEventListener('keydown', handleShortcut, true);
+document.addEventListener('keyup', handleShortcut, true);

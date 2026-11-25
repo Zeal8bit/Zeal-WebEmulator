@@ -24,7 +24,7 @@ function showImageError(message, error) {
 async function fetchImage(url) {
     const response = await fetch(url);
     if (!response.ok) throw new Error(`Image request failed (${response.status})`);
-    return response.blob();
+    return response.arrayBuffer();
 }
 
 async function loadImages(prepare, choice = '') {
@@ -96,12 +96,8 @@ romChoice.addEventListener('change', () => {
         const rom = await fetchImage(value);
         if (expectedHash && !('local' in params) && !await filehash(rom, expectedHash)) return;
         const eeprom = params.e ? await fetchImage(params.e) : undefined;
-        const map = params.m ? await fetchImage(params.m) : undefined;
-        return {
-            rom: await rom.arrayBuffer(),
-            eeprom: await eeprom?.arrayBuffer(),
-            symbols: await map?.arrayBuffer(),
-        };
+        const symbols = params.m ? await fetchImage(params.m) : undefined;
+        return { rom, eeprom, symbols };
     }, value);
 });
 

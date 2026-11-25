@@ -5,13 +5,14 @@
  */
 
 const userBreakpoints = new Map();
+const unavailableBreakpoints = new Set();
 let breakpointEdits = Promise.resolve();
 
 try {
     for (const point of JSON.parse(localStorage.getItem('breakpoints') ?? '[]')) {
         if (!point?.autodelete && Number.isInteger(point?.address) &&
             point.address >= 0 && point.address <= 0xffff) {
-            userBreakpoints.set(point.address, Boolean(point.enabled));
+            userBreakpoints.set(point.address, point.enabled !== false && point.enabled !== 0);
         }
     }
 } catch (error) {
@@ -24,7 +25,9 @@ function renderBreakpoints() {
     for (const [address, enabled] of userBreakpoints) {
         const row = document.createElement('li');
         row.dataset.addr = address;
-        row.classList.toggle('disabled', !enabled);
+        const unavailable = unavailableBreakpoints.has(address);
+        row.classList.toggle('disabled', !enabled || unavailable);
+        if (unavailable) row.title = 'This breakpoint could not be restored in the current session';
         row.append(hex(address));
         const remove = document.createElement('button');
         remove.type = 'button';
@@ -34,8 +37,13 @@ function renderBreakpoints() {
         list.append(row);
     }
     $('#memdump .dumpline').each((_, row) => {
-        row.classList.toggle('brk', userBreakpoints.get(Number(row.dataset.addr)) === true);
+        const address = Number(row.dataset.addr);
+        row.classList.toggle('brk', isBreakpointEnabled(address));
     });
+}
+
+function isBreakpointEnabled(address) {
+    return userBreakpoints.get(address) === true && !unavailableBreakpoints.has(address);
 }
 
 function editBreakpoint(edit) {
@@ -54,9 +62,18 @@ function editBreakpoint(edit) {
 }
 
 async function restoreBreakpoints(session) {
+    unavailableBreakpoints.clear();
     for (const [address, enabled] of userBreakpoints) {
-        await session.setBreakpoint(address, enabled);
+        try {
+            await session.setBreakpoint(address, enabled);
+        } catch (error) {
+            if (session !== emulator?.debugger || !emulator.runtimeReady) throw error;
+            unavailableBreakpoints.add(address);
+            console.warn('Could not restore breakpoint', address, error);
+        }
     }
+    renderBreakpoints();
+    if (unavailableBreakpoints.size) popout.warn('Some saved breakpoints could not be restored.');
 }
 
 function addBreakpointFromInput() {
@@ -71,6 +88,7 @@ function addBreakpointFromInput() {
             return;
         }
         await session.setBreakpoint(address);
+        unavailableBreakpoints.delete(address);
         userBreakpoints.set(address, true);
         input.value = '';
     });
@@ -88,9 +106,11 @@ $('#bps').on('click', 'li', function(event) {
         if (remove) {
             await session.removeBreakpoint(address);
             userBreakpoints.delete(address);
+            unavailableBreakpoints.delete(address);
         } else if (userBreakpoints.has(address)) {
-            const enabled = !userBreakpoints.get(address);
+            const enabled = !isBreakpointEnabled(address);
             await session.setBreakpoint(address, enabled);
+            unavailableBreakpoints.delete(address);
             userBreakpoints.set(address, enabled);
         }
     });
@@ -102,6 +122,7 @@ $('#memdump').on('click', '.dumpline', function() {
         if (userBreakpoints.has(address)) {
             await session.removeBreakpoint(address);
             userBreakpoints.delete(address);
+            unavailableBreakpoints.delete(address);
         } else {
             await session.setBreakpoint(address);
             userBreakpoints.set(address, true);

@@ -1,6 +1,5 @@
 <h1 align="center">Zeal 8-bit Computer emulator</h1>
 <p align=center>
-    <img src="../imgs/screenshot.png" alt="screenshot" />
     <a href="https://opensource.org/licenses/Apache-2.0">
         <img src="https://img.shields.io/badge/License-Apache_2.0-blue.svg" alt="Licence" />
     </a>
@@ -20,75 +19,31 @@
 - [购买 Zeal 8位计算机](https://www.tindie.com/products/zeal8bit/zeal-8-bit-computer-developer-edition-z80-based/)
 - 中国购买请联系`contact@zeal8bit.com`
   
-## ✅模拟器的目的是什么？
+## 在浏览器中运行调试器
 
-用该模拟器可以实现与真实机器完全相同的模拟，以便可以直接在主机上执行并调试为Zeal 8位计算机编写的程序，而无需手动写入任何EEPROM或NOR闪存。这有助于简化开发和测试流程。
+Zeal-NativeEmulator 通过 WebAssembly 模拟硬件，由 SDL 渲染画面。本项目提供 HTML 调试界面。使用 Chrome 访问通过 HTTPS 或本地服务器提供的页面。
 
-## ⭐️为什么选择创建一个网页模拟器？（使用HTML/CSS/JavaScript）
+```sh
+npm install
+npm run dev
+```
 
-主要目标集成模拟器到 [zeal8bit.com](https://zeal8bit.com)网站中。因此，选择HTML/CSS和Javascript在这方面优势明显。
+可以选择预构建的 Zeal 8 位操作系统镜像，也可以在 **Advanced** 中加载本地 ROM，以及可选的 EEPROM 镜像和符号映射文件。使用 `npm run get-prebuilt` 下载镜像后，可通过 `?local=1&r=latest` 加载本地镜像。对镜像的更改仅在当前会话中保留。
 
-此外，任何人都可以在任意平台（Linux / Windows / Mac OS X）上为Zeal 8位计算机测试或编写程序，而无需安装工具链。
+## 调试功能
 
-模拟器已在Opera，Google Chrome和Microsoft Edge等浏览器上进行了测试。
+- 暂停、继续、重置、单步执行和单步跳过调用。断点支持十六进制地址和映射文件中的符号。
+- CPU 暂停时查看寄存器、标志位、T 状态和反汇编。
+- 查看和编辑逻辑内存，按当前 MMU 映射显示物理地址。
+- 查看调色板、字体、图块、精灵和图块地图层，并在垂直消隐时暂停。
 
-## 🧐性能如何？
-
-哪怕Zeal8位计算机上的CPU硬件用的是 10MHz 频率的Z80，模拟器运行速率还是会比实际硬件慢。这是由于Javascript本身和Web浏览器本身的消耗。不过别忘了，模拟器的主要功能是调试程序，从这个角度来看还是相当不错的。
-
-此外，模拟器在时间方面并不是完全准确的，更多详细信息可以在“功能”部分找到。
-
-用 **C语言** （w/ SDL） 编写原生仿真器将会更快，这在计时方面会更准确。但是，这需要一些时间投入。如果您对此类项目感兴趣，请随时与我联系或提供贡献。
-
-## 🎯如何使用模拟器？
-有几种使用模拟器的方法：
-* 使用在线模拟器：[在线模拟器](https://zeal8bit.github.io/Zeal-WebEmulator/)。您无需安装任何其他东西就可以使用模拟器。
-* 本地开发时，在仓库根目录运行 `npm install` 和 `npm run dev`，然后在 Chrome 中打开本地地址。
-* 桌面版模拟器请使用 [Zeal-NativeEmulator](https://github.com/Zeal8bit/Zeal-NativeEmulator)。
-
-## ✅目前支持的功能
-
-目前，该模拟器实现了Zeal 8位计算机的以下功能：
-
-* Z80 CPU（[感谢*Molly Howell*](https://github.com/DrGoldfire/Z80.js)）
-* Z80 PIO：支持所有模式，包括端口 A 和 B。实现了独立于连接的设备。
-* 22 位 MMU
-* 256KB 只读存储器
-* 512KB 内存视频芯片：拥有640x480带颜色文本模式及640x480带颜色图形模式
-* 带中断的PS/2 键盘
-* UART：可以发送和接收字节。也可以发送文件。波特率可以从 GUI 更改
-* I2C：总线仿真，支持读/写/读写操作
-* I2C RTC：始终返回当前日期
-* I2C EEPROM：仿真24C512，因此硬编码为64KB EEPROM。内容可以通过 GUI 加载。
-
-模拟器本身实现的功能：
-
-* 调试器：断点、单步执行、单步执行指令、继续直到下一个断点
-* 加载二进制文件，直接加载到ROM
-* 加载从“z88dk-dis”生成的转储文件，在进行分步调试的同时查看汇编代码
-* 使用**十六进制**PC地址或符号（来自转储文件）设置断点
-* 在进行分步调试时查看内存内容
-* UART 视图的专用选项卡
-
-## ❗️待办
-
-模拟器端要执行的其余任务是：
-
-* I2C RTC 设置日期。目前，它始终返回当前浏览器日期，因此写入它不会产生任何改变。
-* 声音支持¹
-* SD 卡仿真¹
-* 视频芯片：320x240文本模式，320x240图形模式¹，精灵图¹，4位调色板¹等...
-
-¹：优先级**较低**的功能，因为它们尚未在实际硬件上实现。
-
-* 调试器按钮的更好界面，带有一些快捷方式
-* 解析断点输入的更好方法。一个已知的错误是，提供以十六进制字母开头的标签将被解释为 PC 值而不是标签。例如，输入 *date_routine* 作为要中断的标签将导致在地址 0xda 处添加断点，而不是标签 *date_routine* 的地址（因为 *date* 以十六进制字母 *da* 开头）
+桌面版调试器请使用 [Zeal-NativeEmulator](https://github.com/Zeal8bit/Zeal-NativeEmulator)。浏览器运行时的版本和构建方法见 [WASM 运行时说明](../wasm/README.md)。
 
 ## 👬为项目做出贡献
 
 欢迎大家对该项目积极贡献！任何人都可以为这个项目做出贡献。
 
-您可以按照您的意愿修复任何错误，也可以实现待办列表中的功能，或您认为有用或重要的新功能。
+您可以按照您的意愿修复任何错误，也可以提出调试器改进建议。
 
 贡献流程：
 
@@ -117,11 +72,7 @@ It is now possible to switch to 320x240 text-mode and display text.
 
 ## 📝许可证
 
-`Z80.js` 在MIT licence下取得许可 (源自Molly Howell的存储库：[Z80.js](https://github.com/DrGoldfire/Z80.js))
-
-所有其他文件都在 Apache 2.0 许可证下分发。有关详细信息，请参阅“许可证”文件。
-
-您可以自由地将其用于个人和商业用途，但不得删除每个文件中存在的样板。
+本项目采用 [Apache 2.0 许可证](../LICENSE)。随 Native WASM 一起分发的 SDL 采用 [SDL 许可证](../wasm/SDL3-LICENSE.txt)。
 
 ## 📪联系方式
 
