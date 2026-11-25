@@ -20,11 +20,14 @@ Run and debug Z80 software for the Zeal 8-bit Computer in Chrome. Zeal-NativeEmu
 Serve the repository over localhost or HTTPS. For local development, run:
 
 ```sh
-npm install
+npm ci
+npm run get-prebuilt
 npm run dev
 ```
 
-Select a prebuilt Zeal 8-bit OS image or use **Advanced** to upload a ROM and optional EEPROM and map files. Use `npm run get-prebuilt` to cache the prebuilt ROMs locally, then open `?local=1&r=latest`. Image changes last for the current session.
+Select a Zeal 8-bit OS release or use **Advanced** to upload a ROM and optional EEPROM and map files. Add `?r=latest` to boot the latest published release with an emulator ROM, or choose a specific release with a URL such as `?r=v0.8.0`. Image changes last for the current session.
+
+The ROM picker uses a catalog generated from Zeal 8-bit OS GitHub releases. Run `npm run get-prebuilt` again to refresh a local copy. [Zeal 8-bit OS releases](https://github.com/Zeal8bit/Zeal-8-bit-OS/releases)
 
 In Settings, select **Mount HostFS** to share a folder with a HostFS-enabled ROM over localhost or HTTPS in desktop Chrome. The guest can read and write the selected folder. Mounting or unmounting during a session requires a restart.
 
@@ -37,6 +40,10 @@ In Settings, select **Mount HostFS** to share a folder with a HostFS-enabled ROM
 - Use the canvas for keyboard input, audio, and SDL gamepad support.
 
 For desktop debugging, use Zeal-NativeEmulator. For the browser runtime's source revision and build commands, see [the WASM runtime notes](wasm/README.md).
+
+## Publish the web emulator
+
+Set the repository's Pages build source to **GitHub Actions**. The **Publish Web Emulator** workflow refreshes the release catalog and deploys the static site on pushes to `main`, nightly, and on manual dispatch. Only published releases that provide an emulator ZIP are available in the picker.
 
 ## Contributing
 

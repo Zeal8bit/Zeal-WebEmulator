@@ -97,7 +97,7 @@ romChoice.addEventListener('change', () => {
     const expectedHash = selectedOptions[0].dataset.hash;
     loadImages(async () => {
         const rom = await fetchImage(value);
-        if (expectedHash && !('local' in params) && !await filehash(rom, expectedHash)) return;
+        if (expectedHash && !await filehash(rom, expectedHash)) return;
         const eeprom = params.e ? await fetchImage(params.e) : undefined;
         const symbols = params.m ? await fetchImage(params.m) : undefined;
         return { rom, eeprom, symbols };
@@ -109,17 +109,9 @@ document.getElementById('romload-advanced').addEventListener('click', () => {
 });
 
 async function fetchRomIndex() {
-    const local = new URL('roms/index.json', document.baseURI);
-    const sources = 'local' in params ? [local] : ['https://zeal8bit.com/roms/index.json', local];
-    for (const source of sources) {
-        try {
-            const response = await fetch(source);
-            if (response.ok) return { index: await response.json(), base: response.url };
-        } catch (error) {
-            console.debug('Could not read ROM index', source, error);
-        }
-    }
-    throw new Error('No ROM index is available');
+    const response = await fetch(new URL('roms/index.json', document.baseURI));
+    if (!response.ok) throw new Error(`ROM catalog request failed (${response.status})`);
+    return { index: await response.json(), base: response.url };
 }
 
 async function populateRomPicker() {
@@ -128,21 +120,24 @@ async function populateRomPicker() {
         const { index, base } = await fetchRomIndex();
         const groups = [
             ['Latest', index.latest ? [index.latest] : []],
-            ['Nightly', [...(index.nightly ?? [])].reverse()],
+            ['Nightly', index.nightly ?? []],
             ['Stable', index.stable ?? []],
         ];
+        const groupRequested = groups.some(([label]) => params.r === label.toLowerCase());
         for (const [label, entries] of groups) {
             if (!entries.length) continue;
             const group = document.createElement('optgroup');
             group.label = label;
             entries.forEach((entry, position) => {
-                // Local downloads store paths relative to the application root.
+                // The release sync writes paths relative to the application root.
                 const url = new URL(entry.urls, new URL('../', base));
                 const option = new Option(entry.name, url.href);
                 option.dataset.hash = entry.hash ?? '';
                 group.append(option);
-                if (params.r === entry.urls || params.r === url.href ||
-                    (params.r === label.toLowerCase() && position === 0)) {
+                const selected = groupRequested
+                    ? params.r === label.toLowerCase() && position === 0
+                    : params.r === entry.name || params.r === entry.urls || params.r === url.href;
+                if (selected) {
                     option.selected = true;
                 }
             });

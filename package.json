@@ -15,6 +15,7 @@
   },
   "license": "Apache-2.0",
   "devDependencies": {
+    "fflate": "^0.8.3",
     "live-server": "^1.2.2"
   }
 }

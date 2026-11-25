@@ -24,11 +24,12 @@
 Zeal-NativeEmulator 通过 WebAssembly 模拟硬件，由 SDL 渲染画面。本项目提供 HTML 调试界面。使用 Chrome 访问通过 HTTPS 或本地服务器提供的页面。
 
 ```sh
-npm install
+npm ci
+npm run get-prebuilt
 npm run dev
 ```
 
-可以选择预构建的 Zeal 8 位操作系统镜像，也可以在 **Advanced** 中加载本地 ROM，以及可选的 EEPROM 镜像和符号映射文件。使用 `npm run get-prebuilt` 下载镜像后，可通过 `?local=1&r=latest` 加载本地镜像。对镜像的更改仅在当前会话中保留。
+可以从下拉框选择 Zeal 8 位操作系统的 GitHub 发布版本，也可以在 **Advanced** 中加载本地 ROM 以及可选的 EEPROM 镜像和符号映射文件。使用 `?r=latest` 启动最新的公开模拟器版本，或使用 `?r=v0.8.0` 指定版本。再次运行 `npm run get-prebuilt` 可更新本地目录。对镜像的更改仅在当前会话中保留。
 
 在桌面版 Chrome 中，可通过 **Settings → Mount HostFS** 将本地文件夹共享给支持 HostFS 的 ROM。访客系统可以读写所选文件夹。在运行期间挂载或卸载会重新启动模拟器。
 
