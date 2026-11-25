@@ -1,56 +1,41 @@
 /**
- * SPDX-FileCopyrightText: 2022-2024 Zeal 8-bit Computer <contact@zeal8bit.com>
+ * SPDX-FileCopyrightText: 2022-2026 Zeal 8-bit Computer <contact@zeal8bit.com>
  *
  * SPDX-License-Identifier: Apache-2.0
  */
 
-function disassembleAndShow() {
-    let regs = zealcom.getCPUState();
-    /* Get the PC, which is a virtual address */
-    const pc = regs != null ? (regs.pc) : 0;
-    /* Set the number of instructions we need to disassemble and show */
-    const instructions = 20;
-    /* The maximum number of bytes per instruction is 4 */
-    const bytes = instructions * 4;
-
-    /* Read "bytes" bytes from the Z80 virtual memory */
-    var memory = [];
-    /* Add 4 bytes so that if the last instruction is a 4 byte instruction, we won't go out of
-     * bounds when disassembling */
-    for (var i = 0; i < bytes + 4; i++) {
-        memory.push(zealcom.mem_read(pc + i));
+async function disassembleAndShow() {
+    const session = emulator?.debugger;
+    const state = session?.state;
+    const panel = document.getElementById('memdump');
+    if (!state?.paused || !emulator.runtimeReady) {
+        panel.replaceChildren();
+        return;
     }
 
-    /* Disassemble this part of the memory */
-    const instr_arr = disassembler.disassemble(memory, bytes, pc);
-
-    const dumptxt = instr_arr.map(entry => {
-        var cssclass = (entry.instruction && (entry.addr == pc)) ? "activeline" : "";
-        var text = "";
-
-        if (entry.label) {
-            cssclass += " labelline";
-            text = entry.label
-        } else {
-            cssclass += " dumpline";
-            text = entry.instruction;
+    const { pc } = state.registers;
+    try {
+        const rows = await session.disassemble(pc);
+        if (session !== emulator?.debugger || state !== session.state) return;
+        const content = document.createDocumentFragment();
+        for (const row of rows) {
+            if (row.label) {
+                const label = document.createElement('div');
+                label.className = 'labelline';
+                label.textContent = row.label;
+                content.append(label);
+            }
+            const line = document.createElement('div');
+            line.dataset.addr = row.address;
+            line.className = 'dumpline';
+            line.classList.toggle('activeline', row.address === pc);
+            line.classList.toggle('brk', userBreakpoints.get(row.address) === true);
+            const bytes = Array.from(row.bytes, byte => hex8(byte, true)).join(' ');
+            line.textContent = `${hex(row.address)}  ${bytes.padEnd(11)}  ${row.instruction || 'DB ' + bytes}`;
+            content.append(line);
         }
-
-        /* Check if the current address has a breakpoint */
-        const breakpoint = getBreakpoint(entry.addr);
-        const brk = breakpoint == null ? "" : "brk";
-
-        return `<div data-addr="${entry.addr}" class="${cssclass} ${brk}">${text}</div>`;
-    });
-
-    $("#memdump").html(dumptxt);
-}
-
-function clearDisassemblerView()
-{
-    $("#memdump").html("");
-}
-
-function disassembleHideActive() {
-    $("#memdump .activeline").removeClass("activeline");
+        panel.replaceChildren(content);
+    } catch (error) {
+        if (session === emulator?.debugger && state === session.state) console.error(error);
+    }
 }

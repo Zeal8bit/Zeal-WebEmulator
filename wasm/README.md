@@ -1,6 +1,6 @@
 # Native WASM runtime
 
-These browser assets were built from [Zeal-NativeEmulator 76dc588](https://github.com/Zeal8bit/Zeal-NativeEmulator/tree/76dc588564f3055905fdbd803f4a5b26701ae641) using Emscripten 7.0.0.
+These browser assets were built from [Zeal-NativeEmulator 231bfe6](https://github.com/Zeal8bit/Zeal-NativeEmulator/tree/231bfe69a3dad66170679c348a01e306eacde455) using Emscripten 7.0.0.
 
 Build from that revision with:
 

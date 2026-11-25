@@ -1,159 +1,112 @@
 /**
- * SPDX-FileCopyrightText: 2022-2024 Zeal 8-bit Computer <contact@zeal8bit.com>
+ * SPDX-FileCopyrightText: 2022-2026 Zeal 8-bit Computer <contact@zeal8bit.com>
  *
  * SPDX-License-Identifier: Apache-2.0
  */
 
-var breakpoints = [];
-var breakpointOnVBlank = false;
+const userBreakpoints = new Map();
+let breakpointEdits = Promise.resolve();
 
-$("#bps").on("click", "li", function() {
-    /* Get the breakpoint address */
-    const bkpaddr = $(this).data("addr");
-    toggleBreakpoint(bkpaddr);
-});
-
-function isValidHexadecimal(str) {
-    const regexp = /^[0-9A-Fa-f]+$/;
-    return regexp.test(str);
+try {
+    for (const point of JSON.parse(localStorage.getItem('breakpoints') ?? '[]')) {
+        if (!point?.autodelete && Number.isInteger(point?.address) &&
+            point.address >= 0 && point.address <= 0xffff) {
+            userBreakpoints.set(point.address, Boolean(point.enabled));
+        }
+    }
+} catch (error) {
+    console.warn('Could not restore saved breakpoints', error);
 }
 
-$("#addbp").on("click", function (){
-    var written = $("#bpaddr").val();
-    /* Empty the text field */
-    $("#bpaddr").val("");
-    newBreakpoint(written);
-});
-
-function newBreakpoint(value) {
-    if (value.length < 1) return;
-    /* Remove the 0x prefix if it exists */
-    if (value.startsWith('0x')) {
-        value = value.slice(2);
+function renderBreakpoints() {
+    const list = document.getElementById('bps');
+    list.replaceChildren();
+    for (const [address, enabled] of userBreakpoints) {
+        const row = document.createElement('li');
+        row.dataset.addr = address;
+        row.classList.toggle('disabled', !enabled);
+        row.append(hex(address));
+        const remove = document.createElement('button');
+        remove.type = 'button';
+        remove.textContent = '×';
+        remove.setAttribute('aria-label', `Remove breakpoint at ${hex(address)}`);
+        row.append(remove);
+        list.append(row);
     }
-    /* Check if the string only contains valid hex digits */
-    var result = 0;
-    if (isValidHexadecimal(value)) {
-        result = parseInt(value, 16);
-    } else {
-        /* Could be a label, let's check this */
-        const addr = disassembler.labelAddress(value);
-        if (addr === null) {
+    $('#memdump .dumpline').each((_, row) => {
+        row.classList.toggle('brk', userBreakpoints.get(Number(row.dataset.addr)) === true);
+    });
+}
+
+function editBreakpoint(edit) {
+    const session = emulator?.debugger;
+    if (!session?.state || loadingImages) return;
+    breakpointEdits = breakpointEdits.then(async () => {
+        if (session !== emulator?.debugger || loadingImages) return;
+        await edit(session);
+        renderBreakpoints();
+        localStorage.setItem('breakpoints', JSON.stringify(Array.from(userBreakpoints,
+            ([address, enabled]) => ({address, enabled}))));
+    }).catch(error => {
+        console.error(error);
+        popout.error('Could not change the breakpoint.');
+    });
+}
+
+async function restoreBreakpoints(session) {
+    for (const [address, enabled] of userBreakpoints) {
+        await session.setBreakpoint(address, enabled);
+    }
+}
+
+function addBreakpointFromInput() {
+    const input = document.getElementById('bpaddr');
+    const text = input.value.trim();
+    if (!text) return;
+    editBreakpoint(async session => {
+        const isHex = /^(?:0x)?[a-f0-9]+$/i.test(text);
+        const address = isHex ? Number.parseInt(text, 16) : await session.findSymbol(text);
+        if (address === null || address > 0xffff) {
+            popout.warn('Enter a 16-bit address or a loaded symbol.');
             return;
         }
-        result = addr;
-    }
-    /* Only add the breakpoint if not in the list */
-    if (!getBreakpoint(result)) {
-        addBreakpoint({ address: result});
-    }
+        await session.setBreakpoint(address);
+        userBreakpoints.set(address, true);
+        input.value = '';
+    });
 }
 
-$("#bpaddr").on('keydown', function(event) {
-    if (event.key === "Enter") {
-        $("#addbp").click();
-    }
+$('#bpaddr').on('keydown', event => {
+    if (event.key === 'Enter') addBreakpointFromInput();
 });
+$('#addbp').on('click', addBreakpointFromInput);
 
-
-/**
- * @brief Add a breakpoint to the global breakpoint list
- *
- * @param addr Virtual address to break on
- * @param autodelete Flag to mark whether the breakpoint should be auto deleted once triggered (false by default)
- */
-function addBreakpoint(options) {
-    const { address, enabled = true, autodelete = false } = options;
-    /* Find the breakpoint object in the breakpoint list */
-    var bkrobj = breakpoints.find(element => element.address == address);
-
-    if (bkrobj != undefined) {
-        /* This may be possible if the former breakpoint was "hidden" (auto-delete)
-         * If it was clicked by the user, it will become a regular breakpoint, else, it won't change */
-        bkrobj.autodelete = autodelete;
-    } else if (address <= 0xFFFF) {
-        bkrobj = { address, enabled, autodelete };
-        breakpoints.push(bkrobj);
-    }
-
-    /* Only add the breakpoint to the list if it was manually added by the user, not if step over was clicked */
-    if (! bkrobj?.autodelete) {
-        $li = $(`<li data-addr="${address}">${hex(address)}</li>`);
-        if(!enabled) {
-            $li.addClass('disabled');
+$('#bps').on('click', 'li', function(event) {
+    const address = Number(this.dataset.addr);
+    const remove = Boolean(event.target.closest('button'));
+    editBreakpoint(async session => {
+        if (remove) {
+            await session.removeBreakpoint(address);
+            userBreakpoints.delete(address);
+        } else if (userBreakpoints.has(address)) {
+            const enabled = !userBreakpoints.get(address);
+            await session.setBreakpoint(address, enabled);
+            userBreakpoints.set(address, enabled);
         }
-        $delete = $('<span>x</span>').on('click', () => {
-            deleteBreakpoint(address);
-        })
-        $li.append($delete);
-        $("#bps").append($li);
-        /* If the line is currently being disassembled, mark it as a breakpoint */
-        $(`.dumpline[data-addr='${address}']`).addClass("brk");
-    }
-
-    localStorage.setItem('breakpoints', JSON.stringify(breakpoints));
-}
-
-function toggleBreakpoint(brkaddr) {
-    /* Find the breakpoint object in the breakpoint list */
-    const bkrobj = breakpoints.find(element => element.address == brkaddr);
-
-    $(`#bps li[data-addr='${brkaddr}']`).toggleClass("disabled");
-    $(`.dumpline[data-addr='${brkaddr}']`).toggleClass("brk");
-
-    /* Toggle enabled field in the breakpoint */
-    if (bkrobj != undefined) {
-        bkrobj.enabled ^= true;
-    }
-    localStorage.setItem('breakpoints', JSON.stringify(breakpoints));
-}
-
-function deleteBreakpoint(brkaddr) {
-    /* Find the breakpoint object in the breakpoint list */
-    const index = breakpoints.findIndex(element => element.address == brkaddr);
-
-    if(index >= 0) {
-        breakpoints.splice(index, 1);
-        $(`#bps li[data-addr='${brkaddr}']`).remove();
-        $(`.dumpline[data-addr='${brkaddr}']`).toggleClass("brk");
-    }
-    localStorage.setItem('breakpoints', JSON.stringify(breakpoints));
-}
-
-function getBreakpoint(addr) {
-    /* Find the breakpoint object in the breakpoint list */
-    const bkrobj = breakpoints.find(element => element.address == addr);
-    return (bkrobj != undefined && !bkrobj.autodelete) ? bkrobj : null;
-}
-
-
-/**
- * @brief Function called when a breakpoint is triggered
- */
-function triggeredBreakpoint(bkrobj) {
-    if (bkrobj?.autodelete) {
-        breakpoints = breakpoints.filter(element => element.address !== bkrobj.address);
-    }
-}
-
-function enableBreakpoint(bkrobj) {
-    bkrobj.enabled = true;
-}
-
-function enableBreakOnVBlank(doBreak) {
-    breakpointOnVBlank = doBreak;
-}
-
-$('#breakpoint-vblank').on('change', function(e) {
-    enableBreakOnVBlank($(this).prop('checked'));
+    });
 });
 
-jQuery(() => {
-    const storage = localStorage.getItem('breakpoints');
-    if(storage) {
-        const points = JSON.parse(storage);
-        points.map((point) => {
-            addBreakpoint(point);
-        });
-    }
-})
+$('#memdump').on('click', '.dumpline', function() {
+    const address = Number(this.dataset.addr);
+    editBreakpoint(async session => {
+        if (userBreakpoints.has(address)) {
+            await session.removeBreakpoint(address);
+            userBreakpoints.delete(address);
+        } else {
+            await session.setBreakpoint(address);
+            userBreakpoints.set(address, true);
+        }
+    });
+});
+
+renderBreakpoints();

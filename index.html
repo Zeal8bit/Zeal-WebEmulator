@@ -234,7 +234,7 @@
             <section class="menucontent">
                 <label>
                   Break on VBlank
-                  <input type="checkbox" id="breakpoint-vblank" />
+                  <input type="checkbox" id="breakpoint-vblank" disabled />
                 </label>
                 <section id="newbp">
                     <input type="text" id="bpaddr" />
@@ -270,7 +270,7 @@
         </section>
     </section>
 
-    <section class="bottompanel" inert>
+    <section class="bottompanel">
       <section class="tabs">
         <div id="disassemble-tab" class="tab">Disassemble</div>
         <div id="memory-tab" class="tab">Memory view</div>
@@ -278,7 +278,7 @@
       </section>
       <section id="memdump" class="panel">
       </section>
-      <section id="memview" class="panel">
+      <section id="memview" class="panel" inert>
         <section class="panel-toolbar">
           <input type="text" id="dumpaddr" placeholder="Hex address" />
           <input type="text" id="dumpsize" placeholder="Size" value="256" />
@@ -296,7 +296,7 @@
           </section>
         </div>
       </section>
-      <section id="video" class="panel">
+      <section id="video" class="panel" inert>
         <div class="panel-toolbar">
           <input type="button" id="video-dump" value="Dump" />
 
@@ -398,6 +398,8 @@
     <script src="view/init.js"></script>
     <script src="view/menus.js"></script>
     <script src="view/regs_panel.js"></script>
+    <script src="view/breakpoint.js"></script>
+    <script src="view/tabs/disassemble.js"></script>
     <script src="view/debug.js"></script>
     <script src="view/readrom.js"></script>
     <script src="view/tabs/tabs.js"></script>

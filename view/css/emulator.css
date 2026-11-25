@@ -256,14 +256,17 @@ hr {
     width: 102%;
     user-select: none;
 
-    > span {
+    > button {
         display: flex;
         align-items: center;
         justify-content: center;
         width: 24px;
         height: 24px;
         line-height: 1em;
-        color: white;
+        color: var(--first-txt-color);
+        background: none;
+        border: 0;
+        cursor: pointer;
         text-transform: lowercase;
         margin-left: auto;
 

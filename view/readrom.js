@@ -35,10 +35,11 @@ async function loadImages(prepare, choice = '') {
     try {
         const images = await prepare();
         if (!images) return;
-        await bootEmulator(images.rom, images.eeprom);
+        await bootEmulator(images.rom, images.eeprom, images.symbols);
         loadedChoice = choice;
         $('#romready').addClass('ready');
         $('#eepromready').toggleClass('ready', Boolean(images.eeprom));
+        $('#symready').toggleClass('ready', Boolean(images.symbols));
     } catch (error) {
         if (!emulator?.module) {
             loadedChoice = '';
@@ -56,15 +57,32 @@ async function loadImages(prepare, choice = '') {
 loadImagesButton.addEventListener('click', () => {
     const rom = document.getElementById('file-rom').files[0];
     const eeprom = document.getElementById('file-eeprom').files[0];
-    if (!rom) {
+    const map = document.getElementById('file-map').files[0];
+    if (rom) {
+        loadImages(async () => ({
+            rom: await rom.arrayBuffer(),
+            eeprom: await eeprom?.arrayBuffer(),
+            symbols: await map?.arrayBuffer(),
+        }));
+    } else if (map && emulator?.runtimeReady) {
+        loadMap(map);
+    } else {
         popout.warn('Choose a system image first.');
-        return;
     }
-    loadImages(async () => ({
-        rom: await rom.arrayBuffer(),
-        eeprom: eeprom ? await eeprom.arrayBuffer() : undefined,
-    }));
 });
+
+async function loadMap(file) {
+    const session = emulator.debugger;
+    try {
+        await session.loadSymbols(await file.arrayBuffer());
+        if (session === emulator?.debugger) {
+            $('#symready').addClass('ready');
+            disassembleAndShow();
+        }
+    } catch (error) {
+        showImageError('Could not load the map file.', error);
+    }
+}
 
 romChoice.addEventListener('change', () => {
     const { value, selectedOptions } = romChoice;
@@ -78,7 +96,12 @@ romChoice.addEventListener('change', () => {
         const rom = await fetchImage(value);
         if (expectedHash && !('local' in params) && !await filehash(rom, expectedHash)) return;
         const eeprom = params.e ? await fetchImage(params.e) : undefined;
-        return { rom: await rom.arrayBuffer(), eeprom: await eeprom?.arrayBuffer() };
+        const map = params.m ? await fetchImage(params.m) : undefined;
+        return {
+            rom: await rom.arrayBuffer(),
+            eeprom: await eeprom?.arrayBuffer(),
+            symbols: await map?.arrayBuffer(),
+        };
     }, value);
 });
 

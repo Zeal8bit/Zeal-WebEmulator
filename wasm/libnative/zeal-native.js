@@ -28,11 +28,11 @@
             this.dispatchEvent(new CustomEvent('statechange', {detail: state}));
         }
 
-        complete(error) {
+        complete(error, result) {
             const pending = this.pending;
             this.pending = null;
             if (error) pending?.reject(new Error(`Debugger command failed (errno ${error})`));
-            else pending?.resolve();
+            else pending?.resolve(result);
         }
 
         disconnect(error) {
@@ -41,23 +41,35 @@
             this.update(null);
         }
 
-        request(command) {
+        request(command, address = 0, count = 0, data = null) {
             const { module } = this.emulator;
-            const operation = this.queue.then(() => {
+            const operation = this.queue.then(async () => {
                 if (!module || module !== this.emulator.module || !this.emulator.runtimeReady ||
                     this.emulator.runtimeError) {
                     throw new Error('The debugger session is unavailable');
                 }
-                return new Promise((resolve, reject) => {
-                    this.pending = {resolve, reject};
-                    try {
-                        if (module._zeal_debug_request_web(command)) return;
-                        throw new Error('The emulator could not accept the debugger command');
-                    } catch (error) {
-                        this.pending = null;
-                        reject(error);
+                let buffer = 0;
+                try {
+                    if (data?.length) {
+                        buffer = module._malloc(data.length);
+                        if (!buffer) throw new Error('Could not allocate debugger data');
+                        module.HEAPU8.set(data, buffer);
                     }
-                });
+                    return await new Promise((resolve, reject) => {
+                        this.pending = {resolve, reject};
+                        try {
+                            if (module._zeal_debug_request_web(command, address, count, buffer, data?.length ?? 0)) return;
+                            throw new Error('The emulator could not accept the debugger command');
+                        } catch (error) {
+                            this.pending = null;
+                            reject(error);
+                        }
+                    });
+                } finally {
+                    if (buffer && module === this.emulator.module && !this.emulator.runtimeError) {
+                        module._free(buffer);
+                    }
+                }
             });
             this.queue = operation.catch(() => {});
             return operation;
@@ -67,6 +79,48 @@
         continue() { return this.request(2); }
         step() { return this.request(3); }
         reset() { return this.request(4); }
+        stepOver() { return this.request(5); }
+
+        setBreakpoint(address, enabled = true) {
+            this.validateAddress(address);
+            return this.request(6, address, enabled ? 1 : 0);
+        }
+
+        removeBreakpoint(address) {
+            this.validateAddress(address);
+            return this.request(7, address);
+        }
+
+        disassemble(address, count = 20) {
+            this.validateAddress(address);
+            if (!Number.isInteger(count) || count < 1 || count > 256) {
+                throw new RangeError('Expected 1 to 256 instructions');
+            }
+            return this.request(8, address, count);
+        }
+
+        loadSymbols(data) {
+            if (!(data instanceof Uint8Array) && !(data instanceof ArrayBuffer)) {
+                throw new TypeError('Expected a map file as bytes');
+            }
+            if (data.byteLength > 4 * 1024 * 1024) throw new RangeError('Map file exceeds 4 MiB');
+            return this.request(9, 0, 0, new Uint8Array(data).slice());
+        }
+
+        findSymbol(name) {
+            if (typeof name !== 'string' || !name.length || name.includes('\0')) {
+                throw new TypeError('Expected a symbol name');
+            }
+            const data = new TextEncoder().encode(name + '\0');
+            if (data.length > 256) throw new RangeError('Symbol name exceeds 255 bytes');
+            return this.request(10, 0, 0, data);
+        }
+
+        validateAddress(address) {
+            if (!Number.isInteger(address) || address < 0 || address > 0xffff) {
+                throw new RangeError('Expected a 16-bit logical address');
+            }
+        }
     }
 
     class ZealNative {
@@ -223,8 +277,8 @@
                     onDebugState(state) {
                         owner.debugger?.update(state);
                     },
-                    onDebugComplete(error) {
-                        owner.debugger?.complete(error);
+                    onDebugComplete(error, result) {
+                        owner.debugger?.complete(error, result);
                     },
                     hostfsBackend: this.hostfs,
                     print: this.print,

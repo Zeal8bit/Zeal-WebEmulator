@@ -24,7 +24,7 @@ async function unloadEmulator() {
     }
 }
 
-async function bootEmulator(romdisk, eeprom) {
+async function bootEmulator(romdisk, eeprom, symbols) {
     const next = new ZealNative({
         canvas: screenCanvas,
         romdisk,
@@ -41,6 +41,8 @@ async function bootEmulator(romdisk, eeprom) {
     emulator = next;
     try {
         await next.start();
+        if (symbols) await next.debugger.loadSymbols(symbols);
+        await restoreBreakpoints(next.debugger);
         await next.debugger.continue();
     } catch (error) {
         await next.exit().catch(console.error);
@@ -60,6 +62,7 @@ document.addEventListener('keydown', event => {
         F5: '#fullscreen-mode',
         F9: '.cpuexec:visible',
         F10: '#step',
+        F11: '#stepover',
     }[event.key];
     if (binding) {
         event.preventDefault();
