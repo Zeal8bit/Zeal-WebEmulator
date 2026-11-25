@@ -48,9 +48,9 @@ function isBreakpointEnabled(address) {
 
 function editBreakpoint(edit) {
     const session = emulator?.debugger;
-    if (!session?.state || loadingImages) return;
+    if (!session?.state || sessionChanging) return;
     breakpointEdits = breakpointEdits.then(async () => {
-        if (session !== emulator?.debugger || loadingImages) return;
+        if (session !== emulator?.debugger || sessionChanging) return;
         await edit(session);
         renderBreakpoints();
         localStorage.setItem('breakpoints', JSON.stringify(Array.from(userBreakpoints,

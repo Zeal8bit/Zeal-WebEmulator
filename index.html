@@ -51,6 +51,7 @@
         <h3>Load a ROM</h3>
         <p>Choose a prebuilt Zeal 8-bit OS image or open <strong>Advanced</strong> to load a local ROM with an optional EEPROM image and map file. The emulator starts after the image loads. Changes to the images last for the current session.</p>
         <p>Click the emulated screen before typing or playing audio.</p>
+        <p>In Settings, use <strong>Mount HostFS</strong> to share a folder with a HostFS-enabled ROM. The guest can read and write files in the selected folder.</p>
         <h3>Control execution</h3>
         <ul>
           <li><kbd>F9</kbd> pauses or continues execution.</li>
@@ -182,7 +183,7 @@
                 <button id="screen-capture" disabled>Capture Screen</button>
                 <button id="theater-mode">Theater Mode</button>
                 <button id="fullscreen-mode" style="display: none;">Full Screen</button>
-                <button id="hostfs-mount" title="HostFS mounting is unavailable from this page" disabled>Mount HostFS</button>
+                <button id="hostfs-mount" disabled>Mount HostFS</button>
                 <button id="console-paste" title="Console paste is unavailable in this WASM build" disabled>Paste to Console</button>
             </section>
           </section>
@@ -310,6 +311,7 @@
     <script src="view/tabs/memdump.js"></script>
     <script src="view/tabs/video.js"></script>
     <script src="view/debug.js"></script>
+    <script src="view/hostfs.js"></script>
     <script src="view/readrom.js"></script>
     <script src="view/tabs/tabs.js"></script>
   </body>

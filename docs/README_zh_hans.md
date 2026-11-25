@@ -30,6 +30,8 @@ npm run dev
 
 可以选择预构建的 Zeal 8 位操作系统镜像，也可以在 **Advanced** 中加载本地 ROM，以及可选的 EEPROM 镜像和符号映射文件。使用 `npm run get-prebuilt` 下载镜像后，可通过 `?local=1&r=latest` 加载本地镜像。对镜像的更改仅在当前会话中保留。
 
+在桌面版 Chrome 中，可通过 **Settings → Mount HostFS** 将本地文件夹共享给支持 HostFS 的 ROM。访客系统可以读写所选文件夹。在运行期间挂载或卸载会重新启动模拟器。
+
 ## 调试功能
 
 - 暂停、继续、重置、单步执行和单步跳过调用。断点支持十六进制地址和映射文件中的符号。

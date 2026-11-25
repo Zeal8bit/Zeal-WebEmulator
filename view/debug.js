@@ -37,12 +37,15 @@ for (const command of ['continue', 'pause', 'step', 'reset']) {
 $('#stepover').on('click', () => runDebugCommand('stepOver'));
 
 $('#clean').on('click', async () => {
-    if (!emulator || loadingImages) return;
+    if (!emulator || sessionChanging) return;
+    setSessionChanging(true);
     try {
         await unloadEmulator();
         resetImageSelection();
     } catch (error) {
         console.error(error);
         popout.error('Could not close the emulator session.');
+    } finally {
+        setSessionChanging(false);
     }
 });

@@ -26,6 +26,8 @@ npm run dev
 
 Select a prebuilt Zeal 8-bit OS image or use **Advanced** to upload a ROM and optional EEPROM and map files. Use `npm run get-prebuilt` to cache the prebuilt ROMs locally, then open `?local=1&r=latest`. Image changes last for the current session.
 
+In Settings, select **Mount HostFS** to share a folder with a HostFS-enabled ROM over localhost or HTTPS in desktop Chrome. The guest can read and write the selected folder. Mounting or unmounting during a session requires a restart.
+
 ## Debugger features
 
 - Pause, continue, reset, single-step, and step over calls. Breakpoints accept hexadecimal addresses and map-file symbols.

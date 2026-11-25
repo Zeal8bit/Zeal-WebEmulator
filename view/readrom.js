@@ -7,7 +7,6 @@
 const romChoice = document.getElementById('romchoice');
 const loadImagesButton = document.getElementById('read-button');
 let loadedChoice = '';
-let loadingImages = false;
 
 function resetImageSelection() {
     loadedChoice = '';
@@ -28,9 +27,8 @@ async function fetchImage(url) {
 }
 
 async function loadImages(prepare, choice = '') {
-    if (loadingImages) return;
-    loadingImages = true;
-    romChoice.disabled = loadImagesButton.disabled = true;
+    if (sessionChanging) return;
+    setSessionChanging(true);
     $('#loading_img').visible();
     try {
         const images = await prepare();
@@ -48,9 +46,8 @@ async function loadImages(prepare, choice = '') {
         showImageError('Could not start the emulator. Check the images and try again.', error);
     } finally {
         romChoice.value = loadedChoice;
-        romChoice.disabled = loadImagesButton.disabled = false;
         $('#loading_img').invisible();
-        loadingImages = false;
+        setSessionChanging(false);
     }
 }
 
@@ -72,15 +69,21 @@ loadImagesButton.addEventListener('click', () => {
 });
 
 async function loadMap(file) {
+    if (sessionChanging) return;
+    setSessionChanging(true);
     const session = emulator.debugger;
     try {
-        await session.loadSymbols(await file.arrayBuffer());
+        const symbols = await file.arrayBuffer();
+        await session.loadSymbols(symbols);
         if (session === emulator?.debugger) {
+            activeSymbols = symbols;
             $('#symready').addClass('ready');
             disassembleAndShow();
         }
     } catch (error) {
         showImageError('Could not load the map file.', error);
+    } finally {
+        setSessionChanging(false);
     }
 }
 

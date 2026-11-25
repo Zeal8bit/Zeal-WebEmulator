@@ -9,6 +9,22 @@ const popout = new Popup();
 const screenCanvas = document.getElementById('zeal-screen');
 
 let emulator = null;
+let sessionChanging = false;
+let activeSymbols = null;
+
+function setSessionChanging(changing) {
+    sessionChanging = changing;
+    $('#romchoice, #read-button').prop('disabled', changing);
+    updateHostFSButton();
+}
+
+async function prepareDebugger(current, resume) {
+    if (activeSymbols) await current.debugger.loadSymbols(activeSymbols);
+    await restoreBreakpoints(current.debugger);
+    if (vblankControl.checked) await current.debugger.setBreakOnVBlank(true);
+    if (resume) await current.debugger.continue();
+    else renderDebugState(current.debugger.state);
+}
 
 async function unloadEmulator() {
     const current = emulator;
@@ -17,6 +33,7 @@ async function unloadEmulator() {
     try {
         await current.exit();
         emulator = null;
+        activeSymbols = null;
         renderDebugState(null);
     } catch (error) {
         renderDebugState(current.debugger.state);
@@ -31,6 +48,7 @@ async function bootEmulator(romdisk, eeprom, symbols) {
         eeprom,
         imageStorage: 'memory',
         debugger: true,
+        hostfs: createHostFS(),
     });
 
     next.debugger.addEventListener('statechange', ({detail}) => {
@@ -39,15 +57,14 @@ async function bootEmulator(romdisk, eeprom, symbols) {
 
     await unloadEmulator();
     emulator = next;
+    activeSymbols = symbols;
     try {
         await next.start();
-        if (symbols) await next.debugger.loadSymbols(symbols);
-        await restoreBreakpoints(next.debugger);
-        if (vblankControl.checked) await next.debugger.setBreakOnVBlank(true);
-        await next.debugger.continue();
+        await prepareDebugger(next, true);
     } catch (error) {
         await next.exit().catch(console.error);
         emulator = null;
+        activeSymbols = null;
         renderDebugState(null);
         throw error;
     }
