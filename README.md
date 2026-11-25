@@ -49,50 +49,8 @@ Several choices are offered to you:
 
 * Use the live version of the emulator: [live version of the emulator](https://zeal8bit.github.io/Zeal-WebEmulator/). This will let you use the emulator without the need to install anything
 * Clone this repository and open the `index.html` page with a web browser: Chrome or Opera preferred.
-* Create an application out of this repo by using electron. More details below.
-
-### Get started with electron?
-
-#### Install dependencies
-
-First of all, you will need to clone this current repository, after that use a package manager to install dependencies. If you are using `yarn`, use the following commands:
-
-```bash
-cd /path/to/Zeal-WebEmulator
-yarn install
-```
-
-If you are using `npm`, the commands are as follows:
-
-```bash
-cd /path/to/Zeal-WebEmulator
-npm install
-```
-
-If you encounter any issues, you can find more information on [the official electron forge website](https://www.electronforge.io/import-existing-project).
-
-#### Running
-
-Once the dependencies are ready, it can be executed thanks to `yarn start` or `npm start` commands.
-
-#### Compiling
-
-Supported architectures are the following: `win`, `win64`, and `linux`.
-
-Choose your architecture and replace it in either `npm run dist-<arch>` or `yarn dist-<arch>` commands to compile the project.
-
-
-For example, if you want to build for Windows x64, run the following command:
-
-```bash
-npm run dist-win64
-```
-
-or:
-
-```bash
-yarn dist-win64
-```
+* For local development, run `npm install` and `npm run dev` from the repository root.
+* For a desktop emulator, use [Zeal-NativeEmulator](https://github.com/Zeal8bit/Zeal-NativeEmulator).
 
 ## Supported Features
 

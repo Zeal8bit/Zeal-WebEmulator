@@ -60,10 +60,6 @@ popout.warn("Zeal Web Emulator is now deprecated in favor of <a href=\"https://g
 
 const params = parseQueryParams(window.location.search);
 
-if (typeof electronAPI != 'undefined') {
-    $(electronAPI.loaded);
-}
-
 $('#screen').focus();
 $(window).on('focus', () => {
     $('#screen').focus();

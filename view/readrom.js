@@ -284,13 +284,3 @@ jQuery(() => {
             return Promise.all(promises);
         });
 });
-
-// electron
-if (typeof electronAPI != 'undefined') {
-    electronAPI.on('load-advanced', (data) => {
-        if(!data.hideAdvanced) {
-            $('#romfile').show();
-        }
-        $('#read-button').trigger('click');
-    });
-}

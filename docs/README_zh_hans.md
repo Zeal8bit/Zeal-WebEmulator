@@ -44,73 +44,8 @@
 有几种使用模拟器的方法：
 * 使用在线模拟器：[在线模拟器](https://zeal8bit.github.io/Zeal-WebEmulator/)。您无需安装任何其他东西就可以使用模拟器。
 * 克隆这个存储库，并使用网络浏览器打开 `index.html`（首选 Google Chrome 或 Opera）。
-* 使用 Electron 从此存储库创建一个应用程序。更多详细信息可以在下面找到。
-
-### 如何使用Electron？
-
-#### 安装依赖项
-
-首先，您需要克隆此当前存储库，然后使用包管理器安装程序依赖项。如果您使用的是 `yarn`，请使用以下命令：
-
-```bash
-cd /path/to/Zeal-WebEmulator
-yarn install
-```
-
-如果您使用的是 `npm`，则命令如下：
-
-```bash
-cd /path/to/Zeal-WebEmulator
-npm install
-```
-
-如果您遇到了任何问题，您可以在[electron forge官方网站](https://www.electronforge.io/import-existing-project)上找到更多信息。
-
-#### 运行
-
-在依赖项安装完成之后，你可以使用
-
-```bash
-yarn start
-```
-
-或
-
-```bash
-npm start
-```
-
-命令来启动你的模拟器。
-
-#### 发布
-
-目前支持的架构：
-
-`win` `win64` `linux`
-
-npm：
-
-```bash
-npm run dist-<arch>
-```
-
-yarn：
-
-```bash
-yarn dist-<arch>
-```
-
-例如，如果要为 Windows-x64 生成完整程序及安装包，请运行以下命令：
-
-```bash
-npm run dist-win64
-```
-
-或：
-
-```bash
-yarn dist-win64
-```
+* 本地开发时，在仓库根目录运行 `npm install` 和 `npm run dev`。
+* 桌面版模拟器请使用 [Zeal-NativeEmulator](https://github.com/Zeal8bit/Zeal-NativeEmulator)。
 
 ## ✅目前支持的功能
 

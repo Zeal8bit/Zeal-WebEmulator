@@ -157,13 +157,3 @@ jQuery(() => {
         });
     }
 })
-
-// electron
-if (typeof electronAPI != 'undefined') {
-    electronAPI.on("breakpoint", (breakpoints) => {
-        for (let i = 0; i < breakpoints.length; i++) {
-            newBreakpoint(breakpoints[i]);
-        }
-    });
-}
-
