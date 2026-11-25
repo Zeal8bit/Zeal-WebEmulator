@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg">
+  <!-- SPDX-FileCopyrightText: 2026 Zeal 8-bit Computer &lt;contact@zeal8bit.com&gt; -->
+  <!-- SPDX-License-Identifier: Apache-2.0 -->
+  <!-- SDL/FLTK draw_icon geometry, using an 18-pixel icon centered in a 24-pixel viewBox. -->
+  <symbol id="play" viewBox="0 0 24 24">
+    <path d="M7 6l11 6-11 6z"/>
+  </symbol>
+  <symbol id="pause" viewBox="0 0 24 24">
+    <path d="M6 6h5v13H6zM14 6h5v13h-5z"/>
+  </symbol>
+  <symbol id="step" viewBox="0 0 24 24">
+    <path d="M11 6h3v6h3l-5 4-5-4h4zM6 18h13v2H6z"/>
+  </symbol>
+  <symbol id="step-over" viewBox="0 0 24 24">
+    <path d="M6 12a6 6 0 0 1 12 0" fill="none" stroke="currentColor" stroke-width="2"/>
+    <path d="M14 12h8l-4 5zM6 18h13v2H6z"/>
+  </symbol>
+  <symbol id="reset" viewBox="0 0 24 24">
+    <path d="M15 6.8a6 6 0 1 0 3 5.2" fill="none" stroke="currentColor" stroke-width="2"/>
+    <path d="M14 3l8 4-6-7z"/>
+  </symbol>
+</svg>

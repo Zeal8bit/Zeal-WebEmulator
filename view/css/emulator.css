@@ -106,7 +106,9 @@ input[type=text] {
 #toppanel {
     display: grid;
     grid-template-columns: clamp(16rem, 17vw, 20rem) minmax(0, 1fr) clamp(17.5rem, 19vw, 23rem);
-    grid-template-areas: "registers screen controls";
+    grid-template-areas:
+        "registers screen controls"
+        "debugger debugger controls";
     align-items: start;
     gap: var(--page-gutter);
 }
@@ -125,6 +127,7 @@ input[type=text] {
 
 #rightpanel {
     grid-area: controls;
+    align-self: stretch;
 }
 
 .registers {
@@ -209,7 +212,9 @@ hr {
 
 #toppanel.theater-mode {
     grid-template-columns: minmax(0, 1fr);
-    grid-template-areas: "screen";
+    grid-template-areas:
+        "screen"
+        "debugger";
     --screen-height: max(0px, calc(100dvh - 2 * var(--page-gutter)));
 }
 
@@ -332,8 +337,9 @@ hr {
 }
 
 .bottompanel {
+    grid-area: debugger;
     display: flex;
-    flex: 1;
+    align-self: stretch;
     flex-direction: column;
     gap: 0.5rem;
     min-inline-size: 0;
@@ -675,11 +681,22 @@ h3 {
     padding: 0.375rem;
 }
 
+#menu-controls svg,
 #menu-controls img {
     display: block;
     max-inline-size: 100%;
     max-block-size: 100%;
     margin: auto;
+}
+
+#menu-controls svg {
+    inline-size: 2rem;
+    block-size: 2rem;
+    fill: currentColor;
+}
+
+#menu-controls .cpuexec {
+    color: var(--theme-green);
 }
 
 .menu + .menu {
@@ -816,8 +833,7 @@ footer li {
 footer li a:hover {
     color: var(--theme-cyan);
 }
-#menu-controls[inert],
-#menu-controls [aria-disabled="true"] {
+#menu-controls[inert] {
     opacity: 0.5;
 }
 
@@ -833,18 +849,23 @@ input[type=button]:disabled {
         block-size: 100dvh;
     }
 
-    body:not(:has(#toppanel.theater-mode)) .bottompanel {
+    #toppanel:not(.theater-mode) {
+        flex: 1;
         min-block-size: 0;
+        grid-template-rows: auto minmax(0, 1fr);
     }
 
-    body:not(:has(#toppanel.theater-mode)) .panel {
+    #toppanel:not(.theater-mode) .panel {
         flex: 1;
         min-block-size: 0;
     }
 
+    #debug {
+        max-block-size: var(--screen-height);
+    }
+
     #debug,
     #rightpanel {
-        max-block-size: var(--screen-height);
         overflow-y: auto;
     }
 }
@@ -854,7 +875,8 @@ input[type=button]:disabled {
         grid-template-columns: repeat(2, minmax(0, 1fr));
         grid-template-areas:
             "screen screen"
-            "registers controls";
+            "registers controls"
+            "debugger debugger";
     }
 
     #container canvas:not(:fullscreen) {
@@ -872,7 +894,8 @@ input[type=button]:disabled {
         grid-template-areas:
             "screen"
             "controls"
-            "registers";
+            "registers"
+            "debugger";
     }
 
     .tab {

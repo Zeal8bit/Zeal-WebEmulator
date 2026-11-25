@@ -134,11 +134,11 @@
 
         <section id="rightpanel">
           <section class="menu" id="menu-controls" inert>
-            <button type="button" id="continue" title="Continue (F9)" aria-label="Continue" class="cpuexec" style="display: none;"><img src="imgs/continue.png" alt=""></button>
-            <button type="button" id="pause" title="Pause (F9)" aria-label="Pause" class="cpuexec hidden"><img src="imgs/pause.png" alt=""></button>
-            <button type="button" id="step" title="Step (F10)" aria-label="Step"><img src="imgs/step.png" alt=""></button>
-            <button type="button" id="stepover" aria-disabled="true" title="Step Over (F11)" aria-label="Step over"><img src="imgs/stepover.png" alt=""></button>
-            <button type="button" id="reset" title="Reset" aria-label="Reset"><img src="imgs/restart.png" alt=""></button>
+            <button type="button" id="continue" title="Continue (F9)" aria-label="Continue" class="cpuexec" style="display: none;"><svg aria-hidden="true" focusable="false"><use href="imgs/debugger-icons.svg#play"></use></svg></button>
+            <button type="button" id="pause" title="Pause (F9)" aria-label="Pause" class="cpuexec hidden"><svg aria-hidden="true" focusable="false"><use href="imgs/debugger-icons.svg#pause"></use></svg></button>
+            <button type="button" id="step" title="Step (F10)" aria-label="Step"><svg aria-hidden="true" focusable="false"><use href="imgs/debugger-icons.svg#step"></use></svg></button>
+            <button type="button" id="stepover" aria-disabled="true" title="Step Over (F11)" aria-label="Step over"><svg aria-hidden="true" focusable="false"><use href="imgs/debugger-icons.svg#step-over"></use></svg></button>
+            <button type="button" id="reset" title="Reset" aria-label="Reset"><svg aria-hidden="true" focusable="false"><use href="imgs/debugger-icons.svg#reset"></use></svg></button>
             <button type="button" id="clean" title="Clean" aria-label="Clean"><img src="imgs/clean.png" alt=""></button>
           </section>
 
@@ -191,104 +191,104 @@
             </section>
           </section>
         </section>
-    </section>
 
-    <section class="bottompanel">
-      <section class="tabs">
-        <button type="button" id="disassemble-tab" class="tab" aria-controls="memdump">Disassemble</button>
-        <button type="button" id="memory-tab" class="tab" aria-controls="memview">Memory view</button>
-        <button type="button" id="uart-tab" class="tab" disabled title="UART is unavailable in this WASM build">Terminal (UART)</button>
-        <button type="button" id="gamepad-tab" class="tab" disabled title="The WASM canvas uses SDL gamepad mappings">Gamepad</button>
-        <button type="button" id="video-tab" class="tab" aria-controls="video">Video</button>
-      </section>
-      <section id="memdump" class="panel" tabindex="0" aria-label="Disassembly">
-      </section>
-      <section id="memview" class="panel" inert>
-        <section class="panel-toolbar">
-          <input type="text" id="dumpaddr" aria-label="Hex address" placeholder="Hex address" />
-          <input type="text" id="dumpsize" aria-label="Dump size in bytes" placeholder="Size" value="256" />
-          <input type="button" id="dumpnow" value="Dump" />
-          <input type="button" id="dump-button" value="Dump ROM" title="ROM export is unavailable in this WASM build" disabled />
-          <input type="button" id="dump-eeprom-button" value="Dump EEPROM" title="EEPROM export is unavailable in this WASM build" disabled />
+        <section class="bottompanel">
+          <section class="tabs">
+            <button type="button" id="disassemble-tab" class="tab" aria-controls="memdump">Disassemble</button>
+            <button type="button" id="memory-tab" class="tab" aria-controls="memview">Memory view</button>
+            <button type="button" id="uart-tab" class="tab" disabled title="UART is unavailable in this WASM build">Terminal (UART)</button>
+            <button type="button" id="gamepad-tab" class="tab" disabled title="The WASM canvas uses SDL gamepad mappings">Gamepad</button>
+            <button type="button" id="video-tab" class="tab" aria-controls="video">Video</button>
+          </section>
+          <section id="memdump" class="panel" tabindex="0" aria-label="Disassembly">
+          </section>
+          <section id="memview" class="panel" inert>
+            <section class="panel-toolbar">
+              <input type="text" id="dumpaddr" aria-label="Hex address" placeholder="Hex address" />
+              <input type="text" id="dumpsize" aria-label="Dump size in bytes" placeholder="Size" value="256" />
+              <input type="button" id="dumpnow" value="Dump" />
+              <input type="button" id="dump-button" value="Dump ROM" title="ROM export is unavailable in this WASM build" disabled />
+              <input type="button" id="dump-eeprom-button" value="Dump EEPROM" title="EEPROM export is unavailable in this WASM build" disabled />
+            </section>
+            <div class="sub-panel memory-scroll" tabindex="0" aria-label="Memory dump">
+              <section class="memline">
+                  <section id="current_memaddr" class="memaddr"></section>
+              </section>
+              <section id="dumpcontent">
+              </section>
+            </div>
+          </section>
+          <section id="video" class="panel" inert>
+            <div class="panel-toolbar">
+              <input type="button" id="video-dump" value="Dump" />
+
+              <label>
+                <input type="checkbox" id="video-palette" class="toggle" name="palette" checked />
+                Show Palette
+              </label>
+              <label>
+                <input type="checkbox" id="video-fonts" class="toggle" name="fonts"  />
+                Show Fonts
+              </label>
+              <label>
+                <input type="checkbox" id="video-tileset" class="toggle" name="tileset" checked />
+                Show Tileset
+              </label>
+              <label>
+                <input type="checkbox" id="video-sprites" class="toggle" name="sprites" />
+                Show Sprites
+              </label>
+              <label>
+                <input type="checkbox" id="video-tilemap" class="toggle" name="tilemap" />
+                Show Tilemap
+              </label>
+            </div>
+            <details class="sub-panel" name="palette" open>
+              <summary>Palette</summary>
+              <div class="palette"></div>
+            </details>
+            <details class="sub-panel" name="fonts">
+              <summary>Fonts</summary>
+              <div class="fonts"></div>
+            </details>
+            <details class="sub-panel" name="tileset" open>
+              <summary>Tileset</summary>
+              <div class="tileset"></div>
+            </details>
+            <details class="sub-panel" name="sprites" open>
+              <summary>Sprites</summary>
+              <div class="panel-toolbar">
+                <label>
+                  <input type="checkbox" class="data" name="sprites-empty" />
+                  Hide Empty
+                </label>
+                <label>
+                  <input type="checkbox" class="data" name="sprites-details" />
+                  Show Details
+                </label>
+                <label>
+                  <input type="number" min="0" max="512" class="data" name="sprites-empty-index" value="0" />
+                  Empty Index
+                </label>
+              </div>
+              <div class="sprites"></div>
+            </details>
+            <details class="sub-panel" name="tilemap">
+              <summary>Tilemap</summary>
+              <div class="panel-toolbar">
+                <label>
+                  <input type="checkbox" class="data" name="tilemap-layer0" />
+                  Layer0
+                </label>
+                <label>
+                  <input type="checkbox" class="data" name="tilemap-layer1" />
+                  Layer1
+                </label>
+              </div>
+              <div class="tilemap"></div>
+            </details>
+          </section>
         </section>
-        <div class="sub-panel memory-scroll" tabindex="0" aria-label="Memory dump">
-          <section class="memline">
-              <section id="current_memaddr" class="memaddr"></section>
-          </section>
-          <section id="dumpcontent">
-          </section>
-        </div>
-      </section>
-      <section id="video" class="panel" inert>
-        <div class="panel-toolbar">
-          <input type="button" id="video-dump" value="Dump" />
-
-          <label>
-            <input type="checkbox" id="video-palette" class="toggle" name="palette" checked />
-            Show Palette
-          </label>
-          <label>
-            <input type="checkbox" id="video-fonts" class="toggle" name="fonts"  />
-            Show Fonts
-          </label>
-          <label>
-            <input type="checkbox" id="video-tileset" class="toggle" name="tileset" checked />
-            Show Tileset
-          </label>
-          <label>
-            <input type="checkbox" id="video-sprites" class="toggle" name="sprites" />
-            Show Sprites
-          </label>
-          <label>
-            <input type="checkbox" id="video-tilemap" class="toggle" name="tilemap" />
-            Show Tilemap
-          </label>
-        </div>
-        <details class="sub-panel" name="palette" open>
-          <summary>Palette</summary>
-          <div class="palette"></div>
-        </details>
-        <details class="sub-panel" name="fonts">
-          <summary>Fonts</summary>
-          <div class="fonts"></div>
-        </details>
-        <details class="sub-panel" name="tileset" open>
-          <summary>Tileset</summary>
-          <div class="tileset"></div>
-        </details>
-        <details class="sub-panel" name="sprites" open>
-          <summary>Sprites</summary>
-          <div class="panel-toolbar">
-            <label>
-              <input type="checkbox" class="data" name="sprites-empty" />
-              Hide Empty
-            </label>
-            <label>
-              <input type="checkbox" class="data" name="sprites-details" />
-              Show Details
-            </label>
-            <label>
-              <input type="number" min="0" max="512" class="data" name="sprites-empty-index" value="0" />
-              Empty Index
-            </label>
-          </div>
-          <div class="sprites"></div>
-        </details>
-        <details class="sub-panel" name="tilemap">
-          <summary>Tilemap</summary>
-          <div class="panel-toolbar">
-            <label>
-              <input type="checkbox" class="data" name="tilemap-layer0" />
-              Layer0
-            </label>
-            <label>
-              <input type="checkbox" class="data" name="tilemap-layer1" />
-              Layer1
-            </label>
-          </div>
-          <div class="tilemap"></div>
-        </details>
-      </section>
     </section>
 
     <footer>
