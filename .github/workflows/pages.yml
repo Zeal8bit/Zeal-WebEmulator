@@ -33,7 +33,7 @@ jobs:
           path: ${{ runner.temp }}/site
 
   deploy:
-    if: github.ref == 'refs/heads/main'
+    if: github.ref == 'refs/heads/main' || (github.event_name == 'workflow_dispatch' && github.ref_type == 'branch')
     needs: build
     runs-on: ubuntu-latest
     permissions:

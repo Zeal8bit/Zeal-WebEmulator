@@ -50,7 +50,9 @@ throughout the web interface. To add a theme, define a `[data-theme]` variant in
 
 ## Publish the web emulator
 
-Set the repository's Pages build source to **GitHub Actions**. The **Publish Web Emulator** workflow refreshes the release catalog and deploys the static site on pushes to `main`, nightly, and on manual dispatch. Only published releases that provide an emulator ZIP are available in the picker.
+Set the repository's Pages build source to **GitHub Actions**. The **Publish Web Emulator** workflow refreshes the release catalog and deploys the static site on pushes to `main` and nightly from `main`. Only published releases that provide an emulator ZIP are available in the picker.
+
+To publish another branch, open **Actions → Publish Web Emulator → Run workflow** and select it under **Use workflow from**. The selected branch replaces the site's current deployment. GitHub requires the workflow on the default branch for manual dispatch. The selected branch must also contain the workflow and be allowed to deploy to the `github-pages` environment.
 
 ## Contributing
 
