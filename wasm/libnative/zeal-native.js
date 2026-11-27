@@ -91,6 +91,18 @@
             return this.request(7, address);
         }
 
+        setWatchpoint(address, type, enabled = true) {
+            this.validateAddress(address);
+            const mode = ['read', 'write', 'access'].indexOf(type) + 1;
+            if (!mode) throw new RangeError('Expected a read, write, or access watchpoint');
+            return this.request(17, address, mode | (enabled ? 0 : 4));
+        }
+
+        removeWatchpoint(address) {
+            this.validateAddress(address);
+            return this.request(17, address);
+        }
+
         disassemble(address, count = 20) {
             this.validateAddress(address);
             if (!Number.isInteger(count) || count < 1 || count > 256) {
@@ -117,11 +129,19 @@
         }
 
         inspectMemory(address, count) {
+            return this.requestMemory(11, address, count);
+        }
+
+        sample(address = 0, count = 0) {
+            return this.requestMemory(16, address, count);
+        }
+
+        requestMemory(command, address, count) {
             this.validateAddress(address);
             if (!Number.isInteger(count) || count < 0 || count > 0x10000) {
                 throw new RangeError('Expected a memory length between 0 and 65536');
             }
-            return this.request(11, address, count);
+            return this.request(command, address, count);
         }
 
         async readMemory(address, count) {
