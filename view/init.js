@@ -15,7 +15,9 @@ let activeSymbols = null;
 function setSessionChanging(changing) {
     sessionChanging = changing;
     $('#romchoice, #read-button').prop('disabled', changing);
+    syncBreakpointControls();
     updateHostFSButton();
+    scheduleDebuggerSample();
 }
 
 async function prepareDebugger(current, resume) {

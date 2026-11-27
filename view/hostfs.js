@@ -5,6 +5,7 @@
  */
 
 const hostFSButton = document.getElementById('hostfs-mount');
+const hostFSStatus = document.getElementById('hostfs-status');
 let hostFSDirectory = null;
 
 const hostFSOptions = {
@@ -21,9 +22,11 @@ function createHostFS(directory = hostFSDirectory) {
 function updateHostFSButton() {
     hostFSButton.disabled = sessionChanging || !HostFS.supported;
     hostFSButton.textContent = hostFSDirectory ? 'Unmount HostFS' : 'Mount HostFS';
-    hostFSButton.title = HostFS.unavailableReason ?? (hostFSDirectory
-        ? `HostFS folder: ${hostFSDirectory.name}`
-        : 'Choose a folder for the guest to read and write');
+    hostFSStatus.dataset.mounted = String(Boolean(hostFSDirectory));
+    const status = HostFS.unavailableReason ?? (hostFSDirectory
+        ? `Mounted: ${hostFSDirectory.name} → H:/`
+        : 'Share a local folder with the guest as H:/.');
+    if (hostFSStatus.textContent !== status) hostFSStatus.textContent = status;
 }
 
 async function reloadHostFS(current, hostfs) {

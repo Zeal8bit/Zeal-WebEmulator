@@ -25,7 +25,7 @@ npm run get-prebuilt
 npm run dev
 ```
 
-Select a Zeal 8-bit OS release or use **Advanced** to upload a ROM and optional EEPROM and map files. Add `?r=latest` to boot the latest published release with an emulator ROM, or choose a specific release with a URL such as `?r=v0.8.0`. Image changes last for the current session.
+The emulator boots the latest published Zeal 8-bit OS release with an emulator ROM by default. Use a URL such as `?r=v0.8.0` for a specific release or `?r=` to start without a ROM. In **Web Settings**, you can select another release or use **Load local files** for a ROM and optional EEPROM and map files. Image changes last for the current session.
 
 The ROM picker uses a catalog generated from Zeal 8-bit OS GitHub releases. Run `npm run get-prebuilt` again to refresh a local copy. [Zeal 8-bit OS releases](https://github.com/Zeal8bit/Zeal-8-bit-OS/releases)
 

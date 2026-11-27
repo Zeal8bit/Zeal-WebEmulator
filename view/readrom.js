@@ -79,6 +79,7 @@ async function loadMap(file) {
             activeSymbols = symbols;
             $('#symready').addClass('ready');
             disassembleAndShow();
+            renderWatches();
         }
     } catch (error) {
         showImageError('Could not load the map file.', error);
@@ -104,8 +105,10 @@ romChoice.addEventListener('change', () => {
     }, value);
 });
 
-document.getElementById('romload-advanced').addEventListener('click', () => {
-    $('#romfile').toggle(250);
+document.getElementById('romload-advanced').addEventListener('click', function() {
+    const expanded = this.getAttribute('aria-expanded') !== 'true';
+    this.setAttribute('aria-expanded', String(expanded));
+    $('#romfile').toggle(expanded);
 });
 
 async function fetchRomIndex() {
@@ -115,6 +118,7 @@ async function fetchRomIndex() {
 }
 
 async function populateRomPicker() {
+    const requestedROM = params.r ?? 'latest';
     romChoice.replaceChildren(new Option('Choose an image...', ''));
     try {
         const { index, base } = await fetchRomIndex();
@@ -123,7 +127,7 @@ async function populateRomPicker() {
             ['Nightly', index.nightly ?? []],
             ['Stable', index.stable ?? []],
         ];
-        const groupRequested = groups.some(([label]) => params.r === label.toLowerCase());
+        const groupRequested = groups.some(([label]) => requestedROM === label.toLowerCase());
         for (const [label, entries] of groups) {
             if (!entries.length) continue;
             const group = document.createElement('optgroup');
@@ -135,8 +139,8 @@ async function populateRomPicker() {
                 option.dataset.hash = entry.hash ?? '';
                 group.append(option);
                 const selected = groupRequested
-                    ? params.r === label.toLowerCase() && position === 0
-                    : params.r === entry.name || params.r === entry.urls || params.r === url.href;
+                    ? requestedROM === label.toLowerCase() && position === 0
+                    : requestedROM === entry.name || requestedROM === entry.urls || requestedROM === url.href;
                 if (selected) {
                     option.selected = true;
                 }
@@ -147,6 +151,7 @@ async function populateRomPicker() {
     } catch (error) {
         showImageError('Could not load the prebuilt ROM list. You can open a local image.', error);
         $('#romfile').show();
+        $('#romload-advanced').attr('aria-expanded', 'true');
     }
 }
 

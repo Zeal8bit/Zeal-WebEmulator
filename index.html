@@ -52,80 +52,144 @@
     <section class="popup" id="help-message">
         <h2>Using the browser debugger</h2>
         <h3>Load a ROM</h3>
-        <p>Choose a prebuilt Zeal 8-bit OS image or open <strong>Advanced</strong> to load a local ROM with an optional EEPROM image and map file. The emulator starts after the image loads. Changes to the images last for the current session.</p>
+        <p>The emulator boots the latest available Zeal 8-bit OS release by default. Open <strong>Web Settings</strong> to choose another release or use <strong>Load local files</strong> to load a ROM with an optional EEPROM image and map file. Changes to the images last for the current session.</p>
         <p>Click the emulated screen before typing or playing audio.</p>
-        <p>In Settings, use <strong>Mount HostFS</strong> to share a folder with a HostFS-enabled ROM. The guest can read and write files in the selected folder.</p>
+        <p>In Web Settings, use <strong>Mount HostFS</strong> to share a folder with a HostFS-enabled ROM. The guest can read and write files in the selected folder.</p>
         <h3>Control execution</h3>
         <ul>
           <li><kbd>F9</kbd> pauses or continues execution.</li>
           <li><kbd>F10</kbd> executes one instruction while paused.</li>
           <li><kbd>F11</kbd> steps over a call while paused.</li>
-          <li><strong>Reset</strong> resets the machine and pauses at its entry point. <strong>Clean</strong> closes the current session.</li>
+          <li><strong>Reset</strong> resets the machine and pauses at its entry point. <strong>Close session</strong> in Web Settings unloads the current session.</li>
         </ul>
         <h3>Set breakpoints</h3>
-        <p>Enter a hexadecimal address or a loaded map symbol and press Enter. Click a disassembly row to add or remove a breakpoint. In the breakpoint list, click the address to enable or disable it, or click × to remove it. <strong>Break on VBlank</strong> pauses at the next emulated vertical blank.</p>
-        <h3>Inspect memory and video</h3>
-        <p>Click a register address to open the memory viewer at that location. The viewer accepts a hexadecimal logical address and a decimal byte count. Each row displays its physical and logical addresses. While paused, edit a byte and press Enter to write it.</p>
+        <p>Enter a hexadecimal address or a loaded map symbol and choose Exec, Read, Write, or R/W. Click a disassembly row to add or remove an execution breakpoint. Click a breakpoint in the list to enable or disable it, or click × to remove it. <strong>Break on VBlank</strong> pauses at the next emulated vertical blank.</p>
+        <h3>Inspect the machine</h3>
+        <p>Click a register, Stack slot, or resolved Watch address to inspect it in Memory. Read up to 1024 bytes at a time or use <strong>Next</strong> to advance. While paused, edit a byte and press Enter to write it.</p>
+        <p>Disassembly shows 48 instructions at a time. Use <strong>Load more</strong> to extend the view to 192 or enter an address or symbol to jump. <strong>Follow PC</strong> returns to the current instruction when execution stops.</p>
+        <p>Watch accepts addresses, symbols, and expressions such as <code>(HL)</code> and <code>(IX+2)</code>. CPU, Stack, and the open Memory and Watch views sample once per second while running. Turn sampling off in Web Settings.</p>
         <p>Open <strong>Video</strong> to inspect the palette, font, tileset, sprites, and tilemap layers. Choose which panels to show, then use <strong>Dump</strong> to refresh the previews.</p>
     </section>
 
-    <section id="toppanel">
-        <section id="debug">
-            <section id="romload">
-                <label for="romchoice">System ROM</label>
-                <img src="imgs/loading.gif" id="loading_img" alt="loading..." />
-                <select name="romchoice" id="romchoice">
-                    <option value="">Loading...</option>
-                </select>
+    <dialog id="web-settings" aria-labelledby="web-settings-title">
+        <header>
+            <h2 class="dock-title" id="web-settings-title">Web Settings</h2>
+            <form method="dialog">
+                <button type="submit" autofocus>Done</button>
+            </form>
+        </header>
+        <div class="web-settings-body">
+            <section class="web-settings-hostfs" aria-labelledby="hostfs-title">
+                <div>
+                    <h3 class="dock-title" id="hostfs-title">HostFS</h3>
+                    <p id="hostfs-status" class="web-settings-note" role="status"></p>
+                </div>
+                <button type="button" id="hostfs-mount" aria-describedby="hostfs-status" disabled>Mount HostFS</button>
+            </section>
 
-                <section id="romadvanced">
-                    <a id="romload-advanced">Advanced...</a>
+            <section class="web-settings-section" aria-labelledby="system-rom-title">
+                <h3 class="dock-title" id="system-rom-title">System ROM</h3>
+                <div id="romload">
+                    <div class="web-settings-actions">
+                        <select name="romchoice" id="romchoice" aria-labelledby="system-rom-title">
+                            <option value="">Loading...</option>
+                        </select>
+                        <button type="button" id="romload-advanced" aria-controls="romfile" aria-expanded="false">Load local files…</button>
+                        <img src="imgs/loading.gif" id="loading_img" alt="Loading system ROM" />
+                    </div>
+                </div>
+                <section id="romfile">
+                    <label for="file-rom">System image:</label>
+                    <div class="help" title="File to load into the emulated ROM. It can be a single system binary or an image containing the system and a romdisk">?</div>
+                    <input type="file" id="file-rom" placeholder="OS file" />
+                    <label for="file-map">System map file:</label>
+                    <div class="help" title="Map file (text) generated by z88dk-z80asm containing the symbols of the binary image/file">?</div>
+                    <input type="file" id="file-map" placeholder="OS dump" />
+                    <label for="file-eeprom">EEPROM image:</label>
+                    <div class="help" title="Binary file to load into the emulated 64KB I2C EEPROM">?</div>
+                    <input type="file" id="file-eeprom" placeholder="EEPROM image" />
+                    <label for="file-cf">CompactFlash image:</label>
+                    <div class="help" title="CompactFlash image loading is unavailable in this WASM build">?</div>
+                    <input type="file" id="file-cf" placeholder="CompactFlash image" disabled />
+                    <button id="read-button">Load selected files</button>
+                    <div id="statuspan">
+                        <h4>Loaded files</h4>
+                        <div id="romready" class="status">System image</div>
+                        <div id="symready" class="status">Symbols</div>
+                        <div id="eepromready" class="status">EEPROM image</div>
+                        <div id="cfready" class="status" title="CompactFlash image loading is unavailable in this WASM build">CompactFlash image</div>
+                    </div>
+                    <pre id="file-contents"></pre>
                 </section>
             </section>
 
-            <section id="romfile">
-                <label for="file-rom">System image:</label>
-                <div class="help" title="File to load into the emulated ROM. It take be a single system binary or an image containing the system and a romdisk">?</div>
-                <input type="file" id="file-rom" placeholder="OS file" />
-                <label for="file-map">System map file:</label>
-                <div class="help" title="Map file (text) generated by z88dk-z80asm containing the symbols of the binary image/file">?</div>
-                <input type="file" id="file-map" placeholder="OS dump" />
-                <label for="file-eeprom">EEPROM image:</label>
-                <div class="help" title="Binary file to load into the emulated 64KB I2C EEPROM">?</div>
-                <input type="file" id="file-eeprom" placeholder="EEPROM image" />
-                <label for="file-cf">CompactFlash image:</label>
-                <div class="help" title="CompactFlash image loading is unavailable in this WASM build">?</div>
-                <input type="file" id="file-cf" placeholder="CompactFlash image" disabled />
-                <button id="read-button">Read file(s)</button>
-                <div id="statuspan">
-                <h4>Ready?</h4>
-                <div id="romready" class="status">System image</div>
-                <div id="symready" class="status">Symbols</div>
-                <div id="eepromready" class="status">EEPROM image</div>
-                <div id="cfready" class="status" title="CompactFlash image loading is unavailable in this WASM build">CompactFlash image</div>
-                </div>
-                <pre id="file-contents"></pre>
+            <div class="web-settings-preferences">
+                <section class="web-settings-section" aria-labelledby="display-title">
+                    <h3 class="dock-title" id="display-title">Display</h3>
+                    <label class="web-settings-field">
+                        Theme
+                        <select id="theme" name="theme">
+                            <option value="dark" selected>Dark</option>
+                            <option value="light">Light</option>
+                        </select>
+                    </label>
+                    <label class="web-settings-field">
+                        <input type="checkbox" id="canvas-smooth-val" />
+                        Smooth canvas
+                    </label>
+                    <div class="web-settings-actions">
+                        <button type="button" id="theater-mode">Theater Mode</button>
+                        <button type="button" id="fullscreen-mode" style="display: none;">Full Screen</button>
+                        <button type="button" id="screen-capture" disabled>Capture Screen</button>
+                    </div>
+                </section>
+
+                <section class="web-settings-section" aria-labelledby="debugger-settings-title">
+                    <h3 class="dock-title" id="debugger-settings-title">Debugger</h3>
+                    <label class="web-settings-field">
+                        <input type="checkbox" id="debugger-sampling" aria-describedby="sampling-description" checked />
+                        Sample while running
+                    </label>
+                    <p id="sampling-description" class="web-settings-note">Refresh CPU, Stack, Memory, and Watch once per second.</p>
+                </section>
+            </div>
+
+            <section class="web-settings-section" aria-labelledby="session-title">
+                <h3 class="dock-title" id="session-title">Session</h3>
+                <button type="button" id="clean" disabled>Close session</button>
             </section>
 
-            <dl class="registers" aria-label="CPU registers">
-                <div><dt>A</dt><dd id="rega"></dd></div>
-                <div><dt>B</dt><dd id="regb"></dd></div>
-                <div><dt>C</dt><dd id="regc"></dd></div>
-                <div><dt>D</dt><dd id="regd"></dd></div>
-                <div><dt>E</dt><dd id="rege"></dd></div>
-                <div><dt>H</dt><dd id="regh"></dd></div>
-                <div><dt>L</dt><dd id="regl"></dd></div>
-                <div><dt>IX</dt><dd id="regix" class="regaddr"></dd></div>
-                <div><dt>IY</dt><dd id="regiy" class="regaddr"></dd></div>
-                <div><dt>BC</dt><dd id="regbc" class="regaddr"></dd></div>
-                <div><dt>DE</dt><dd id="regde" class="regaddr"></dd></div>
-                <div><dt>HL</dt><dd id="reghl" class="regaddr"></dd></div>
-                <div><dt>PC</dt><dd id="regpc" class="regaddr"></dd></div>
-                <div><dt>SP</dt><dd id="regsp" class="regaddr"></dd></div>
-                <div class="register-wide"><dt>Flags</dt><dd id="flags"></dd></div>
-                <div class="register-wide"><dt>T-States</dt><dd id="tstates"></dd></div>
-            </dl>
-        </section>
+            <details class="web-settings-section web-settings-note">
+                <summary>Unavailable in this build</summary>
+                <p>T-State logging, Web Serial, and console paste.</p>
+            </details>
+        </div>
+    </dialog>
+
+    <section id="toppanel">
+        <div class="debugger-toolbar">
+          <section id="menu-controls" inert>
+            <button type="button" id="continue" title="Continue (F9)" class="cpuexec" hidden>
+                <svg aria-hidden="true" focusable="false"><use href="imgs/debugger-icons.svg#play"></use></svg>Continue
+            </button>
+            <button type="button" id="pause" title="Pause (F9)" class="cpuexec" hidden>
+                <svg aria-hidden="true" focusable="false"><use href="imgs/debugger-icons.svg#pause"></use></svg>Pause
+            </button>
+            <button type="button" id="step" title="Step (F10)">
+                <svg aria-hidden="true" focusable="false"><use href="imgs/debugger-icons.svg#step"></use></svg>Step
+            </button>
+            <button type="button" id="stepover" aria-disabled="true" title="Step Over (F11)" aria-label="Step over">
+                <svg aria-hidden="true" focusable="false"><use href="imgs/debugger-icons.svg#step-over"></use></svg>Over
+            </button>
+            <button type="button" id="reset" title="Reset">
+                <svg aria-hidden="true" focusable="false"><use href="imgs/debugger-icons.svg#reset"></use></svg>Reset
+            </button>
+          </section>
+          <div class="toolbar-status">
+            <button type="button" id="open-web-settings" aria-haspopup="dialog" aria-controls="web-settings">Web Settings</button>
+            <span id="debugger-status" role="status">NO ROM</span>
+          </div>
+        </div>
 
         <div id="container">
             <button type="button" class="close" aria-label="Exit theater mode">×</button>
@@ -133,92 +197,127 @@
         </div>
 
         <section id="rightpanel">
-          <section class="menu" id="menu-controls" inert>
-            <button type="button" id="continue" title="Continue (F9)" aria-label="Continue" class="cpuexec" style="display: none;"><svg aria-hidden="true" focusable="false"><use href="imgs/debugger-icons.svg#play"></use></svg></button>
-            <button type="button" id="pause" title="Pause (F9)" aria-label="Pause" class="cpuexec hidden"><svg aria-hidden="true" focusable="false"><use href="imgs/debugger-icons.svg#pause"></use></svg></button>
-            <button type="button" id="step" title="Step (F10)" aria-label="Step"><svg aria-hidden="true" focusable="false"><use href="imgs/debugger-icons.svg#step"></use></svg></button>
-            <button type="button" id="stepover" aria-disabled="true" title="Step Over (F11)" aria-label="Step over"><svg aria-hidden="true" focusable="false"><use href="imgs/debugger-icons.svg#step-over"></use></svg></button>
-            <button type="button" id="reset" title="Reset" aria-label="Reset"><svg aria-hidden="true" focusable="false"><use href="imgs/debugger-icons.svg#reset"></use></svg></button>
-            <button type="button" id="clean" title="Clean" aria-label="Clean"><img src="imgs/clean.png" alt=""></button>
+          <section class="debugger-dock" aria-labelledby="cpu-title">
+            <header class="dock-header">
+                <h2 class="dock-title" id="cpu-title">CPU</h2>
+                <span id="cpu-state" class="dock-status"></span>
+            </header>
+            <dl class="registers" aria-label="CPU registers">
+                <div><dt>AF</dt><dd><button class="inspect-address" type="button" id="regaf" data-register="af" disabled>----</button></dd></div>
+                <div><dt>AF'</dt><dd><button class="inspect-address" type="button" id="regafAlt" data-register="afAlt" disabled>----</button></dd></div>
+                <div><dt>BC</dt><dd><button class="inspect-address" type="button" id="regbc" data-register="bc" disabled>----</button></dd></div>
+                <div><dt>BC'</dt><dd><button class="inspect-address" type="button" id="regbcAlt" data-register="bcAlt" disabled>----</button></dd></div>
+                <div><dt>DE</dt><dd><button class="inspect-address" type="button" id="regde" data-register="de" disabled>----</button></dd></div>
+                <div><dt>DE'</dt><dd><button class="inspect-address" type="button" id="regdeAlt" data-register="deAlt" disabled>----</button></dd></div>
+                <div><dt>HL</dt><dd><button class="inspect-address" type="button" id="reghl" data-register="hl" disabled>----</button></dd></div>
+                <div><dt>HL'</dt><dd><button class="inspect-address" type="button" id="reghlAlt" data-register="hlAlt" disabled>----</button></dd></div>
+                <div><dt>IX</dt><dd><button class="inspect-address" type="button" id="regix" data-register="ix" disabled>----</button></dd></div>
+                <div><dt>IY</dt><dd><button class="inspect-address" type="button" id="regiy" data-register="iy" disabled>----</button></dd></div>
+                <div><dt>SP</dt><dd><button class="inspect-address" type="button" id="regsp" data-register="sp" disabled>----</button></dd></div>
+                <div><dt>PC</dt><dd><button class="inspect-address" type="button" id="regpc" data-register="pc" disabled>----</button></dd></div>
+                <div><dt>I</dt><dd><span id="regi" data-register="i">--</span></dd></div>
+                <div><dt>R</dt><dd><span id="regr" data-register="r">--</span></dd></div>
+            </dl>
+            <div class="flag-display">
+              <div class="dock-label" id="flags-title">Flags</div>
+              <ul id="flags" aria-labelledby="flags-title">
+                <li title="Sign" aria-label="Sign unavailable">S</li>
+                <li title="Zero" aria-label="Zero unavailable">Z</li>
+                <li title="Undocumented bit 5" aria-label="Undocumented bit 5 unavailable" class="undocumented">5</li>
+                <li title="Half carry" aria-label="Half carry unavailable">H</li>
+                <li title="Undocumented bit 3" aria-label="Undocumented bit 3 unavailable" class="undocumented">3</li>
+                <li title="Parity or overflow" aria-label="Parity or overflow unavailable">P</li>
+                <li title="Subtract" aria-label="Subtract unavailable">N</li>
+                <li title="Carry" aria-label="Carry unavailable">C</li>
+              </ul>
+            </div>
           </section>
-
-          <section class="menu" id="menu-breakpoints" inert>
-            <button type="button" class="menutitle" aria-expanded="false" aria-controls="breakpoints-settings">Breakpoints</button>
-            <section class="menucontent" id="breakpoints-settings">
-                <label>
-                  Break on VBlank
+          <section class="debugger-dock" aria-labelledby="stack-title">
+            <header class="dock-header">
+                <h2 class="dock-title" id="stack-title">Stack</h2>
+                <span id="stack-pointer" class="dock-status"></span>
+            </header>
+            <div class="dock-scroll stack-scroll">
+                <p class="dock-message" id="stack-message"></p>
+                <ul id="stack-words" aria-labelledby="stack-title"></ul>
+            </div>
+          </section>
+          <section class="debugger-dock watch-break-dock" aria-label="Watch and breakpoints">
+            <header class="dock-header dock-switch">
+                <button type="button" id="watch-tab" aria-controls="watch-panel" aria-pressed="true">Watch <span id="watch-count">0</span></button>
+                <button type="button" id="breakpoints-tab" aria-controls="menu-breakpoints" aria-pressed="false">Breakpoints <span id="breakpoint-count">0</span></button>
+            </header>
+            <section id="watch-panel" aria-labelledby="watch-tab">
+                <div class="dock-scroll watch-scroll">
+                    <p class="dock-message" id="watch-message">Add a watch using an address, symbol, or (HL).</p>
+                    <ul id="watch-rows" aria-label="Memory watches"></ul>
+                </div>
+                <form id="watch-form" class="dock-form">
+                    <input type="text" id="watch-expr" aria-label="Watch expression" placeholder="Address, symbol, (HL)" maxlength="80" required />
+                    <select id="watch-type" aria-label="Watch type">
+                        <option value="u8">u8</option>
+                        <option value="s8">s8</option>
+                        <option value="u16">u16</option>
+                        <option value="s16">s16</option>
+                        <option value="string">str</option>
+                        <option value="ptr8">*u8</option>
+                        <option value="ptr16">*u16</option>
+                        <option value="bits">bits</option>
+                    </select>
+                    <button type="submit">Add</button>
+                </form>
+            </section>
+            <section id="menu-breakpoints" aria-labelledby="breakpoints-tab" hidden>
+                <p id="breakpoint-hint" class="dock-message">Add a hex address before boot. Symbols require a loaded map.</p>
+                <ul id="bps" aria-label="Breakpoints"></ul>
+                <label class="dock-option">
                   <input type="checkbox" id="breakpoint-vblank" disabled />
+                  Break on VBlank
                 </label>
-                <section id="newbp">
-                    <input type="text" id="bpaddr" aria-label="Breakpoint address or symbol" />
+                <section id="newbp" class="dock-form">
+                    <input type="text" id="bpaddr" placeholder="Address or symbol" aria-label="Breakpoint address or symbol" />
+                    <select id="bp-type" aria-label="Breakpoint type">
+                        <option value="exec">Exec</option>
+                        <option value="read">Read</option>
+                        <option value="write">Write</option>
+                        <option value="access">R/W</option>
+                    </select>
                     <button type="button" id="addbp">Add</button>
                 </section>
-
-                <section id="breakpoints">
-                    <ul id="bps">
-                    </ul>
-                </section>
-            </section>
-          </section>
-
-          <section class="menu" id="menu-settings">
-            <button type="button" class="menutitle" aria-expanded="false" aria-controls="settings-settings">Settings</button>
-            <section class="menucontent" id="settings-settings">
-                <label>
-                  Switch theme:
-                  <select id="theme" name="theme">
-                      <option value="dark" selected>Dark (Default)</option>
-                      <option value="light">Light</option>
-                  </select>
-                </label>
-                <label>
-                  Canvas Smoothing
-                  <input type="checkbox" id="canvas-smooth-val" />
-                </label>
-                <label title="T-State logging is unavailable in this WASM build">
-                  T-State Logger
-                  <input type="checkbox" id="t-state-logger-val" disabled />
-                </label>
-                <div id="web-serial-settings" title="Web Serial is unavailable in this WASM build">
-                  <label>Web Serial:</label>
-                  <button id="web-serial-connect" disabled>Connect Serial</button>
-                </div>
-                <button id="screen-capture" disabled>Capture Screen</button>
-                <button id="theater-mode">Theater Mode</button>
-                <button id="fullscreen-mode" style="display: none;">Full Screen</button>
-                <button id="hostfs-mount" disabled>Mount HostFS</button>
-                <button id="console-paste" title="Console paste is unavailable in this WASM build" disabled>Paste to Console</button>
             </section>
           </section>
         </section>
 
         <section class="bottompanel">
-          <section class="tabs">
-            <button type="button" id="disassemble-tab" class="tab" aria-controls="memdump">Disassemble</button>
-            <button type="button" id="memory-tab" class="tab" aria-controls="memview">Memory view</button>
-            <button type="button" id="uart-tab" class="tab" disabled title="UART is unavailable in this WASM build">Terminal (UART)</button>
-            <button type="button" id="gamepad-tab" class="tab" disabled title="The WASM canvas uses SDL gamepad mappings">Gamepad</button>
+          <header class="tabs dock-header dock-switch" aria-label="Inspector views">
+            <button type="button" id="disassemble-tab" class="tab" aria-controls="disassembly-panel">Disassembly</button>
+            <button type="button" id="memory-tab" class="tab" aria-controls="memview">Memory</button>
             <button type="button" id="video-tab" class="tab" aria-controls="video">Video</button>
+          </header>
+          <section id="disassembly-panel" class="panel" aria-labelledby="disassembly-title">
+            <h2 class="dock-title" id="disassembly-title">Disassembly</h2>
+            <form id="disassembly-form" class="dock-form">
+                <input type="text" id="disassembly-address" placeholder="Address or symbol" aria-label="Disassembly address or symbol" />
+                <button type="button" id="disassembly-pc">PC</button>
+                <label><input type="checkbox" id="disassembly-follow" checked /> Follow PC</label>
+            </form>
+            <div id="memdump" tabindex="0"></div>
+            <button type="button" id="disassembly-more" disabled>Load more</button>
           </section>
-          <section id="memdump" class="panel" tabindex="0" aria-label="Disassembly">
-          </section>
-          <section id="memview" class="panel" inert>
+          <section id="memview" class="panel" aria-labelledby="memory-tab" inert>
             <section class="panel-toolbar">
               <input type="text" id="dumpaddr" aria-label="Hex address" placeholder="Hex address" />
               <input type="text" id="dumpsize" aria-label="Dump size in bytes" placeholder="Size" value="256" />
               <input type="button" id="dumpnow" value="Dump" />
-              <input type="button" id="dump-button" value="Dump ROM" title="ROM export is unavailable in this WASM build" disabled />
-              <input type="button" id="dump-eeprom-button" value="Dump EEPROM" title="EEPROM export is unavailable in this WASM build" disabled />
+              <button type="button" id="dumpnext">Next</button>
+              <span id="current_memaddr" aria-label="Current address"></span>
             </section>
             <div class="sub-panel memory-scroll" tabindex="0" aria-label="Memory dump">
-              <section class="memline">
-                  <section id="current_memaddr" class="memaddr"></section>
-              </section>
               <section id="dumpcontent">
               </section>
             </div>
           </section>
-          <section id="video" class="panel" inert>
+          <section id="video" class="panel" aria-labelledby="video-tab" inert>
             <div class="panel-toolbar">
               <input type="button" id="video-dump" value="Dump" />
 
@@ -309,6 +408,7 @@
     <script src="view/init.js"></script>
     <script src="view/menus.js"></script>
     <script src="view/regs_panel.js"></script>
+    <script src="view/inspectors.js"></script>
     <script src="view/breakpoint.js"></script>
     <script src="view/tabs/disassemble.js"></script>
     <script src="view/tabs/memdump.js"></script>

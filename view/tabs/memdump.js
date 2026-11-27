@@ -5,11 +5,13 @@
  */
 
 const bytesPerRow = 16;
+const maximumDumpSize = 1024;
 const memoryPanel = document.getElementById('memview');
 const dumpContent = document.getElementById('dumpcontent');
 const dumpAddress = document.getElementById('dumpaddr');
 const dumpSize = document.getElementById('dumpsize');
 let memoryRequest = 0;
+let memorySnapshot;
 
 function displayAddress(address) {
     return hex(address, true, 4);
@@ -31,6 +33,12 @@ function memoryElement(tag, className, text = '') {
 }
 
 function renderMemory(address, bytes, mmu, editable) {
+    if (memorySnapshot?.address === address && memorySnapshot.editable === editable &&
+        memorySnapshot.bytes.length === bytes.length &&
+        bytes.every((byte, index) => byte === memorySnapshot.bytes[index]) &&
+        mmu.every((page, index) => page.physical === memorySnapshot.mmu[index]?.physical &&
+            page.device === memorySnapshot.mmu[index]?.device)) return;
+    memorySnapshot = {address, bytes, mmu, editable};
     const content = document.createDocumentFragment();
     const heading = memoryElement('section', 'memline heading');
     const offsets = memoryElement('div', 'membytes');
@@ -86,22 +94,46 @@ async function setRAMView(address, size, save = false) {
     }
 }
 
-function dumpSelectedMemory(save = false) {
+function memorySelection() {
     const rawAddress = dumpAddress.value.trim();
     const rawSize = dumpSize.value.trim();
     const address = /^(?:0x)?[a-f0-9]{1,4}$/i.test(rawAddress) ? Number.parseInt(rawAddress, 16) : NaN;
     const size = /^\d+$/.test(rawSize) ? Number(rawSize) : NaN;
-    if (!Number.isInteger(address) || !Number.isInteger(size) || size < 1 || size > 0x10000) {
-        if (save) popout.warn('Enter a 16-bit hex address and a size from 1 to 65536 bytes.');
+    if (!Number.isInteger(address) || !Number.isInteger(size) || size < 1 || size > maximumDumpSize) {
+        return null;
+    }
+    return {address, size};
+}
+
+function memoryPageFromSample(bytes, address, size) {
+    if (address + size <= bytes.length) return bytes.slice(address, address + size);
+    const page = new Uint8Array(size);
+    const tail = bytes.subarray(address);
+    page.set(tail);
+    page.set(bytes.subarray(0, size - tail.length), tail.length);
+    return page;
+}
+
+function dumpSelectedMemory(save = false, next = false) {
+    const selection = memorySelection();
+    if (!selection) {
+        if (save) popout.warn(`Enter a 16-bit hex address and a size from 1 to ${maximumDumpSize} bytes.`);
         return;
     }
-    setRAMView(address, size, save);
+    const {address, size} = selection;
+    const start = next ? (address + size) & 0xffff : address;
+    if (next) {
+        dumpAddress.value = displayAddress(start);
+        memoryPanel.scrollTop = 0;
+    }
+    return setRAMView(start, size, save);
 }
 
 function syncMemoryState(state) {
     memoryPanel.inert = !state || !emulator?.runtimeReady;
     if (memoryPanel.inert) {
         memoryRequest++;
+        memorySnapshot = undefined;
         dumpContent.replaceChildren();
     } else if (!state.paused) {
         dumpContent.querySelectorAll('[contenteditable]').forEach(cell => { cell.contentEditable = 'false'; });
@@ -111,18 +143,18 @@ function syncMemoryState(state) {
 }
 
 $('#dumpnow').on('click', () => dumpSelectedMemory(true));
+$('#dumpnext').on('click', () => dumpSelectedMemory(true, true));
 $('#dumpaddr, #dumpsize').on('keydown', event => {
     if (event.key === 'Enter') dumpSelectedMemory(true);
 });
 $('#memview').on('active', () => dumpSelectedMemory());
 
-$('.regaddr').on('click', function() {
-    if (!this.textContent) return;
-    dumpAddress.value = displayAddress(Number.parseInt(this.textContent, 16));
+function openMemoryAt(address) {
+    dumpAddress.value = displayAddress(address);
     dumpSize.value = '256';
     setActiveTab('memory-tab');
     localStorage.setItem('dump', JSON.stringify({address: dumpAddress.value, size: 256}));
-});
+}
 
 $('#dumpcontent').on('mouseenter focusin', '[data-addr]', function() {
     const elements = this.closest('.memline').querySelectorAll(`[data-addr="${this.dataset.addr}"]`);
@@ -157,7 +189,9 @@ $('#dumpcontent').on('focusout', '[contenteditable]', async function() {
     try {
         const [actual] = await session.writeMemory(address, Uint8Array.of(value));
         if (!this.isConnected || session !== emulator?.debugger) return;
+        memorySnapshot = undefined;
         disassembleAndShow();
+        refreshMemoryInspectors();
         this.dataset.byte = actual;
         this.textContent = displayByte(actual);
         this.closest('.memline').querySelector(`.asciichar[data-addr="${address}"]`).textContent = displayCharacter(actual);
@@ -173,7 +207,7 @@ $('#dumpcontent').on('focusout', '[contenteditable]', async function() {
 try {
     const saved = JSON.parse(localStorage.getItem('dump') ?? 'null');
     dumpAddress.value = saved?.address ?? '0000';
-    dumpSize.value = saved?.size ?? 256;
+    dumpSize.value = Math.min(saved?.size ?? 256, maximumDumpSize);
 } catch {
     dumpAddress.value = '0000';
     dumpSize.value = '256';

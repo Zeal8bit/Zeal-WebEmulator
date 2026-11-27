@@ -5,7 +5,7 @@
   "description": "Browser emulator and debugger for the Zeal 8-bit Computer",
   "scripts": {
     "lint": "echo \"No linting configured\"",
-    "dev": "live-server ./ --port=1145 --ignore=\".git,docs,roms\" --open=\"?r=latest\"",
+    "dev": "live-server ./ --port=1145 --ignore=\".git,docs,roms\"",
     "get-prebuilt": "node ./tools/get-prebuilt.js"
   },
   "keywords": [],

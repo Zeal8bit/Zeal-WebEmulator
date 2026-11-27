@@ -4,24 +4,17 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-function saveMenuState() {
-    const menus = {};
-    $('.menu').each(function() {
-        const id = $(this).attr('id');
-        menus[id] = $(this).hasClass('visible');
-    });
-    localStorage.setItem('menus', JSON.stringify(menus));
-}
+const webSettings = document.getElementById('web-settings');
+const webSettingsOpener = document.getElementById('open-web-settings');
+const settingsNotification = document.getElementById('popup-message');
 
-function setMenuExpanded(menu, expanded) {
-    menu.classList.toggle('visible', expanded);
-    menu.querySelector('.menutitle')?.setAttribute('aria-expanded', String(expanded));
-}
+webSettingsOpener.addEventListener('click', () => {
+    webSettings.append(settingsNotification);
+    webSettings.showModal();
+});
 
-$('.menutitle').on('click', function() {
-    const menu = this.parentElement;
-    setMenuExpanded(menu, !menu.classList.contains('visible'));
-    saveMenuState();
+webSettings.addEventListener('close', () => {
+    if (!webSettings.open) document.body.prepend(settingsNotification);
 });
 
 $("#theme").on("change", function() {
@@ -67,11 +60,18 @@ $('#screen-capture').on('click', async () => {
     }
 });
 
-$('#theater-mode').on('click', () => {
-    $('#toppanel').toggleClass('theater-mode');
+$('#theater-mode, #container .close').on('click', () => {
+    if (webSettings.open) webSettings.close();
+    $('#toppanel').toggleClass('theater-mode').trigger('layoutchange');
+    if (debuggerLayout.classList.contains('theater-mode')) {
+        document.querySelector('#container .close').focus();
+    } else {
+        webSettingsOpener.focus();
+    }
 });
 
 $('#fullscreen-mode').on('click', () => {
+    webSettings.close();
     const canvas = document.querySelector('#container canvas');
 
     if(document.fullscreenElement && document.exitFullscreen) {
@@ -85,21 +85,7 @@ $('#fullscreen-mode').on('click', () => {
     }
 });
 
-$('#container .close').on('click', () => {
-    $('#toppanel').toggleClass('theater-mode');
-})
-
 jQuery(() => {
-    try {
-        const menus = JSON.parse(localStorage.getItem('menus') ?? '{}') ?? {};
-        for (const [id, visible] of Object.entries(menus)) {
-            const menu = document.getElementById(id);
-            if (visible && menu?.classList.contains('menu')) setMenuExpanded(menu, true);
-        }
-    } catch (error) {
-        console.warn('Could not restore menu preferences', error);
-    }
-
     const smooth = localStorage.getItem('canvas-smooth') === 'true';
     $('#canvas-smooth-val').prop('checked', smooth).trigger('change');
 

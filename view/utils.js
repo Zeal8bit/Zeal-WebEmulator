@@ -27,3 +27,9 @@ function hex8(value, noPrefix = false) {
 function hex16(high, low, noPrefix = false) {
     return hex(high << 8 | low, noPrefix);
 }
+
+function resolveDebugAddress(session, text) {
+    if (/^(?:0x|\$)?[a-f0-9]{1,4}$/i.test(text)) return Number.parseInt(text.replace(/^\$/, ''), 16);
+    if (!text || /^(?:\$|0x)?[0-9a-f]{5,}$/i.test(text)) return null;
+    return session?.findSymbol(text) ?? null;
+}

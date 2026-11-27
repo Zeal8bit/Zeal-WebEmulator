@@ -6,34 +6,56 @@
 
 const userBreakpoints = new Map();
 const unavailableBreakpoints = new Set();
+const userWatchpoints = new Map();
+const unavailableWatchpoints = new Set();
+const watchpointLabels = {read: 'Read', write: 'Write', access: 'R/W'};
 let breakpointEdits = Promise.resolve();
 
 try {
     for (const point of JSON.parse(localStorage.getItem('breakpoints') ?? '[]')) {
         if (!point?.autodelete && Number.isInteger(point?.address) &&
             point.address >= 0 && point.address <= 0xffff) {
-            userBreakpoints.set(point.address, point.enabled !== false && point.enabled !== 0);
+            const enabled = point.enabled !== false && point.enabled !== 0;
+            if (Object.hasOwn(watchpointLabels, point.type)) {
+                userWatchpoints.set(point.address, {type: point.type, enabled});
+            } else if (!point.type || point.type === 'exec') {
+                userBreakpoints.set(point.address, enabled);
+            }
         }
     }
 } catch (error) {
     console.warn('Could not restore saved breakpoints', error);
 }
 
+function* debuggerStops() {
+    for (const [address, enabled] of userBreakpoints) yield {address, type: 'exec', enabled};
+    for (const [address, point] of userWatchpoints) yield {address, ...point};
+}
+
 function renderBreakpoints() {
     const list = document.getElementById('bps');
+    document.getElementById('breakpoint-count').textContent = userBreakpoints.size + userWatchpoints.size;
     list.replaceChildren();
-    for (const [address, enabled] of userBreakpoints) {
+    for (const {address, type, enabled} of debuggerStops()) {
         const row = document.createElement('li');
         row.dataset.addr = address;
-        const unavailable = unavailableBreakpoints.has(address);
+        row.dataset.type = type;
+        const unavailable = (type === 'exec' ? unavailableBreakpoints : unavailableWatchpoints).has(address);
         row.classList.toggle('disabled', !enabled || unavailable);
         if (unavailable) row.title = 'This breakpoint could not be restored in the current session';
-        row.append(hex(address));
+        const toggle = document.createElement('button');
+        toggle.type = 'button';
+        toggle.className = 'breakpoint-toggle inspect-address';
+        const label = watchpointLabels[type];
+        toggle.textContent = label ? `${label} ${hex(address)}` : hex(address);
+        toggle.setAttribute('aria-label', `${label ?? 'Execution'} breakpoint at ${hex(address)}`);
+        toggle.setAttribute('aria-pressed', String(enabled && !unavailable));
         const remove = document.createElement('button');
         remove.type = 'button';
+        remove.className = 'dock-remove';
         remove.textContent = '×';
-        remove.setAttribute('aria-label', `Remove breakpoint at ${hex(address)}`);
-        row.append(remove);
+        remove.setAttribute('aria-label', `Remove ${label ?? 'execution'} breakpoint at ${hex(address)}`);
+        row.append(toggle, remove);
         list.append(row);
     }
     $('#memdump .dumpline').each((_, row) => {
@@ -46,15 +68,24 @@ function isBreakpointEnabled(address) {
     return userBreakpoints.get(address) === true && !unavailableBreakpoints.has(address);
 }
 
+function breakpointSession() {
+    return emulator?.runtimeReady && emulator.debugger.state ? emulator.debugger : null;
+}
+
+function syncBreakpointControls() {
+    document.getElementById('breakpoint-hint').hidden = Boolean(breakpointSession());
+    document.getElementById('addbp').disabled = sessionChanging;
+    document.getElementById('bps').inert = sessionChanging;
+}
+
 function editBreakpoint(edit) {
-    const session = emulator?.debugger;
-    if (!session?.state || sessionChanging) return;
+    if (sessionChanging) return;
+    const session = breakpointSession();
     breakpointEdits = breakpointEdits.then(async () => {
-        if (session !== emulator?.debugger || sessionChanging) return;
+        if (sessionChanging || session !== breakpointSession()) return;
         await edit(session);
         renderBreakpoints();
-        localStorage.setItem('breakpoints', JSON.stringify(Array.from(userBreakpoints,
-            ([address, enabled]) => ({address, enabled}))));
+        localStorage.setItem('breakpoints', JSON.stringify([...debuggerStops()]));
     }).catch(error => {
         console.error(error);
         popout.error('Could not change the breakpoint.');
@@ -63,33 +94,44 @@ function editBreakpoint(edit) {
 
 async function restoreBreakpoints(session) {
     unavailableBreakpoints.clear();
-    for (const [address, enabled] of userBreakpoints) {
+    unavailableWatchpoints.clear();
+    for (const {address, enabled, type} of debuggerStops()) {
         try {
-            await session.setBreakpoint(address, enabled);
+            if (type === 'exec') await session.setBreakpoint(address, enabled);
+            else await session.setWatchpoint(address, type, enabled);
         } catch (error) {
             if (session !== emulator?.debugger || !emulator.runtimeReady) throw error;
-            unavailableBreakpoints.add(address);
+            (type === 'exec' ? unavailableBreakpoints : unavailableWatchpoints).add(address);
             console.warn('Could not restore breakpoint', address, error);
         }
     }
     renderBreakpoints();
-    if (unavailableBreakpoints.size) popout.warn('Some saved breakpoints could not be restored.');
+    if (unavailableBreakpoints.size || unavailableWatchpoints.size) {
+        popout.warn('Some saved breakpoints could not be restored.');
+    }
 }
 
 function addBreakpointFromInput() {
     const input = document.getElementById('bpaddr');
     const text = input.value.trim();
+    const type = document.getElementById('bp-type').value;
     if (!text) return;
     editBreakpoint(async session => {
-        const isHex = /^(?:0x)?[a-f0-9]+$/i.test(text);
-        const address = isHex ? Number.parseInt(text, 16) : await session.findSymbol(text);
-        if (address === null || address > 0xffff) {
-            popout.warn('Enter a 16-bit address or a loaded symbol.');
+        const address = await resolveDebugAddress(session, text);
+        if (address === null) {
+            popout.warn(session ? 'Enter a 16-bit address or a loaded symbol.' :
+                'Enter a 16-bit hex address. Symbols require a loaded ROM and map.');
             return;
         }
-        await session.setBreakpoint(address);
-        unavailableBreakpoints.delete(address);
-        userBreakpoints.set(address, true);
+        if (type === 'exec') {
+            await session?.setBreakpoint(address);
+            unavailableBreakpoints.delete(address);
+            userBreakpoints.set(address, true);
+        } else {
+            await session?.setWatchpoint(address, type);
+            unavailableWatchpoints.delete(address);
+            userWatchpoints.set(address, {type, enabled: true});
+        }
         input.value = '';
     });
 }
@@ -101,15 +143,28 @@ $('#addbp').on('click', addBreakpointFromInput);
 
 $('#bps').on('click', 'li', function(event) {
     const address = Number(this.dataset.addr);
-    const remove = Boolean(event.target.closest('button'));
+    const {type} = this.dataset;
+    const remove = Boolean(event.target.closest('.dock-remove'));
     editBreakpoint(async session => {
-        if (remove) {
-            await session.removeBreakpoint(address);
+        if (type !== 'exec') {
+            const point = userWatchpoints.get(address);
+            if (!point) return;
+            if (remove) {
+                await session?.removeWatchpoint(address);
+                userWatchpoints.delete(address);
+            } else {
+                const enabled = !point.enabled || unavailableWatchpoints.has(address);
+                await session?.setWatchpoint(address, point.type, enabled);
+                point.enabled = enabled;
+            }
+            unavailableWatchpoints.delete(address);
+        } else if (remove) {
+            await session?.removeBreakpoint(address);
             userBreakpoints.delete(address);
             unavailableBreakpoints.delete(address);
         } else if (userBreakpoints.has(address)) {
             const enabled = !isBreakpointEnabled(address);
-            await session.setBreakpoint(address, enabled);
+            await session?.setBreakpoint(address, enabled);
             unavailableBreakpoints.delete(address);
             userBreakpoints.set(address, enabled);
         }
@@ -119,6 +174,7 @@ $('#bps').on('click', 'li', function(event) {
 $('#memdump').on('click', '.dumpline', function() {
     const address = Number(this.dataset.addr);
     editBreakpoint(async session => {
+        if (!session) return;
         if (userBreakpoints.has(address)) {
             await session.removeBreakpoint(address);
             userBreakpoints.delete(address);
@@ -131,3 +187,4 @@ $('#memdump').on('click', '.dumpline', function() {
 });
 
 renderBreakpoints();
+syncBreakpointControls();

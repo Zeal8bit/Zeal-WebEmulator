@@ -17,6 +17,7 @@
     color-scheme: dark;
 
     --theme-font: 'BigBlue Terminal 437TT', monospace;
+    --theme-ui-font: system-ui, sans-serif;
     --theme-font-data-size: 16px;
 
     --theme-background: #111215;
