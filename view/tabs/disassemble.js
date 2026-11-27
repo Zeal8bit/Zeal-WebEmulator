@@ -1,56 +1,118 @@
 /**
- * SPDX-FileCopyrightText: 2022-2024 Zeal 8-bit Computer <contact@zeal8bit.com>
+ * SPDX-FileCopyrightText: 2022-2026 Zeal 8-bit Computer <contact@zeal8bit.com>
  *
  * SPDX-License-Identifier: Apache-2.0
  */
 
-function disassembleAndShow() {
-    let regs = zealcom.getCPUState();
-    /* Get the PC, which is a virtual address */
-    const pc = regs != null ? (regs.pc) : 0;
-    /* Set the number of instructions we need to disassemble and show */
-    const instructions = 20;
-    /* The maximum number of bytes per instruction is 4 */
-    const bytes = instructions * 4;
+const disassemblyPanel = document.getElementById('memdump');
+const disassemblyInput = document.getElementById('disassembly-address');
+const followPC = document.getElementById('disassembly-follow');
+const pcButton = document.getElementById('disassembly-pc');
+const moreInstructions = document.getElementById('disassembly-more');
+const instructionBatch = 48;
+const instructionLimit = 192;
+let disassemblyStart;
+let disassemblyNext;
+let instructionCount = 0;
+let disassemblyRequest = 0;
 
-    /* Read "bytes" bytes from the Z80 virtual memory */
-    var memory = [];
-    /* Add 4 bytes so that if the last instruction is a 4 byte instruction, we won't go out of
-     * bounds when disassembling */
-    for (var i = 0; i < bytes + 4; i++) {
-        memory.push(zealcom.mem_read(pc + i));
+async function disassembleAndShow({more = false, pc = false} = {}) {
+    const session = emulator?.debugger;
+    const state = session?.state;
+    const sequence = ++disassemblyRequest;
+    const paused = state?.paused && emulator.runtimeReady;
+    moreInstructions.disabled = true;
+    disassemblyInput.disabled = !paused;
+    pcButton.disabled = !paused;
+    if (!paused) {
+        disassemblyPanel.replaceChildren();
+        moreInstructions.textContent = 'Load more';
+        if (!state) {
+            disassemblyStart = undefined;
+            disassemblyInput.value = '';
+        }
+        return;
     }
 
-    /* Disassemble this part of the memory */
-    const instr_arr = disassembler.disassemble(memory, bytes, pc);
-
-    const dumptxt = instr_arr.map(entry => {
-        var cssclass = (entry.instruction && (entry.addr == pc)) ? "activeline" : "";
-        var text = "";
-
-        if (entry.label) {
-            cssclass += " labelline";
-            text = entry.label
-        } else {
-            cssclass += " dumpline";
-            text = entry.instruction;
+    const {pc: currentPC} = state.registers;
+    if (!more) {
+        if (pc || followPC.checked || disassemblyStart === undefined) disassemblyStart = currentPC;
+        instructionCount = 0;
+        disassemblyNext = disassemblyStart;
+        disassemblyInput.value = hex(disassemblyStart, true);
+        moreInstructions.textContent = 'Load more';
+    }
+    const start = disassemblyNext;
+    try {
+        const rows = await session.disassemble(start, instructionBatch);
+        if (sequence !== disassemblyRequest || session !== emulator?.debugger || state !== session.state) return;
+        const content = document.createDocumentFragment();
+        for (const row of rows) {
+            if (row.label) {
+                const label = document.createElement('div');
+                label.className = 'labelline';
+                label.textContent = row.label + ':';
+                content.append(label);
+            }
+            const line = document.createElement('div');
+            line.dataset.addr = row.address;
+            line.className = 'dumpline';
+            line.classList.toggle('activeline', row.address === currentPC);
+            line.classList.toggle('brk', isBreakpointEnabled(row.address));
+            const bytes = Array.from(row.bytes, byte => hex8(byte, true)).join(' ');
+            const address = document.createElement('span');
+            address.className = 'instruction-address';
+            address.textContent = hex(row.address, true);
+            const encoding = document.createElement('span');
+            encoding.className = 'instruction-bytes';
+            encoding.textContent = bytes;
+            const instruction = document.createElement('span');
+            instruction.textContent = row.instruction?.trim().replace(/\s+/, ' ') || 'db ' + bytes;
+            line.append(address, encoding, instruction);
+            content.append(line);
         }
-
-        /* Check if the current address has a breakpoint */
-        const breakpoint = getBreakpoint(entry.addr);
-        const brk = breakpoint == null ? "" : "brk";
-
-        return `<div data-addr="${entry.addr}" class="${cssclass} ${brk}">${text}</div>`;
-    });
-
-    $("#memdump").html(dumptxt);
+        if (more) disassemblyPanel.append(content);
+        else {
+            disassemblyPanel.replaceChildren(content);
+            disassemblyPanel.scrollTop = 0;
+        }
+        const last = rows.at(-1);
+        instructionCount += rows.length;
+        if (last) disassemblyNext = (last.address + Math.max(1, last.bytes.length)) & 0xffff;
+        moreInstructions.disabled = !last || instructionCount >= instructionLimit;
+        moreInstructions.textContent = instructionCount >= instructionLimit ? `${instructionLimit} instructions shown` : 'Load more';
+    } catch (error) {
+        if (sequence === disassemblyRequest && session === emulator?.debugger && state === session.state) {
+            console.error(error);
+            moreInstructions.disabled = instructionCount === 0 || instructionCount >= instructionLimit;
+        }
+    }
 }
 
-function clearDisassemblerView()
-{
-    $("#memdump").html("");
-}
+$('#disassembly-form').on('submit', async event => {
+    event.preventDefault();
+    const session = emulator?.debugger;
+    const state = session?.state;
+    if (!state?.paused) return;
+    const query = disassemblyInput.value.trim();
+    try {
+        const address = await resolveDebugAddress(session, query);
+        if (session !== emulator?.debugger || state !== session.state) return;
+        if (address === null) {
+            popout.warn('Enter a 16-bit address or a loaded symbol.');
+            return;
+        }
+        followPC.checked = false;
+        disassemblyStart = address;
+        disassembleAndShow();
+    } catch (error) {
+        if (session === emulator?.debugger && state === session.state) console.error(error);
+    }
+});
 
-function disassembleHideActive() {
-    $("#memdump .activeline").removeClass("activeline");
-}
+pcButton.addEventListener('click', () => disassembleAndShow({pc: true}));
+followPC.addEventListener('change', () => {
+    if (followPC.checked) disassembleAndShow();
+});
+moreInstructions.addEventListener('click', () => disassembleAndShow({more: true}));
+disassembleAndShow();

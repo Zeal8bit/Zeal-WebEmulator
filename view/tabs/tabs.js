@@ -1,42 +1,32 @@
-$(".tab").on("click", function(){
-    setActiveTab($(this).attr('id'));
-    // const $inactiveTab = $('.tab.active');
-    // const $inactivePanel = $(".bottompanel .panel").eq($inactiveTab.index());
-    // const $activeTab = $(this);
-    // const $activePanel = $(".bottompanel .panel").eq($activeTab.index());
+const tabs = Array.from(document.querySelectorAll('.tabs > .tab[aria-controls]'));
+const desktopLayout = matchMedia('(min-width: 72rem)');
+const debuggerLayout = document.getElementById('toppanel');
+let preferredTab = tabs.find(tab => tab.id === (params.tab ?? localStorage.getItem('tab'))) ?? tabs[0];
 
-    // $inactiveTab.removeClass("active");
-    // $inactivePanel.removeClass("active").trigger('inactive');
-
-    // $activeTab.addClass("active");
-    // $activePanel.addClass("active").trigger('active');
-});
-
-function setActiveTab(tab) {
-    const $inactiveTab = $('.tab.active');
-    const $inactivePanel = $(".bottompanel .panel").eq($inactiveTab.index());
-    $inactiveTab.removeClass("active");
-    $inactivePanel.removeClass("active").trigger('inactive');
-
-    const $activeTab = $(`#${tab}`);
-    const $activePanel = $(".bottompanel .panel").eq($activeTab.index());
-    $activeTab.addClass("active");
-    $activePanel.addClass("active").trigger('active');
-
-    localStorage.setItem('tab', tab);
+function updateTabs() {
+    const docked = desktopLayout.matches && !debuggerLayout.classList.contains('theater-mode');
+    const active = docked && preferredTab.id === 'disassemble-tab'
+        ? document.getElementById('memory-tab')
+        : preferredTab;
+    for (const tab of tabs) {
+        const selected = tab === active;
+        const panel = document.getElementById(tab.getAttribute('aria-controls'));
+        tab.hidden = docked && tab.id === 'disassemble-tab';
+        tab.setAttribute('aria-pressed', String(selected));
+        if (panel.classList.toggle('active', selected)) $(panel).trigger('active');
+    }
 }
 
-$(() => {
-    if(params.tab) {
-        setActiveTab(params.tab);
-        return;
-    }
+function setActiveTab(id) {
+    preferredTab = tabs.find(tab => tab.id === id) ?? tabs[0];
+    localStorage.setItem('tab', preferredTab.id);
+    updateTabs();
+}
 
-    const lst = localStorage.getItem('tab');
-    if(lst) {
-        setActiveTab(lst);
-        return;
-    }
+for (const tab of tabs) {
+    tab.addEventListener('click', () => setActiveTab(tab.id));
+}
 
-    setActiveTab('uart');
-});
+desktopLayout.addEventListener('change', updateTabs);
+$(debuggerLayout).on('layoutchange', updateTabs);
+updateTabs();

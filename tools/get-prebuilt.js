@@ -1,117 +1,104 @@
-const https = require("https");
-const fs = require("fs");
+/**
+ * SPDX-FileCopyrightText: 2026 Zeal 8-bit Computer <contact@zeal8bit.com>
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
 
-const prebuilt_json_url = "https://zeal8bit.com/roms/index.json";
+const { createHash } = require('node:crypto');
+const { mkdir, rename, writeFile } = require('node:fs/promises');
+const { unzipSync } = require('fflate');
 
-const getRom = async (rom, remote = null) => {
-    // rename files to match "unique" name, to avoid conflicts
-    const romPath = `roms/${rom.name}.img`
+const repository = 'Zeal8bit/Zeal-8-bit-OS';
+const releaseAPI = `https://api.github.com/repos/${repository}/releases`;
+const archiveName = 'zos_target_zeal8bit_emulator.zip';
+const imageName = 'os_with_romdisk.img';
+const maxArchiveBytes = 4 * 1024 * 1024;
+const maxROMBytes = 512 * 1024;
 
-    if (fs.existsSync(romPath)) {
-        console.log(`Exists ${romPath}`);
-        rom.urls = romPath;
-        return rom;
-    }
+const sha256 = data => createHash('sha256').update(data).digest('hex');
 
-    const url = remote ? remote : rom.urls;
-
-    return new Promise((resolve, reject) => {
-        process.stdout.write(`Downloading ${url} `);
-        https.get(url, (res) => {
-            // handle redirects
-            if([301,302,307,308].includes(res.statusCode)) {
-                process.stdout.write('->\n');
-                resolve(getRom(rom, res.headers.location));
-                return;
-            }
-
-            if(res.statusCode !== 200) {
-                process.stdout.write(`... Failed ${res.statusCode}\n`);
-                reject('file not found');
-                return;
-            }
-
-            const content = [];
-            res
-                .on("data", (chunk) => {
-                    content.push(chunk);
-                })
-                .on("end", () => {
-                    const buffer = Buffer.concat(content);
-                    fs.writeFileSync(romPath, buffer);
-                    rom.urls = romPath;
-                    process.stdout.write("... Done\n");
-                    resolve(rom);
-                })
-                .on('error', (err) => {
-                    reject(err);
-                });
-        }).on('error', (e) => {
-            console.log(`An error occurred downloading ${url}`);
-            reject(e);
-        });
+async function fetchChecked(url, headers = {}) {
+    const response = await fetch(url, {
+        headers: { 'User-Agent': 'Zeal-WebEmulator', ...headers },
+        signal: AbortSignal.timeout(30_000),
     });
-};
+    if (!response.ok) throw new Error(`${url} returned HTTP ${response.status}`);
+    return response;
+}
 
-const getAll = async () => {
-    const data = await fetch(prebuilt_json_url).catch((err) => {
-        console.log(`An error occurred downloading ${prebuilt_json_url}`);
-        console.error(err);
-        process.exit(1);
-    });
-    json = await data.json();
+async function fetchReleaseMetadata(suffix) {
+    const headers = { Accept: 'application/vnd.github+json' };
+    return (await fetchChecked(releaseAPI + suffix, headers)).json();
+}
 
-    const indexFile = {
-        indexversion: json.indexversion,
-        latest: null,
-        nightly: [],
-        stable: [],
-    };
+async function writeAtomically(path, data) {
+    const temporary = `${path}.${process.pid}.tmp`;
+    await writeFile(temporary, data);
+    await rename(temporary, path);
+}
 
-    // mkdir if not exists
-    fs.mkdirSync('roms', {
-        recursive: true,
-    });
-
-    console.log('\nLatest:');
-    if (json.latest) {
-        indexFile.latest = await getRom(json.latest).catch((err) => {
-            return null;
-        });
+async function downloadROM(release, asset) {
+    if (!Number.isSafeInteger(asset.id) || !Number.isInteger(asset.size) ||
+        asset.size < 1 || asset.size > maxArchiveBytes) {
+        throw new Error(`${release.tag_name} has invalid emulator archive metadata`);
     }
-    console.log('\nNightly:');
-    if (json.nightly?.length > 0) {
-        for (let i = 0; i < json.nightly.length; i++) {
-            let rom = await getRom(json.nightly[i]).catch((err) => {
-                return null;
-            })
-            if(rom) {
-                indexFile.nightly.push(rom);
-            }
-        }
-    }
-    console.log('\nStable:');
-    if (json.stable?.length > 0) {
-        for (let i = 0; i < json.stable.length; i++) {
-            let rom = await getRom(json.stable[i]).catch((err) => {
-                return null;
-            });
-            if(rom) {
-                indexFile.stable.push(rom);
-            }
-        }
+    const tag = encodeURIComponent(release.tag_name);
+    const archiveURL = `https://github.com/${repository}/releases/download/${tag}/${archiveName}`;
+    const archive = new Uint8Array(await (await fetchChecked(archiveURL)).arrayBuffer());
+    if (archive.length !== asset.size || (asset.digest && asset.digest !== `sha256:${sha256(archive)}`)) {
+        throw new Error(`${release.tag_name} emulator archive failed verification`);
     }
 
-    console.log('\n\nWriting roms/index.json');
-    fileString = JSON.stringify(indexFile, false, 2);
-    fs.writeFileSync(`roms/index.json`, fileString);
-};
+    const images = Object.values(unzipSync(archive, {
+        filter: ({ name, originalSize }) =>
+            name.split('/').at(-1) === imageName && originalSize > 0 && originalSize <= maxROMBytes,
+    }));
+    if (images.length !== 1 || images[0].length === 0 || images[0].length > maxROMBytes) {
+        throw new Error(`${release.tag_name} must contain one valid ${imageName}`);
+    }
 
-(async () => {
-    console.log("Getting Pre-built ROMs");
-    await getAll();
-})();
+    const [image] = images;
+    const hash = sha256(image);
+    const urls = `roms/zos-${asset.id}.img`;
+    await writeAtomically(urls, image);
+    console.log(`${release.tag_name}: ${image.length} bytes → ${urls}`);
+    return { name: release.tag_name, urls, hash };
+}
 
-// TODO: reuse these functions
-// module.exports = getAll;
-// module.exports = getRom;
+async function main() {
+    const [releases, latestRelease] = await Promise.all([
+        fetchReleaseMetadata('?per_page=30'),
+        fetchReleaseMetadata('/latest'),
+    ]);
+    const compatible = [latestRelease, ...releases.filter(release => release.id !== latestRelease.id)]
+        .filter(release => !release.draft)
+        .map(release => ({
+            release,
+            asset: release.assets.find(asset => asset.name === archiveName && asset.state === 'uploaded'),
+        }))
+        .filter(entry => entry.asset);
+
+    const isNightly = ({release}) => release.prerelease || release.tag_name === 'latest';
+    const stable = compatible.filter(entry => !isNightly(entry));
+    const nightly = compatible.filter(isNightly);
+    if (!stable.length) throw new Error('No published Zeal OS release contains an emulator ROM');
+
+    await mkdir('roms', { recursive: true });
+    const catalog = { latest: null, stable: [], nightly: [] };
+    for (const { release, asset } of stable) {
+        const image = await downloadROM(release, asset);
+        if (!catalog.latest) catalog.latest = image;
+        else catalog.stable.push(image);
+    }
+    for (const { release, asset } of nightly) {
+        catalog.nightly.push(await downloadROM(release, asset));
+    }
+
+    await writeAtomically('roms/index.json', JSON.stringify(catalog, null, 2) + '\n');
+    console.log(`Latest emulator ROM: ${catalog.latest.name}`);
+}
+
+main().catch(error => {
+    console.error(error);
+    process.exitCode = 1;
+});

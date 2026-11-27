@@ -1,61 +1,54 @@
 /**
- * SPDX-FileCopyrightText: 2022-2023 Zeal 8-bit Computer <contact@zeal8bit.com>
+ * SPDX-FileCopyrightText: 2022-2026 Zeal 8-bit Computer <contact@zeal8bit.com>
  *
  * SPDX-License-Identifier: Apache-2.0
  */
 
-function setRegView() {
-    const tstates = zealcom.getTstates();
-    let regs = zealcom.getCPUState();
-    $("#rega").text(hex8(regs.a));
-    $("#regb").text(hex8(regs.b));
-    $("#regc").text(hex8(regs.c));
-    $("#regd").text(hex8(regs.d));
-    $("#rege").text(hex8(regs.e));
-    $("#regh").text(hex8(regs.h));
-    $("#regl").text(hex8(regs.l));
-    $("#regix").text(hex(regs.ix));
-    $("#regiy").text(hex(regs.iy));
-    $("#regbc").text(hex16(regs.b, regs.c));
-    $("#regde").text(hex16(regs.d, regs.e));
-    $("#reghl").text(hex16(regs.h, regs.l));
-    $("#regpc").text(hex(regs.pc));
-    $("#regsp").text(hex(regs.sp));
-    $("#tstates").text(tstates);
-    /* Special treatment for the flags */
-    var flags = (regs.flags.S == 1 ? "S" : "") +
-                (regs.flags.Z == 1 ? "Z" : "") +
-                (regs.flags.Y == 1 ? "Y" : "") +
-                (regs.flags.H == 1 ? "H" : "") +
-                (regs.flags.X == 1 ? "X" : "") +
-                (regs.flags.P == 1 ? "P" : "") +
-                (regs.flags.N == 1 ? "N" : "") +
-                (regs.flags.C == 1 ? "C" : "");
+const registerCells = document.querySelectorAll('[data-register]');
+const flagChips = document.querySelectorAll('#flags li');
+let previousRegisters = null;
 
-    $("#flags").text(flags);
-
-    /* Disassemble the current code and show the instructions */
-    disassembleAndShow();
+function cpuRegisters(regs) {
+    return {
+        ...regs,
+        af: regs.a << 8 | regs.f,
+        bc: regs.b << 8 | regs.c,
+        de: regs.d << 8 | regs.e,
+        hl: regs.h << 8 | regs.l,
+    };
 }
 
+function renderCPU(state, sampled = false) {
+    const regs = state && (state.paused || sampled) ? cpuRegisters(state.registers) : null;
+    if (!state || state.reason === 'startup' || state.reason === 'reset') previousRegisters = null;
+    const status = document.getElementById('cpu-state');
+    status.textContent = state ? (state.paused ? 'Paused' : sampled ? 'Sampled' : 'Running') : '';
+    status.title = regs ? `${state.tstates} T-states` : '';
 
-function clearRegView() {
-    const views = ["#rega", "#regb", "#regc", "#regd", "#rege",
-                   "#regh", "#regl", "#regix", "#regiy", "#regbc",
-                   "#regde", "#reghl", "#regpc", "#regsp", "#tstates", "#flags"];
-    const length = views.length;
-    for (var i = 0; i < length; i++) {
-        const reg = views[i];
-        $(reg).text("");
+    for (const cell of registerCells) {
+        const name = cell.dataset.register;
+        const address = cell instanceof HTMLButtonElement;
+        const digits = address ? 4 : 2;
+        const value = regs?.[name];
+        const available = Number.isInteger(value);
+        cell.textContent = available ? hex(value, true, digits) : '-'.repeat(digits);
+        cell.classList.toggle('register-changed', !sampled && available && previousRegisters &&
+            previousRegisters[name] !== value);
+        if (address) {
+            cell.disabled = !available;
+            const label = cell.closest('div').querySelector('dt').textContent;
+            cell.setAttribute('aria-label', `${label} ${cell.textContent}, show in Memory`);
+        }
     }
+
+    flagChips.forEach((chip, index) => {
+        const set = Boolean(regs?.f & (0x80 >> index));
+        chip.classList.toggle('flag-set', set);
+        chip.setAttribute('aria-label', `${chip.title} ${regs ? (set ? 'set' : 'clear') : 'unavailable'}`);
+    });
+    if (state?.paused) previousRegisters = regs;
 }
 
-
-$(".regaddr").click(function() {
-    const virtaddr = parseInt($(this).text(), 16);
-    if (virtaddr || virtaddr == 0) {
-        const size = 256;
-        setRAMView(virtaddr, size);
-        $("#memory-tab").click();
-    }
+$('.registers button').on('click', function() {
+    openMemoryAt(Number.parseInt(this.textContent, 16));
 });

@@ -2,23 +2,10 @@
   "name": "zealwebemulator",
   "productName": "Zeal-WebEmulator",
   "version": "1.0.0",
-  "description": "A emulator for Zeal 8-bit Computer based on electron",
-  "main": "electron/index.js",
+  "description": "Browser emulator and debugger for the Zeal 8-bit Computer",
   "scripts": {
-    "start": "electron-forge start",
-    "watch": "ELECTRON_RELOAD=1 electron-forge start",
-    "package": "electron-forge package",
-    "make": "electron-forge make",
-    "publish": "electron-forge publish",
     "lint": "echo \"No linting configured\"",
-    "pack": "electron-builder --dir",
-    "postinstall": "electron-builder install-app-deps",
-    "dist": "electron-builder",
-    "dist-win": "electron-builder --win --ia32",
-    "dist-win64": "electron-builder --win --x64",
-    "dist-mac": "electron-builder --mac",
-    "dist-linux": "electron-builder --linux",
-    "dev": "live-server ./ --port=1145 --ignore=\".git,docs,roms\" --open=\"?r=latest\"",
+    "dev": "live-server ./ --port=1145 --ignore=\".git,docs,roms\"",
     "get-prebuilt": "node ./tools/get-prebuilt.js"
   },
   "keywords": [],
@@ -27,59 +14,8 @@
     "email": "contact@zeal8bit.com"
   },
   "license": "Apache-2.0",
-  "dependencies": {
-    "electron-config": "^2.0.0",
-    "electron-squirrel-startup": "^1.0.1",
-    "opn": "^6.0.0",
-    "yargs": "^17.7.2"
-  },
   "devDependencies": {
-    "@electron-forge/cli": "^7.4.0",
-    "@electron-forge/maker-deb": "^7.4.0",
-    "@electron-forge/maker-rpm": "^7.4.0",
-    "@electron-forge/maker-squirrel": "^7.4.0",
-    "@electron-forge/maker-zip": "^7.4.0",
-    "@electron-forge/plugin-auto-unpack-natives": "^7.4.0",
-    "electron": "^28.3.3",
-    "electron-builder": "^24.13.3",
-    "electron-reload": "2.0.0-alpha.1",
-    "electron-squirrel-startup": "^1.0.0",
+    "fflate": "^0.8.3",
     "live-server": "^1.2.2"
-  },
-  "build": {
-    "appId": "com.zealemu",
-    "productName": "Zeal-WebEmulator",
-    "files": [
-      "**/*"
-    ],
-    "directories": {
-      "output": "build",
-      "app": "./"
-    },
-    "nsis": {
-      "oneClick": false,
-      "allowToChangeInstallationDirectory": true,
-      "installerIcon": "./imgs/installer/zeal.ico",
-      "installerHeader": "./imgs/installer/header.bmp",
-      "uninstallerIcon": "./imgs/installer/zeal.ico",
-      "perMachine": true,
-      "createDesktopShortcut": true,
-      "createStartMenuShortcut": true,
-      "license": "./LICENSE"
-    },
-    "win": {
-      "icon": "./imgs/installer/zeal.ico",
-      "target": [
-        {
-          "target": "nsis",
-          "arch": [
-            "x64"
-          ]
-        }
-      ]
-    },
-    "linux": {
-      "icon": "./imgs/installer/zeal.png"
-    }
   }
 }

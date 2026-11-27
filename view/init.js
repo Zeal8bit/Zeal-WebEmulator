@@ -4,67 +4,95 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-const KB = 1024;
-/* 10MHz frequency */
-const CPUFREQ = 10000000;
-const TSTATES_US = 1/CPUFREQ * 1000000;
+const params = Object.fromEntries(new URLSearchParams(location.search));
+const popout = new Popup();
+const screenCanvas = document.getElementById('zeal-screen');
 
-function us_to_tstates(us) {
-    return Math.floor(us / TSTATES_US);
+let emulator = null;
+let sessionChanging = false;
+let activeSymbols = null;
+
+function setSessionChanging(changing) {
+    sessionChanging = changing;
+    $('#romchoice, #read-button').prop('disabled', changing);
+    syncBreakpointControls();
+    updateHostFSButton();
+    scheduleDebuggerSample();
 }
 
-const UART_SIZE = {
-    cols: 80,
-    rows: 24,
+async function prepareDebugger(current, resume) {
+    if (activeSymbols) await current.debugger.loadSymbols(activeSymbols);
+    await restoreBreakpoints(current.debugger);
+    if (vblankControl.checked) await current.debugger.setBreakOnVBlank(true);
+    if (resume) await current.debugger.continue();
+    else renderDebugState(current.debugger.state);
+}
+
+async function unloadEmulator() {
+    const current = emulator;
+    if (!current) return;
+    debugControls.inert = true;
+    try {
+        await current.exit();
+        emulator = null;
+        activeSymbols = null;
+        renderDebugState(null);
+    } catch (error) {
+        renderDebugState(current.debugger.state);
+        throw error;
+    }
+}
+
+async function bootEmulator(romdisk, eeprom, symbols) {
+    const next = new ZealNative({
+        canvas: screenCanvas,
+        romdisk,
+        eeprom,
+        imageStorage: 'memory',
+        debugger: true,
+        hostfs: createHostFS(),
+    });
+
+    next.debugger.addEventListener('statechange', ({detail}) => {
+        if (emulator === next) renderDebugState(detail);
+    });
+
+    await unloadEmulator();
+    emulator = next;
+    activeSymbols = symbols;
+    try {
+        await next.start();
+        await prepareDebugger(next, true);
+    } catch (error) {
+        await next.exit().catch(console.error);
+        emulator = null;
+        activeSymbols = null;
+        renderDebugState(null);
+        throw error;
+    }
+}
+
+screenCanvas.addEventListener('pointerdown', () => {
+    emulator?.resumeAudio().catch(console.error);
+});
+
+const shortcuts = {
+    F4: '#theater-mode',
+    F5: '#fullscreen-mode',
+    F9: '.cpuexec:visible',
+    F10: '#step',
+    F11: '#stepover',
 };
 
-var terminal = new Terminal({
-    ...UART_SIZE,
-    screenKeys: true,
-    convertEol: true,
-    cursorBlink: true,
-    fontSize: 14,
-});
-$('#uart-cols').val(UART_SIZE.cols);
-$('#uart-rows').val(UART_SIZE.rows);
-terminal.open(document.getElementById('terminal'));
-
-// Init shortcut key
-document.addEventListener('keydown', function(event) {
-    var handled = false;
-    const binding = {
-        'F4': $("#theater-mode"),
-        'F5': $("#fullscreen-mode"),
-        'F9': $(".cpuexec:visible"),
-        'F10': $("#step"),
-        'F11': $("#stepover")
-    };
-    if (binding[event.key]) {
-        binding[event.key].click();
-        handled = true;
+function handleShortcut(event) {
+    const binding = shortcuts[event.key];
+    if (!binding) return;
+    event.preventDefault();
+    event.stopPropagation();
+    if (event.type === 'keydown' && !event.repeat) {
+        $(binding).not('[aria-disabled=true]').click();
     }
-
-    if (handled) {
-        event.preventDefault();
-    }
-});
-
-// Init Emulated hardware
-var zealcom = new Zeal8bitComputer();
-const disassembler = new Disassembler();
-const popout = new Popup();
-
-popout.warn("Zeal Web Emulator is now deprecated in favor of <a href=\"https://github.com/Zeal8bit/Zeal-NativeEmulator\">Zeal Native Emulator</a>.<br/>"
-            + "No more features will be added here.<br/>Please switch to the new emulator for better performance and features.",
-            5000);
-
-const params = parseQueryParams(window.location.search);
-
-if (typeof electronAPI != 'undefined') {
-    $(electronAPI.loaded);
 }
 
-$('#screen').focus();
-$(window).on('focus', () => {
-    $('#screen').focus();
-})
+document.addEventListener('keydown', handleShortcut, true);
+document.addEventListener('keyup', handleShortcut, true);

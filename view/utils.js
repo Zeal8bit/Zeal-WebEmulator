@@ -8,59 +8,28 @@ function isPrintable(byteCode) {
     return byteCode >= 32 && byteCode <= 126;
 }
 
-async function readBlobFromUrl(pburl) {
-    const response = await fetch(pburl);
-    return await response.blob();
+async function filehash(bytes, expected) {
+    const digest = await crypto.subtle.digest('SHA-256', bytes);
+    const actual = Array.from(new Uint8Array(digest), byte => byte.toString(16).padStart(2, '0')).join('');
+    return actual === String(expected).toLowerCase() ||
+        confirm('The downloaded image has a different checksum. Continue?');
 }
 
-/** Check for hash value */
-function filehash(file1, SHA2) {
-    return new Promise((resolve, reject) => {
-        const fileReader = new FileReader();
-        fileReader.onloadend = (ev) => {
-            const SHA256 = CryptoJS.SHA256(CryptoJS.enc.Latin1.parse(ev.target.result)).toString(CryptoJS.enc.Hex);
-            // console.log("file_hash: "+SHA256+"\nindex_hash: "+SHA2);
-            if (String(SHA256) == String(SHA2)) {
-                resolve(true);
-            }
-            else {
-                r = confirm("Warning: Hash values do not match. Continue?");
-                resolve(r);
-            }
-        }
-        fileReader.readAsBinaryString(file1);
-    });
+function hex(value, noPrefix = false, digits = 4) {
+    const number = value.toString(16).toUpperCase().padStart(digits, '0').slice(-digits);
+    return noPrefix ? number : `0x${number}`;
 }
 
-// About hex
-function hex(str = "", noprefix = false, digits = 4) {
-    const leading = `${"0".repeat(digits)}${str.toString(16).toUpperCase()}`.substr(-digits);
-    return noprefix ? leading : `0x${leading}`;
+function hex8(value, noPrefix = false) {
+    return hex(value, noPrefix, 2);
 }
 
-function hex8(str, noprefix) {
-    const value = hex(str, true);
-    return `${noprefix ? "" : "0x"}${value.substring(2)}`;
+function hex16(high, low, noPrefix = false) {
+    return hex(high << 8 | low, noPrefix);
 }
 
-function hex16(high, lower, noprefix) {
-    const value = (high << 8) | lower;
-    return `${noprefix ? "" : "0x"}${hex(value, true)}`;
+function resolveDebugAddress(session, text) {
+    if (/^(?:0x|\$)?[a-f0-9]{1,4}$/i.test(text)) return Number.parseInt(text.replace(/^\$/, ''), 16);
+    if (!text || /^(?:\$|0x)?[0-9a-f]{5,}$/i.test(text)) return null;
+    return session?.findSymbol(text) ?? null;
 }
-
-
-/**
- * Parse the Query String
- * @param params string
- * @returns Record<string, string>
- */
-function parseQueryParams(params) {
-    if(params.startsWith('?')) params = params.slice(1);
-    return params.split('&').reduce((acc, kvp) => {
-        const [key,value] = kvp.split('=');
-        acc[key] = value ?? true;
-        return acc;
-    }, {});
-}
-
-let array_to_blob = (arr) => new Blob([arr], {type: 'application/octet-stream'});

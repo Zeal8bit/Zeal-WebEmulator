@@ -1,0 +1,4 @@
+# Preserve generated and third-party assets byte for byte.
+wasm/zeal.elf.js -diff -whitespace linguist-generated
+wasm/zeal.elf.wasm binary linguist-generated
+wasm/SDL3-LICENSE.txt -whitespace
